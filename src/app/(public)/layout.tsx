@@ -1,8 +1,7 @@
 import { Header } from "@/components/shared/header";
 import { Footer } from "@/components/shared/footer";
-import { AuthModal } from "@/components/shared/auth-modal";
-import { LiveChat } from "@/components/shared/live-chat";
-import { PromoPopup } from "@/components/shared/promo-popup";
+import { AuthModalMount } from "@/components/shared/auth-modal-mount";
+import { DeferredWidgets } from "@/components/shared/deferred-widgets";
 
 export default function PublicLayout({
   children,
@@ -14,9 +13,8 @@ export default function PublicLayout({
       <Header />
       <main id="main">{children}</main>
       <Footer />
-      <AuthModal />
-      <LiveChat />
-      <PromoPopup />
+      <AuthModalMount />
+      <DeferredWidgets promo />
     </>
   );
 }
