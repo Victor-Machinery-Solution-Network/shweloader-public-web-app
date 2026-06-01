@@ -40,9 +40,13 @@ function excerpt(post: BlogPost): string {
 export async function generateStaticParams() {
   try {
     const posts = await getBlogs({ limit: 200 });
-    return posts.map((p) => ({ slug: blogSlug(p) }));
+    const params = posts.map((p) => ({ slug: blogSlug(p) }));
+    // Cache Components requires ≥1 param (empty array → build error). With no
+    // posts (e.g. empty prod DB), fall back to a placeholder slug that resolves
+    // to notFound() — keeps the build from crashing on empty data.
+    return params.length ? params : [{ slug: "_" }];
   } catch {
-    return [];
+    return [{ slug: "_" }];
   }
 }
 

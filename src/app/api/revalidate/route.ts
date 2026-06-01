@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { updateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { REVALIDATE_SECRET } from "@/lib/env";
 
@@ -38,7 +38,9 @@ export async function POST(req: NextRequest) {
   const tags =
     Array.isArray(body.tags) && body.tags.length ? body.tags : ALL_TAGS;
 
-  for (const tag of tags) updateTag(tag);
+  // `revalidateTag` (NOT `updateTag` — that throws outside a Server Action) is the
+  // correct API in a Route Handler/webhook. "max" = stale-while-revalidate.
+  for (const tag of tags) revalidateTag(tag, "max");
 
   return NextResponse.json({ revalidated: true, tags });
 }

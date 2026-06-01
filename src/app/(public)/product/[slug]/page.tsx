@@ -60,9 +60,13 @@ async function load(slug: string): Promise<Listing> {
 export async function generateStaticParams() {
   try {
     const listings = await getAllListingsForSitemap();
-    return listings.map((l) => ({ slug: listingSlug(l) }));
+    const params = listings.map((l) => ({ slug: listingSlug(l) }));
+    // Cache Components requires ≥1 param (empty array → build error). When there
+    // are no listings (e.g. a fresh/empty prod DB), fall back to a placeholder
+    // slug that `load()` resolves to notFound() — keeps the build from crashing.
+    return params.length ? params : [{ slug: "_" }];
   } catch {
-    return [];
+    return [{ slug: "_" }];
   }
 }
 
