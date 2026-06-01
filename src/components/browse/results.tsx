@@ -3,7 +3,7 @@ import { ListingRow } from "@/components/shared/listing-row";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Pagination } from "@/components/shared/pagination";
 import type { Listing } from "@/lib/api/types";
-import { PAGE_SIZE, buildBrowseHref, type BrowseFilters } from "./filters";
+import { PAGE_SIZE, type BrowseFilters } from "./filters";
 
 /**
  * Server-rendered results region: grid of `ListingCard`s or list of
@@ -31,7 +31,6 @@ export function Results({
 
   const hasNext = listings.length === PAGE_SIZE;
   const hasPrev = filters.page > 1;
-  const makeHref = (page: number) => buildBrowseHref({ ...filters, page });
 
   return (
     <>
@@ -49,12 +48,7 @@ export function Results({
         </div>
       )}
 
-      <Pagination
-        page={filters.page}
-        hasPrev={hasPrev}
-        hasNext={hasNext}
-        makeHref={makeHref}
-      />
+      <Pagination page={filters.page} hasPrev={hasPrev} hasNext={hasNext} />
     </>
   );
 }

@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
 
+  // Use the native sharp pipeline for next/image optimization.
+  serverExternalPackages: ["sharp"],
+
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

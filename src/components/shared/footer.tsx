@@ -34,7 +34,7 @@ export function Footer() {
       <div className="container sl-footer-grid">
         <div className="sl-footer-brand">
           <Image
-            src="/logo_white_with_slogan.svg"
+            src="/brand/logo_white_with_slogan.svg"
             alt="ShweLoader"
             width={200}
             height={56}

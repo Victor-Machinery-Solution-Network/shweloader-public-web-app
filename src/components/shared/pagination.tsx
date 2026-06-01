@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,28 +12,40 @@ export interface PaginationProps {
   hasPrev: boolean;
   /** Whether a next page exists. */
   hasNext: boolean;
-  /** Builds the href for a given page number (preserves existing query params). */
-  makeHref: (page: number) => string;
 }
 
 /**
  * Prev / current-page / Next control for Browse-style listings.
  *
  * The upstream API exposes no total count, so there is no last page and no
- * numbered range — we only know whether a previous and next page exist. The
- * markup reuses the design's `.pgn` / `.pgn-btn` / `.pgn-list` / `.pgn-num`
- * classes (browse.css); the single visible number is the current page, styled
- * with `.is-on`. Disabled edges render as inert `<span>`s (Next.js Link needs a
- * destination), mirroring the `.pgn-btn:disabled` dimming the CSS gives buttons.
+ * numbered range — we only know whether a previous and next page exist. Hrefs
+ * are built from the CURRENT URL (preserving every active filter, changing only
+ * `page`) on the client, so no function prop crosses the server→client boundary.
+ * Markup reuses the design's `.pgn` / `.pgn-btn` / `.pgn-list` / `.pgn-num`.
  */
-export function Pagination({ page, hasPrev, hasNext, makeHref }: PaginationProps) {
-  // Nothing to page through.
+export function Pagination({ page, hasPrev, hasNext }: PaginationProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   if (!hasPrev && !hasNext) return null;
+
+  const hrefForPage = (p: number) => {
+    const sp = new URLSearchParams(searchParams?.toString() ?? "");
+    if (p <= 1) sp.delete("page");
+    else sp.set("page", String(p));
+    const qs = sp.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  };
 
   return (
     <nav className="pgn" aria-label="Pagination">
       {hasPrev ? (
-        <Link className="pgn-btn" href={makeHref(page - 1)} rel="prev" aria-label="Previous page">
+        <Link
+          className="pgn-btn"
+          href={hrefForPage(page - 1)}
+          rel="prev"
+          aria-label="Previous page"
+        >
           <ArrowRight
             className="icon-sm"
             strokeWidth={1.75}
@@ -60,7 +73,12 @@ export function Pagination({ page, hasPrev, hasNext, makeHref }: PaginationProps
       </div>
 
       {hasNext ? (
-        <Link className="pgn-btn" href={makeHref(page + 1)} rel="next" aria-label="Next page">
+        <Link
+          className="pgn-btn"
+          href={hrefForPage(page + 1)}
+          rel="next"
+          aria-label="Next page"
+        >
           Next
           <ArrowRight className="icon-sm" strokeWidth={1.75} aria-hidden="true" />
         </Link>
