@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ChevronRight } from "lucide-react";
+import { ProductActions } from "@/components/product/product-actions";
 
 import { Gallery } from "@/components/product/gallery";
 import {
@@ -140,26 +140,7 @@ export default async function ProductPage({ params }: PageProps) {
       />
 
       <div className="container">
-        <nav className="pdp-crumbs" aria-label="Breadcrumb">
-          {crumbs.map((c, i) => {
-            const last = i === crumbs.length - 1;
-            return (
-              <span
-                key={c.path}
-                style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
-              >
-                {last ? (
-                  <span className="cur">{c.name}</span>
-                ) : (
-                  <a href={c.path}>{c.name}</a>
-                )}
-                {!last && (
-                  <ChevronRight className="icon-sm" aria-hidden="true" />
-                )}
-              </span>
-            );
-          })}
-        </nav>
+        <ProductActions listingId={listing.id} title={listing.title} />
 
         <div className="pdp-title">
           {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
