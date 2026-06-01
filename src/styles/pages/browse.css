@@ -934,7 +934,6 @@
 
 
 
-
 /* ── Results column: search-within-results bar (top of results) ─────── */
 .brz-results-search {
   display: flex; align-items: center; gap: 10px;
@@ -985,7 +984,6 @@
   transition: background .15s, color .15s, transform .15s;
 }
 .brz-results-search-clear:hover { background: var(--m-bg-3); color: var(--m-ink); transform: rotate(90deg); }
-
 
 /* ── Type filter: nested Equipment tree + flat Attachments ─────────── */
 .bsb-tree-section + .bsb-tree-section {
@@ -1107,7 +1105,6 @@
   gap: 1px;
 }
 
-
 /* ── Currency toggle (above price slider) ───────────────────────── */
 .bsb-cur {
   display: inline-flex;
@@ -1139,7 +1136,6 @@
   background: var(--m-bg-3);
   box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 0 0 1px var(--m-line-2);
 }
-
 
 /* ── Location: cascading 3-column picker ──────────────────────────── */
 .bsb-loc { position: relative; }
@@ -1305,11 +1301,9 @@
 }
 .bsb-loc-chip:hover .bsb-loc-chip-x { background: var(--m-ink); color: var(--m-bg); }
 
-
 /* Location tree — extra third-level indentation */
 .bsb-tree-row.depth-2 { padding-left: 20px; }
 .bsb-tree-row.depth-2 .bsb-tree-check { font-size: 13px; }
-
 
 /* ── Location search — bigger, attractive ───────────────────────── */
 .bsb-loc-search {
@@ -1362,7 +1356,6 @@
   background: rgba(251,184,17,0.22);
   color: var(--m-gold);
 }
-
 
 /* ── Card favorite button (top-right of the listing image) ─────── */
 .lcard-img-wrap { position: relative; }
@@ -1420,7 +1413,6 @@
 /* anchor for the favorite button */
 .feat-card .img { position: relative; }
 
-
 /* ─────────────────────────────────────────────────────────────────────
    Mobile filter trigger + bottom sheet
    ───────────────────────────────────────────────────────────────────── */
@@ -1460,7 +1452,7 @@
   z-index: 149;
   background: rgba(20, 18, 12, 0.72);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+
   border: 0; padding: 0;
   cursor: pointer;
   animation: bsbBackdropFade .2s ease-out;
@@ -1575,7 +1567,6 @@
   }
 }
 
-
 /* Sold listings — dim image only, keep body text crisp */
 .feat-card.is-sold .img img:not(.feat-stamp-sold) {
   filter: grayscale(1) brightness(0.85);
@@ -1583,7 +1574,6 @@
 }
 .feat-card.is-sold .lcard-fav { display: none; }
 .pill.pill-sold { background: rgba(220,38,38,0.95); color: #fff; letter-spacing: 0.04em; }
-
 
 /* ── Brand → models: per-brand model search panel ───────────── */
 .bsb-brand-models {
@@ -1643,7 +1633,6 @@
 }
 .bsb-brand-models-more:hover { color: var(--m-ink); text-decoration: underline; text-underline-offset: 3px; }
 [data-theme="dark"] .bsb-brand-models-more { color: var(--m-gold); }
-
 
 /* ── Row view: category eyebrow above the title ─────── */
 .lrow-cat {
@@ -1709,7 +1698,6 @@
 .lrow.is-sold .lrow-price { text-decoration: line-through; color: var(--m-fg-3); }
 .lrow.is-sold .lrow-fav { display: none; }
 
-
 /* Row view: price under the meta line */
 .lrow-body .lrow-price {
   font-family: var(--font-sans);
@@ -1727,7 +1715,6 @@
   margin-left: 2px;
 }
 .lrow-side { display: flex; align-items: flex-end; justify-content: flex-end; }
-
 
 /* Row meta: location as a small pill next to brand */
 .lrow-meta {
@@ -1748,10 +1735,8 @@
 }
 .lrow-meta-loc .icon-sm { width: 13px; height: 13px; color: var(--m-fg-2); flex: 0 0 auto; }
 
-
 /* Row meta: model name next to brand */
 .lrow-model { color: var(--m-fg-2); font-weight: inherit; }
-
 
 /* Row listing — 2-column refactor: lrow-side moved inside lrow-body's foot row */
 .lrow-body {
