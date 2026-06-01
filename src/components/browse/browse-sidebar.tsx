@@ -219,7 +219,7 @@ function CategoryGroup({
   );
 }
 
-/* ── Brand — searchable multi-select list ───────────────────── */
+/* ── Brand — searchable list; each brand expands to its models ─ */
 function BrandGroup({
   brands,
   filters,
@@ -231,13 +231,35 @@ function BrandGroup({
 }) {
   const [q, setQ] = useState("");
   const [showAll, setShowAll] = useState(false);
+  // Per-brand UI state (brand id → …): which are expanded, their model search,
+  // and which have their full model list revealed.
+  const [open, setOpen] = useState<Set<number>>(new Set());
+  const [modelQ, setModelQ] = useState<Record<number, string>>({});
+  const [modelsAll, setModelsAll] = useState<Set<number>>(new Set());
 
-  const toggle = (name: string) =>
+  const toggleBrand = (name: string) =>
     apply({
       brands: filters.brands.includes(name)
         ? filters.brands.filter((x) => x !== name)
         : [...filters.brands, name],
     });
+
+  const toggleModel = (id: string) =>
+    apply({
+      models: filters.models.includes(id)
+        ? filters.models.filter((x) => x !== id)
+        : [...filters.models, id],
+    });
+
+  const toggleOpen = (brandId: number) =>
+    setOpen((s) => {
+      const n = new Set(s);
+      if (n.has(brandId)) n.delete(brandId);
+      else n.add(brandId);
+      return n;
+    });
+
+  const selectedCount = filters.brands.length + filters.models.length;
 
   const sorted = useMemo(
     () => [...brands].sort((a, b) => a.name.localeCompare(b.name)),
@@ -252,13 +274,13 @@ function BrandGroup({
   return (
     <SidebarGroup
       label="Brand"
-      count={filters.brands.length}
+      count={selectedCount}
       action={
-        filters.brands.length > 0 ? (
+        selectedCount > 0 ? (
           <button
             type="button"
             className="bsb-group-clear"
-            onClick={() => apply({ brands: [] })}
+            onClick={() => apply({ brands: [], models: [] })}
           >
             Reset
           </button>
@@ -275,15 +297,88 @@ function BrandGroup({
         />
       </div>
       <div className="bsb-tree">
-        {visible.map((b) => (
-          <TreeRow
-            key={b.id}
-            label={b.name}
-            on={filters.brands.includes(b.name)}
-            depth={0}
-            onToggle={() => toggle(b.name)}
-          />
-        ))}
+        {visible.map((b) => {
+          const brandOn = filters.brands.includes(b.name);
+          const models = b.models;
+          const mq = (modelQ[b.id] || "").trim().toLowerCase();
+          const someModel = models.some((m) =>
+            filters.models.includes(String(m.id)),
+          );
+          // A brand auto-expands when it (or one of its models) is selected.
+          const isOpen = open.has(b.id) || brandOn;
+          const matched = mq
+            ? models.filter((m) => m.name.toLowerCase().includes(mq))
+            : modelsAll.has(b.id)
+              ? models
+              : models.slice(0, 6);
+          const moreModels = models.length - matched.length;
+          return (
+            <Fragment key={b.id}>
+              <TreeRow
+                label={b.name}
+                on={brandOn}
+                indeterminate={!brandOn && someModel}
+                depth={0}
+                hasChildren={models.length > 0}
+                expanded={isOpen}
+                onToggle={() => toggleBrand(b.name)}
+                onExpand={() => toggleOpen(b.id)}
+              />
+              {isOpen && models.length > 0 && (
+                <div
+                  className="bsb-tree-subs bsb-brand-models"
+                  role="group"
+                  aria-label={`${b.name} models`}
+                >
+                  <div className="bsb-brand-msearch">
+                    <Search className="icon-sm" aria-hidden="true" />
+                    <input
+                      value={modelQ[b.id] || ""}
+                      onChange={(e) =>
+                        setModelQ((s) => ({ ...s, [b.id]: e.target.value }))
+                      }
+                      placeholder={`Search ${b.name} model…`}
+                      aria-label={`Search ${b.name} models`}
+                    />
+                    {modelQ[b.id] && (
+                      <button
+                        type="button"
+                        className="bsb-brand-msearch-x"
+                        onClick={() => setModelQ((s) => ({ ...s, [b.id]: "" }))}
+                        aria-label="Clear model search"
+                      >
+                        <X className="icon-sm" />
+                      </button>
+                    )}
+                  </div>
+                  {matched.length === 0 && (
+                    <div className="bsb-empty">No matches</div>
+                  )}
+                  {matched.map((m) => (
+                    <TreeRow
+                      key={m.id}
+                      label={m.name}
+                      on={filters.models.includes(String(m.id))}
+                      depth={1}
+                      onToggle={() => toggleModel(String(m.id))}
+                    />
+                  ))}
+                  {!mq && !modelsAll.has(b.id) && moreModels > 0 && (
+                    <button
+                      type="button"
+                      className="bsb-brand-models-more"
+                      onClick={() =>
+                        setModelsAll((s) => new Set(s).add(b.id))
+                      }
+                    >
+                      Show {moreModels} more
+                    </button>
+                  )}
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
         {visible.length === 0 && <div className="bsb-empty">No matches</div>}
       </div>
       {!q && hidden > 0 && (

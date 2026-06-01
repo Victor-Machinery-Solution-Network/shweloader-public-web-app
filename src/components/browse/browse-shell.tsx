@@ -44,7 +44,11 @@ export function BrowseShell({
         onClose={() => setFiltersOpen(false)}
       />
       <section className="brz-results">
-        <BrowseToolbar filters={filters} onOpenFilters={() => setFiltersOpen(true)} />
+        <BrowseToolbar
+          filters={filters}
+          brands={brands}
+          onOpenFilters={() => setFiltersOpen(true)}
+        />
         {children}
       </section>
     </div>

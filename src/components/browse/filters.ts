@@ -24,6 +24,8 @@ export interface BrowseFilters {
   sub: string;
   /** Selected brand names. */
   brands: string[];
+  /** Selected model ids (as strings), from the per-brand model sub-filter. */
+  models: string[];
   /** Selected condition labels. */
   conditions: string[];
   /** Selected location label (state / district / township name). */
@@ -90,6 +92,7 @@ export function parseFilters(sp: RawSearchParams): BrowseFilters {
     category: one(sp.category),
     sub: one(sp.sub),
     brands: many(sp.brand),
+    models: many(sp.model),
     conditions: many(sp.condition),
     location: one(sp.location),
     currency,
@@ -109,6 +112,7 @@ export function buildBrowseHref(f: Partial<BrowseFilters>): string {
   if (f.category) p.set("category", f.category);
   if (f.sub) p.set("sub", f.sub);
   if (f.brands && f.brands.length) p.set("brand", f.brands.join(","));
+  if (f.models && f.models.length) p.set("model", f.models.join(","));
   if (f.conditions && f.conditions.length) p.set("condition", f.conditions.join(","));
   if (f.location) p.set("location", f.location);
   if (f.currency && f.currency !== "MMK") p.set("currency", f.currency);
@@ -185,13 +189,25 @@ export function toListingQuery(
     if (catId != null) query.category_id = catId;
   }
 
-  // First selected brand maps to brand_id; remaining narrowing happens in `search`.
+  // Brand + model are one facet: resolve every selected brand name to its id and
+  // pass all selected brand + model ids as comma-lists (the worker does `IN (…)`,
+  // combining brand and model with OR).
   const searchTerms: string[] = [];
   if (f.brands.length) {
-    const first = f.brands[0].toLowerCase();
-    const brand = catalogs.brands.find((b) => b.name.toLowerCase() === first);
-    if (brand) query.brand_id = brand.id;
-    else searchTerms.push(f.brands[0]);
+    const ids = f.brands
+      .map(
+        (name) =>
+          catalogs.brands.find((b) => b.name.toLowerCase() === name.toLowerCase())
+            ?.id,
+      )
+      .filter((x): x is number => x != null);
+    if (ids.length) query.brand_id = ids.join(",");
+  }
+  if (f.models.length) {
+    const ids = f.models
+      .map((m) => parseInt(m, 10))
+      .filter((n) => Number.isFinite(n));
+    if (ids.length) query.model_id = ids.join(",");
   }
 
   if (f.q.trim()) searchTerms.push(f.q.trim());

@@ -25,5 +25,6 @@ export async function getBrands(): Promise<Brand[]> {
   "use cache";
   cacheLife("days");
   cacheTag(CACHE_TAGS.brands);
-  return apiFetch<ApiBrand[]>("/brands");
+  const data = await apiFetch<ApiBrand[]>("/brands");
+  return data.map((b) => ({ id: b.id, name: b.name, models: b.models ?? [] }));
 }

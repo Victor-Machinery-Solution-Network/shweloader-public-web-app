@@ -117,6 +117,8 @@ export interface ApiCategory {
 export interface ApiBrand {
   id: number;
   name: string;
+  /** Models under this brand (equipment + attachment), for the Browse filter. */
+  models?: { id: number; name: string }[];
 }
 
 export interface ApiCarousel {
@@ -246,6 +248,8 @@ export interface Category {
 export interface Brand {
   id: number;
   name: string;
+  /** Models under this brand (equipment + attachment). Empty if none. */
+  models: { id: number; name: string }[];
 }
 
 export interface Slide {
@@ -287,8 +291,9 @@ export interface ListingQuery {
   type?: "equipment" | "attachment";
   category_id?: number;
   sub_category_id?: number;
-  model_id?: number;
-  brand_id?: number;
+  /** Single id, or comma-separated ids for multi-select (worker does `IN (…)`). */
+  model_id?: number | string;
+  brand_id?: number | string;
   search?: string;
   condition_id?: number;
 }

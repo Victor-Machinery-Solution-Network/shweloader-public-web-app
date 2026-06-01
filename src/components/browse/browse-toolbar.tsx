@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import type { Brand } from "@/lib/api/types";
 import {
   buildBrowseHref,
   CONDITIONS,
@@ -164,7 +165,13 @@ function fmtPrice(v: string): string {
   return n.toLocaleString();
 }
 
-function ActiveFilters({ filters }: { filters: BrowseFilters }) {
+function ActiveFilters({
+  filters,
+  brands,
+}: {
+  filters: BrowseFilters;
+  brands: Brand[];
+}) {
   const router = useRouter();
   const push = (next: Partial<BrowseFilters>) =>
     router.push(buildBrowseHref({ ...filters, ...next, page: 1 }));
@@ -188,6 +195,16 @@ function ActiveFilters({ filters }: { filters: BrowseFilters }) {
       remove: () => push({ brands: filters.brands.filter((x) => x !== b) }),
     }),
   );
+  filters.models.forEach((id) => {
+    const name = brands
+      .flatMap((b) => b.models)
+      .find((m) => String(m.id) === id)?.name;
+    chips.push({
+      key: "mdl:" + id,
+      label: name ?? `Model ${id}`,
+      remove: () => push({ models: filters.models.filter((x) => x !== id) }),
+    });
+  });
   filters.conditions.forEach((id) => {
     const c = CONDITIONS.find((x) => x.id === id);
     chips.push({
@@ -231,6 +248,7 @@ function ActiveFilters({ filters }: { filters: BrowseFilters }) {
             category: "",
             sub: "",
             brands: [],
+            models: [],
             conditions: [],
             location: "",
             priceMin: "",
@@ -294,15 +312,18 @@ function ResultsSearch({ filters }: { filters: BrowseFilters }) {
 /* ── Toolbar — search + filters button + chips + sort + view ── */
 export function BrowseToolbar({
   filters,
+  brands,
   onOpenFilters,
 }: {
   filters: BrowseFilters;
+  brands: Brand[];
   onOpenFilters: () => void;
 }) {
   const activeCount =
     (filters.category ? 1 : 0) +
     (filters.sub ? 1 : 0) +
     filters.brands.length +
+    filters.models.length +
     filters.conditions.length +
     (filters.location ? 1 : 0) +
     (filters.priceMin || filters.priceMax ? 1 : 0);
@@ -324,7 +345,7 @@ export function BrowseToolbar({
           )}
         </button>
         <div className="brz-results-l">
-          <ActiveFilters filters={filters} />
+          <ActiveFilters filters={filters} brands={brands} />
         </div>
         <div className="brz-results-r">
           <SortSelect filters={filters} />

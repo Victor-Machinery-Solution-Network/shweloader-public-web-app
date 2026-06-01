@@ -47,6 +47,7 @@ export async function generateMetadata({
     filters.category ||
     filters.sub ||
     filters.brands.length ||
+    filters.models.length ||
     filters.location ||
     filters.mode === "rent";
 
