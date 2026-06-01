@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.shweloader.com.mm" },
     ],
     formats: ["image/avif", "image/webp"],
+    // Keep optimized images (incl. the hero LCP) warm in Vercel's cache for a year
+    // so first-time visitors don't pay the on-demand re-optimize cold start. Safe
+    // because R2 asset URLs are timestamped — content changes change the URL.
+    minimumCacheTTL: 31536000,
   },
 
   // Trim client bundles for icon-heavy imports.
