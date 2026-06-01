@@ -66,10 +66,11 @@
 
 /* `.container` (max 1280 / 24px gutter) is provided by ui-kit.css. */
 
-/* Big screens: drop the 24px side gutter on the header content so the logo and
-   actions sit at the edges of the 1280 rail (keeps the gutter on mobile). */
+/* Big screens (≥1280px): drop the 24px side gutter on every .container so all
+   content spans the full 1280 rail and the header lines up with page content.
+   The gutter stays on smaller screens so content never touches the edge. */
 @media (min-width: 1280px) {
-  .mh .container {
+  .container {
     padding-inline: 0;
   }
 }
