@@ -26,6 +26,10 @@ export default function NotificationsPage() {
           <span className="cur">Notifications</span>
         </nav>
 
+        <header className="nf-head-block">
+          <h1 className="nf-h1">Notifications</h1>
+        </header>
+
         <Suspense fallback={<NotificationsSkeleton />}>
           <Content />
         </Suspense>
@@ -37,14 +41,7 @@ export default function NotificationsPage() {
 async function Content() {
   const token = await getToken();
   if (!token) {
-    return (
-      <>
-        <header className="nf-head-block">
-          <h1 className="nf-h1">Notifications</h1>
-        </header>
-        <SignedOutPrompt />
-      </>
-    );
+    return <SignedOutPrompt />;
   }
 
   // Authed feed. Shape is UNVERIFIED — treat as loosely typed, guard everything.
@@ -62,13 +59,6 @@ async function Content() {
 
   return (
     <>
-      <header className="nf-head-block">
-        <h1 className="nf-h1">Notifications</h1>
-        {unread.length > 0 && (
-          <span className="nf-h1-badge">{unread.length}</span>
-        )}
-      </header>
-
       {items.length === 0 ? (
         <div className="nf-empty">
           <span className="nf-empty-ic" aria-hidden="true">
@@ -133,9 +123,6 @@ function isUnread(item: NotificationItem): boolean {
 function NotificationsSkeleton() {
   return (
     <>
-      <header className="nf-head-block">
-        <h1 className="nf-h1">Notifications</h1>
-      </header>
       <section className="nf-section" aria-hidden="true">
         <ul className="nf-list">
           {[0, 1, 2].map((i) => (

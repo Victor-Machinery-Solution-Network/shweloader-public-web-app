@@ -133,7 +133,11 @@ export function SavedGrid() {
     <div className="container">
       <div className="brz-grid">
         {listings.map((l) => (
-          <ListingCard key={l.id} listing={l} />
+          <ListingCard
+            key={l.id}
+            listing={l}
+            mode={l.isRent && !l.isSale ? "rent" : "sale"}
+          />
         ))}
       </div>
     </div>

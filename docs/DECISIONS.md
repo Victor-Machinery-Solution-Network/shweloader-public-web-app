@@ -79,6 +79,25 @@ deploy, DNS) was done — see "Needs you" at the bottom.
    falls back to a UI-only state otherwise.
 6. Optional: tighten the CSP in `next.config.ts` with nonces.
 
+## Review (2026-06-01) — fixed vs. deferred
+
+A 5-dimension agent review (correctness, SEO, a11y, perf, fidelity) ran after the build.
+**Fixed:** rent-mode bugs (Saved cards + "You may also like" used sale data), `og:url` now
+absolute, homepage `<title>`/description were missing (buildMetadata fallback), `og:locale`
++ robots `max-image-preview:large` now emitted on every page, product OG image dimensions,
+notifications collapsed to a single `<h1>`, removed a non-design RENT badge on cards.
+
+**Deferred a11y follow-ups (components are mouse- + Escape-operable + focus-visible today):**
+- `browse-sidebar` category tree uses `<button aria-pressed>`; switch to `role="checkbox"` +
+  `aria-checked` (`mixed` for the indeterminate "some children selected" state).
+- `search-card` category mega-menu: add `role="menuitem"` + ArrowUp/Down/Right keyboard nav,
+  and a focus trap on the mobile category/location modals.
+
+**Deferred perf nits:** `promo-popup` could use `next/image` (it renders null without data
+today); `announcement-bar` marquee measurement uses `useLayoutEffect` (could move to
+`useEffect` + rAF). The 18 `react-hooks/set-state-in-effect` lint warnings are SSR-safe
+mount/URL-sync inits (rule downgraded to `warn`).
+
 ## Security notes
 
 - JSON-LD uses `dangerouslySetInnerHTML` with `<`→`<` escaping on server-built,

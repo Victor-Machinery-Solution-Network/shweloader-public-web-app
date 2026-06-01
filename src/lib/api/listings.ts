@@ -62,7 +62,10 @@ export async function getRelatedListings(
   "use cache";
   cacheLife("hours");
   cacheTag(CACHE_TAGS.listings);
-  const data = await apiFetch<ApiListing[]>("/listings/sale", {
+  // Match the listing's own mode so a rent-only product shows rentals, not sales.
+  const endpoint =
+    listing.isRent && !listing.isSale ? "/listings/rent" : "/listings/sale";
+  const data = await apiFetch<ApiListing[]>(endpoint, {
     query: { limit: limit + 1, type: listing.type },
   });
   return data

@@ -75,7 +75,7 @@ export function ListingCard({
           />
         ) : null}
 
-        {(isNew || isRent || isSold) && (
+        {(isNew || isSold) && (
           <div
             style={{
               position: "absolute",
@@ -87,8 +87,9 @@ export function ListingCard({
               gap: 6,
             }}
           >
+            {/* Design uses NEW / SOLD pills only; rent is conveyed by the
+                kind-rent treatment + "/ day" price suffix. */}
             {isNew && <StatusPill variant="new" />}
-            {isRent && <StatusPill variant="rent" />}
             {isSold && <StatusPill variant="sold" />}
           </div>
         )}

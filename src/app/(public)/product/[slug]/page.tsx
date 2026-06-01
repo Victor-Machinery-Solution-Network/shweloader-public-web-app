@@ -84,7 +84,7 @@ export async function generateMetadata({
     .map((img) => assetUrl(img.url ?? img.thumbUrl))
     .filter((u): u is string => !!u)
     .slice(0, 4)
-    .map((url) => ({ url, alt: listing.title }));
+    .map((url) => ({ url, width: 1200, height: 800, alt: listing.title }));
 
   return buildMetadata({
     title: listing.title,

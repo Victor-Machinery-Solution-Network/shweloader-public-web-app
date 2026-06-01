@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/env";
+import { SITE_URL, absoluteUrl } from "@/lib/env";
 
 export const SITE_NAME = "ShweLoader";
 export const DEFAULT_TITLE =
@@ -75,19 +75,37 @@ export interface PageMetaInput {
 export function buildMetadata(input: PageMetaInput = {}): Metadata {
   const { title, description, path, images, type, noindex } = input;
   const canonical = path || undefined;
+  const resolvedDescription = description ?? DEFAULT_DESCRIPTION;
 
   return {
-    title,
-    description,
+    // Pages with a title get the "%s · ShweLoader" template; pages without one
+    // (the homepage) get the full default title verbatim — never an empty <title>.
+    title: title ?? { absolute: DEFAULT_TITLE },
+    description: resolvedDescription,
     alternates: canonical ? { canonical } : undefined,
+    // Per-segment metadata replaces (doesn't deep-merge) the root's openGraph
+    // and robots, so re-state them here to keep og:locale + crawl directives.
     robots: noindex
       ? { index: false, follow: false, nocache: true }
-      : undefined,
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+            "max-video-preview": -1,
+          },
+        },
     openGraph: {
       type: type ?? "website",
+      siteName: SITE_NAME,
       title: title ?? DEFAULT_TITLE,
-      description: description ?? DEFAULT_DESCRIPTION,
-      url: canonical ?? SITE_URL,
+      description: resolvedDescription,
+      url: canonical ? absoluteUrl(canonical) : SITE_URL,
+      locale: "en_MM",
+      alternateLocale: ["my_MM"],
       ...(images ? { images } : {}),
       ...(input.publishedTime
         ? { publishedTime: input.publishedTime }
