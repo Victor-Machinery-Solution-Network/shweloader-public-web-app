@@ -1,0 +1,121 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Phone, X } from "lucide-react";
+
+import { EnquiryForm } from "@/components/product/enquiry-form";
+
+export interface MobileBarProps {
+  title: string;
+  listingId: number;
+  /** Pre-split price parts for the sticky bar. */
+  priceUnits: string;
+  priceNum: string;
+  priceSuffix: string;
+  kindLabel: string;
+  kind: "sale" | "rent" | "both";
+  /** Visible dealer phone (masking honoured by caller), or null. */
+  phone: string | null;
+}
+
+/**
+ * Mobile-only sticky action bar (price + "Enquiry now") plus a bottom sheet
+ * holding the enquiry form. Both are hidden on desktop by the design CSS.
+ */
+export function MobileBar({
+  title,
+  listingId,
+  priceUnits,
+  priceNum,
+  priceSuffix,
+  kindLabel,
+  kind,
+  phone,
+}: MobileBarProps) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  return (
+    <>
+      <div className="pdp-mbar" role="region" aria-label="Contact seller">
+        <div className="pdp-mbar-price">
+          <span className={`pdp-mbar-kind pdp-mbar-kind--${kind}`}>
+            {kindLabel}
+          </span>
+          <span className="pdp-mbar-amount">
+            {priceUnits && <span className="pdp-mbar-units">{priceUnits}</span>}
+            <span className="pdp-mbar-num tnum">{priceNum}</span>
+            {priceSuffix && <span className="pdp-mbar-suf">{priceSuffix}</span>}
+          </span>
+        </div>
+        <div className="pdp-mbar-actions">
+          {phone && (
+            <a
+              href={`tel:${phone.replace(/\s+/g, "")}`}
+              className="pdp-mbar-call"
+              aria-label="Call dealer"
+            >
+              <Phone aria-hidden="true" />
+            </a>
+          )}
+          <button
+            type="button"
+            className="pdp-mbar-cta"
+            onClick={() => setOpen(true)}
+          >
+            Enquiry now
+          </button>
+        </div>
+      </div>
+
+      <div
+        className={"pdp-sheet-root" + (open ? " is-open" : "")}
+        aria-hidden={!open}
+      >
+        <div className="pdp-sheet-scrim" onClick={() => setOpen(false)} />
+        <div
+          className="pdp-sheet"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Send enquiry"
+        >
+          <div className="pdp-sheet-grab" onClick={() => setOpen(false)} />
+          <div className="pdp-sheet-head">
+            <div className="pdp-sheet-titles">
+              <div className="pdp-sheet-title">Send enquiry</div>
+              <div className="pdp-sheet-sub">{title}</div>
+            </div>
+            <button
+              type="button"
+              className="pdp-sheet-x"
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+            >
+              <X className="icon-sm" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="pdp-sheet-body">
+            <EnquiryForm
+              title={title}
+              listingId={listingId}
+              phone={phone}
+              autoFocus={open}
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

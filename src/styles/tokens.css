@@ -1,0 +1,185 @@
+/* =============================================================
+   ShweLoader — Colors & Type
+   "Shwe" (ရွှေ) means "gold" in Burmese.
+   ============================================================= */
+
+/* ---------- Webfonts ----------------------------------------------
+   Loaded via next/font (self-hosted) in src/app/fonts.ts. The original
+   Google Fonts @import was removed to avoid render-blocking external CSS. */
+
+:root {
+  /* ---------- Brand --------------------------------------- */
+  --shwe-gold:        #fbb811;   /* Primary — warm saturated gold */
+  --shwe-gold-600:    #e0a40c;
+  --shwe-gold-700:    #b88408;
+  --shwe-gold-100:    #fff0c8;   /* Cream tint, user chat bubble  */
+  --shwe-gold-50:     #fff8e3;
+
+  /* ---------- Surfaces ------------------------------------ */
+  --bg:               #f5f5f3;   /* Warm off-white                 */
+  --bg-raised:        #ffffff;   /* Cards on bg                    */
+  --bg-sunken:        #ecebe6;   /* Inputs / wells                 */
+
+  /* ---------- Warm-grey neutrals -------------------------- */
+  --neutral-0:        #ffffff;
+  --neutral-50:       #f7f6f3;
+  --neutral-100:      #efeeea;
+  --neutral-200:      #e3e1db;
+  --neutral-300:      #cbc8bf;
+  --neutral-400:      #a8a499;
+  --neutral-500:      #7d7a72;
+  --neutral-600:      #5a5852;
+  --neutral-700:      #403f3a;
+  --neutral-800:      #26261f;   /* Deep warm charcoal             */
+  --neutral-900:      #121212;   /* Dark mode bg                   */
+
+  /* ---------- Foreground tokens --------------------------- */
+  --fg-1:             var(--neutral-800); /* Primary text          */
+  --fg-2:             var(--neutral-600); /* Secondary text        */
+  --fg-3:             var(--neutral-500); /* Tertiary / placeholder*/
+  --fg-on-gold:       #1a1a14;            /* Text on gold          */
+  --fg-on-dark:       #f5f5f3;
+
+  /* ---------- Borders / dividers -------------------------- */
+  --border:           #e3e1db;
+  --border-strong:    #cbc8bf;
+
+  /* ---------- Semantic ------------------------------------ */
+  --success:          #1f8a4c;
+  --success-bg:       #e6f4ec;
+  --warning:          #c97a0a;
+  --warning-bg:       #fdf1dc;
+  --danger:           #c4321a;
+  --danger-bg:        #fbe7e2;
+  --info:             #1f6feb;
+  --info-bg:          #e2eefd;
+
+  /* ---------- Listing / marketplace ----------------------- */
+  --price:            #1a1a14;
+  --tag-buy:          #1f6feb;
+  --tag-rent:         #1f8a4c;
+  --tag-sell:         #c97a0a;
+
+  /* ---------- Chat bubble --------------------------------- */
+  --chat-user-bg:     var(--shwe-gold-100);
+  --chat-other-bg:    var(--neutral-100);
+
+  /* ---------- Radii --------------------------------------- */
+  --radius-xs:        2px;
+  --radius-sm:        6px;   /* inputs, small chips                */
+  --radius-md:        10px;
+  --radius-lg:        14px;  /* cards                              */
+  --radius-xl:        18px;  /* large cards                        */
+  --radius-pill:      9999px;/* pills, avatars                     */
+
+  /* ---------- Spacing scale (4px base) -------------------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---------- Shadows (warm, soft) ------------------------ */
+  --shadow-sm:  0 1px 2px rgba(38, 38, 31, 0.06);
+  --shadow-md:  0 2px 6px rgba(38, 38, 31, 0.08), 0 1px 2px rgba(38, 38, 31, 0.05);
+  --shadow-lg:  0 8px 24px rgba(38, 38, 31, 0.10), 0 2px 6px rgba(38, 38, 31, 0.06);
+  --shadow-xl:  0 16px 40px rgba(38, 38, 31, 0.14);
+  --shadow-focus: 0 0 0 3px rgba(251, 184, 17, 0.35);
+
+  /* ---------- Type ---------------------------------------- */
+  --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-my:   'Noto Sans Myanmar', 'Poppins', sans-serif;     /* Burmese  */
+  --font-mono: ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, monospace;
+
+  --fs-12: 12px; --lh-12: 16px;
+  --fs-14: 14px; --lh-14: 20px;
+  --fs-16: 16px; --lh-16: 24px;
+  --fs-18: 18px; --lh-18: 26px;
+  --fs-20: 20px; --lh-20: 28px;
+  --fs-24: 24px; --lh-24: 32px;
+  --fs-30: 30px; --lh-30: 38px;
+  --fs-36: 36px; --lh-36: 44px;
+  --fs-48: 48px; --lh-48: 56px;
+}
+
+/* ---------- Dark mode overrides -------------------------- */
+.dark, [data-theme="dark"] {
+  --bg:               #121212;
+  --bg-raised:        #1c1c1a;
+  --bg-sunken:        #0e0e0d;
+
+  --fg-1:             #f5f5f3;
+  --fg-2:             #b8b6ad;
+  --fg-3:             #7d7a72;
+
+  --border:           #2c2c28;
+  --border-strong:    #403f3a;
+
+  --chat-other-bg:    #26261f;
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md:  0 2px 6px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-lg:  0 8px 24px rgba(0,0,0,0.55);
+}
+
+/* ---------- Semantic typography -------------------------- */
+html { color: var(--fg-1); background: var(--bg); font-family: var(--font-sans); }
+
+.h-display {
+  font-size: var(--fs-48); line-height: var(--lh-48);
+  font-weight: 700; letter-spacing: -0.02em; color: var(--fg-1);
+}
+.h1 {
+  font-size: var(--fs-36); line-height: var(--lh-36);
+  font-weight: 700; letter-spacing: -0.018em; color: var(--fg-1);
+}
+.h2 {
+  font-size: var(--fs-30); line-height: var(--lh-30);
+  font-weight: 600; letter-spacing: -0.015em; color: var(--fg-1);
+}
+.h3 {
+  font-size: var(--fs-24); line-height: var(--lh-24);
+  font-weight: 600; letter-spacing: -0.01em; color: var(--fg-1);
+}
+.h4 {
+  font-size: var(--fs-20); line-height: var(--lh-20);
+  font-weight: 600; color: var(--fg-1);
+}
+.h5 {
+  font-size: var(--fs-16); line-height: var(--lh-16);
+  font-weight: 600; color: var(--fg-1);
+}
+
+.p-lg  { font-size: var(--fs-18); line-height: var(--lh-18); color: var(--fg-1); }
+.p     { font-size: var(--fs-16); line-height: var(--lh-16); color: var(--fg-1); }
+.p-sm  { font-size: var(--fs-14); line-height: var(--lh-14); color: var(--fg-2); }
+.p-xs  { font-size: var(--fs-12); line-height: var(--lh-12); color: var(--fg-2); }
+
+.label {
+  font-size: var(--fs-12); line-height: var(--lh-12);
+  font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--fg-2);
+}
+
+.price {
+  font-size: var(--fs-20); line-height: var(--lh-20);
+  font-weight: 700; color: var(--price);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.code, code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-14); line-height: var(--lh-14);
+  background: var(--bg-sunken);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* Burmese text helper */
+.my { font-family: var(--font-my); }

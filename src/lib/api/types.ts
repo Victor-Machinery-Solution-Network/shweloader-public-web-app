@@ -1,0 +1,294 @@
+/* ============================================================================
+   App REST API — raw response types (from the live staging worker) + the
+   normalized view-models the UI consumes. Endpoints vary in shape (e.g.
+   /listings/featured returns `model_name`, /listings/sale returns
+   `equipment_model_name`), so every raw field is optional and the normalizers
+   (./normalize.ts) collapse them into a single stable shape.
+   ============================================================================ */
+
+// ── Raw ──────────────────────────────────────────────────────────────────────
+
+export interface ApiImage {
+  url: string;
+  thumb_url?: string | null;
+  blurhash?: string | null;
+  focal_x?: number | null;
+  focal_y?: number | null;
+}
+
+export interface ApiListing {
+  id: number;
+  description?: string | null;
+  thumbnail_url?: string | null;
+  thumbnail_sm_url?: string | null;
+  thumbnail_blurhash?: string | null;
+  thumbnail_focal_x?: number | null;
+  thumbnail_focal_y?: number | null;
+
+  // normalized names (featured)
+  model_name?: string | null;
+  category_name?: string | null;
+  sub_category_name?: string | null;
+
+  // equipment / attachment variants (sale, rent, detail)
+  equipment_model_name?: string | null;
+  equipment_category_name?: string | null;
+  equipment_sub_category_name?: string | null;
+  equipment_pdf_url?: string | null;
+  attachment_model_name?: string | null;
+  attachment_category_name?: string | null;
+  attachment_pdf_url?: string | null;
+
+  brand_name?: string | null;
+  condition_name?: string | null;
+  type?: "equipment" | "attachment" | string | null;
+
+  sale_listing_id?: number | null;
+  sale_mmk_price?: number | null;
+  sale_usd_price?: number | null;
+  sale_hide_price?: number | null;
+  sale_display_currency?: string | null;
+  sale_custom_id?: string | null;
+
+  rent_listing_id?: number | null;
+  rent_mmk_price?: number | null;
+  rent_usd_price?: number | null;
+  rent_hide_price?: number | null;
+  rent_display_currency?: string | null;
+  rent_rental_unit?: string | null;
+  rent_custom_id?: string | null;
+
+  is_sold_out?: number | null;
+  is_rented?: number | null;
+
+  township_name?: string | null;
+  district_name?: string | null;
+  state_region_name?: string | null;
+  address?: string | null;
+
+  hide_partner?: number | null;
+  seller_name?: string | null;
+  seller_company?: string | null;
+  seller_phone?: string | null;
+
+  custom_fields?: string | null;
+  created_at?: string | null;
+  display_order?: string | null;
+  images?: ApiImage[] | null;
+}
+
+export interface ApiBlog {
+  id: number;
+  title: string;
+  content: string;
+  author?: string | null;
+  image?: string | null;
+  image_thumb?: string | null;
+  image_blurhash?: string | null;
+  focal_x?: number | null;
+  focal_y?: number | null;
+  date?: string | null;
+  read_time?: number | null;
+  created_at?: string | null;
+  category?: string | null;
+}
+
+export interface ApiBlogCategory {
+  id: number;
+  name: string;
+}
+
+export interface ApiSubCategory {
+  id: number;
+  parent_id: number;
+  name: string;
+  image_url?: string | null;
+  display_order?: string | null;
+}
+
+export interface ApiCategory {
+  id: number;
+  name: string;
+  image_url?: string | null;
+  display_order?: string | null;
+  sub_categories?: ApiSubCategory[];
+}
+
+export interface ApiBrand {
+  id: number;
+  name: string;
+}
+
+export interface ApiCarousel {
+  carousel_id: number;
+  image_id: number;
+  display_order?: string | null;
+  link_url?: string | null;
+  image_url: string;
+  thumb_url?: string | null;
+  blurhash?: string | null;
+  focal_x?: number | null;
+  focal_y?: number | null;
+}
+
+export interface ApiAnnouncement {
+  id: number;
+  text: string;
+  display_order?: string | null;
+}
+
+export interface ApiTownship {
+  id: number;
+  name: string;
+  name_my?: string | null;
+}
+export interface ApiDistrict {
+  id: number;
+  name: string;
+  name_my?: string | null;
+  townships?: ApiTownship[];
+}
+export interface ApiState {
+  id: number;
+  name: string;
+  name_my?: string | null;
+  districts?: ApiDistrict[];
+}
+
+// ── Normalized view-models ──────────────────────────────────────────────────
+
+export interface ListingImage {
+  url: string | null;
+  thumbUrl: string | null;
+  blurhash: string | null;
+  focalX: number;
+  focalY: number;
+}
+
+export interface CustomField {
+  key: string;
+  label: string;
+  type: string;
+  value: string;
+}
+
+export interface ListingPrice {
+  mmk: number | null;
+  usd: number | null;
+  hide: boolean;
+  currency: string | null;
+  customId: string | null;
+}
+
+export interface Listing {
+  id: number;
+  title: string;
+  brand: string | null;
+  category: string | null;
+  subCategory: string | null;
+  condition: string | null;
+  type: "equipment" | "attachment";
+  description: string | null;
+  thumbnail: ListingImage;
+  images: ListingImage[];
+  isSale: boolean;
+  isRent: boolean;
+  sale: ListingPrice | null;
+  rent: (ListingPrice & { unit: string | null }) | null;
+  isSoldOut: boolean;
+  isRented: boolean;
+  location: {
+    township: string | null;
+    district: string | null;
+    state: string | null;
+    address: string | null;
+  };
+  seller: {
+    name: string | null;
+    company: string | null;
+    phone: string | null;
+    hidden: boolean;
+  } | null;
+  pdfUrl: string | null;
+  customFields: CustomField[];
+  createdAt: string | null;
+}
+
+export interface BlogPost {
+  id: number;
+  title: string;
+  content: string;
+  author: string | null;
+  cover: {
+    url: string | null;
+    blurhash: string | null;
+    focalX: number;
+    focalY: number;
+  };
+  date: string | null;
+  readTime: number;
+  category: string | null;
+  createdAt: string | null;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  image: string | null;
+  subCategories: {
+    id: number;
+    parentId: number;
+    name: string;
+    image: string | null;
+  }[];
+}
+
+export interface Brand {
+  id: number;
+  name: string;
+}
+
+export interface Slide {
+  id: number;
+  href: string | null;
+  image: string | null;
+  blurhash: string | null;
+  focalX: number;
+  focalY: number;
+}
+
+export interface Announcement {
+  id: number;
+  text: string;
+}
+
+export interface Township {
+  id: number;
+  name: string;
+  nameMy: string | null;
+}
+export interface District {
+  id: number;
+  name: string;
+  nameMy: string | null;
+  townships: Township[];
+}
+export interface StateRegion {
+  id: number;
+  name: string;
+  nameMy: string | null;
+  districts: District[];
+}
+
+/** Listing browse/query params accepted by /listings/sale|rent. */
+export interface ListingQuery {
+  limit?: number;
+  offset?: number;
+  type?: "equipment" | "attachment";
+  category_id?: number;
+  sub_category_id?: number;
+  model_id?: number;
+  brand_id?: number;
+  search?: string;
+  condition_id?: number;
+}

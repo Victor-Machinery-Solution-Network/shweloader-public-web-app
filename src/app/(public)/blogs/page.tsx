@@ -1,0 +1,51 @@
+import Link from "next/link";
+
+import { BlogIndex } from "@/components/blog/blog-index";
+import { getBlogs, getBlogCategories } from "@/lib/api/blogs";
+import { JsonLd, breadcrumbSchema } from "@/lib/seo/jsonld";
+import { buildMetadata } from "@/lib/seo/metadata";
+
+import "@/styles/pages/blog.css";
+
+export const metadata = buildMetadata({ title: "Blog", path: "/blogs" });
+
+/**
+ * Blog index (chat6 "filter-first" variant): a page head (breadcrumb + title),
+ * then a filter toolbar — horizontally-scrolling category rail from
+ * `getBlogCategories()` + free-text search — over a single uniform editorial
+ * grid of `BlogCard`. No lead/featured story, no newsletter strip.
+ */
+export default async function BlogsPage() {
+  const [posts, categories] = await Promise.all([
+    getBlogs(),
+    getBlogCategories(),
+  ]);
+
+  return (
+    <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Blog", path: "/blogs" },
+        ])}
+      />
+
+      <section className="bx-pagehead" data-screen-label="Hero">
+        <div className="container">
+          <nav className="bx-crumbs" aria-label="Breadcrumb">
+            <Link href="/">Home</Link>
+            <span className="bx-crumbs-sep">/</span>
+            <span>Blog</span>
+          </nav>
+          <h1 className="bx-h1">The ShweLoader Blog</h1>
+        </div>
+      </section>
+
+      <section className="bx-archive-wrap" data-screen-label="Stories">
+        <div className="container">
+          <BlogIndex posts={posts} categories={categories} />
+        </div>
+      </section>
+    </>
+  );
+}

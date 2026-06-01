@@ -1,0 +1,67 @@
+/* ============================================================================
+   ShweLoader — global stylesheet
+   Tailwind v4 + the ported Claude Design system (tokens.css / ui-kit.css /
+   app.css). The design CSS is the visual source of truth; Tailwind provides
+   utilities + preflight. Design classes are unlayered so they win over
+   Tailwind's layered utilities where they overlap.
+   ============================================================================ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Design system (ported, proven, 60fps-tuned, dark-mode + a11y passed) */
+@import "../styles/tokens.css";
+@import "../styles/ui-kit.css";
+@import "../styles/app.css";
+
+/* Dark mode is driven by next-themes via [data-theme="dark"] on <html>,
+   which matches the design CSS's own dark selector. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------------------------------------------------------------------------
+   Wire the self-hosted next/font faces into the design's font tokens.
+   This block follows the @imports, so it overrides the font-family vars that
+   tokens.css / app.css declare with literal "Poppins" names.
+   --------------------------------------------------------------------------- */
+:root {
+  --font-sans: var(--font-poppins), "Noto Sans Myanmar", ui-sans-serif,
+    system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-my: var(--font-noto-myanmar), var(--font-poppins), sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "JetBrains Mono", Menlo,
+    monospace;
+
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------------------
+   Tailwind theme bridge — expose the most-used brand tokens as Tailwind
+   utilities (bg-bg, text-ink, text-gold, border-line, ...) for any component
+   authored with utility classes. The design's --m-* tokens stay the source.
+   --------------------------------------------------------------------------- */
+@theme inline {
+  --color-bg: var(--m-bg);
+  --color-bg-2: var(--m-bg-2);
+  --color-bg-3: var(--m-bg-3);
+  --color-ink: var(--m-ink);
+  --color-ink-2: var(--m-ink-2);
+  --color-fg-2: var(--m-fg-2);
+  --color-fg-3: var(--m-fg-3);
+  --color-line: var(--m-line);
+  --color-line-2: var(--m-line-2);
+  --color-gold: var(--m-gold);
+  --color-gold-soft: var(--m-gold-soft);
+  --color-green: var(--m-green);
+  --color-danger: var(--m-danger);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+}
+
+/* `.container` (max 1280 / 24px gutter) is provided by ui-kit.css. */

@@ -1,0 +1,110 @@
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/env";
+
+export const SITE_NAME = "ShweLoader";
+export const DEFAULT_TITLE =
+  "ShweLoader — Myanmar's Heavy Equipment Marketplace";
+export const DEFAULT_DESCRIPTION =
+  "Buy, sell, and rent excavators, wheel loaders, cranes, and bulldozers across Myanmar. MMK and USD pricing, on-site viewings, trusted dealers.";
+
+export const baseMetadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: { default: DEFAULT_TITLE, template: "%s · ShweLoader" },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  keywords: [
+    "heavy equipment",
+    "machinery",
+    "Myanmar",
+    "excavator",
+    "wheel loader",
+    "crane",
+    "bulldozer",
+    "dump truck",
+    "for sale",
+    "for rent",
+    "ShweLoader",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    url: SITE_URL,
+    locale: "en_MM",
+    alternateLocale: ["my_MM"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@shweloader",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  formatDetection: { telephone: false },
+};
+
+export interface PageMetaInput {
+  title?: string;
+  description?: string;
+  /** Path relative to the site root, e.g. "/browse". */
+  path?: string;
+  images?: { url: string; width?: number; height?: number; alt?: string }[];
+  type?: "website" | "article";
+  noindex?: boolean;
+  publishedTime?: string;
+  authors?: string[];
+  section?: string;
+}
+
+/** Build per-page metadata that inherits the base + sets canonical + OG. */
+export function buildMetadata(input: PageMetaInput = {}): Metadata {
+  const { title, description, path, images, type, noindex } = input;
+  const canonical = path || undefined;
+
+  return {
+    title,
+    description,
+    alternates: canonical ? { canonical } : undefined,
+    robots: noindex
+      ? { index: false, follow: false, nocache: true }
+      : undefined,
+    openGraph: {
+      type: type ?? "website",
+      title: title ?? DEFAULT_TITLE,
+      description: description ?? DEFAULT_DESCRIPTION,
+      url: canonical ?? SITE_URL,
+      ...(images ? { images } : {}),
+      ...(input.publishedTime
+        ? { publishedTime: input.publishedTime }
+        : {}),
+      ...(input.authors ? { authors: input.authors } : {}),
+      ...(input.section ? { section: input.section } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: title ?? DEFAULT_TITLE,
+      description: description ?? DEFAULT_DESCRIPTION,
+      ...(images ? { images: images.map((i) => i.url) } : {}),
+    },
+  };
+}
+
+/** Metadata for the authed app area — never indexed. */
+export const noindexMetadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
