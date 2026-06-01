@@ -1880,6 +1880,8 @@ html, body {
 .mh-ann-mega {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px;
+  padding-left: 12px;
+  box-sizing: content-box;
   color: var(--m-ink);
   flex-shrink: 0;
   transform-origin: 30% 70%;

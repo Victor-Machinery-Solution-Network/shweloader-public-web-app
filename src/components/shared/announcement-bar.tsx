@@ -8,7 +8,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { ChevronRight, Volume2 } from "lucide-react";
+import { Volume2 } from "lucide-react";
 
 import type { Announcement } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -27,12 +27,10 @@ type MarqueeVars = CSSProperties & {
  * Rotating announcement reel for the homepage header.
  *
  * Ports the design's `AnnouncementBar` (`.mh-ann*` rules in homepage/styles.css):
- * an odometer-style vertical reel of admin messages with a speaker icon, a
- * magazine-style fraction counter, a manual "next" control and a progress
- * underline that re-fills on each step. Messages that overflow the stage gently
- * marquee via the `.is-marquee` class. Auto-rotation pauses when the pointer is
- * over the bar and stops entirely under `prefers-reduced-motion: reduce` (the
- * reel transition + progress animation are also disabled there by the CSS).
+ * an odometer-style vertical reel of admin messages with a speaker icon.
+ * Messages that overflow the stage gently marquee via the `.is-marquee` class.
+ * Auto-rotation pauses when the pointer is over the bar and stops entirely under
+ * `prefers-reduced-motion: reduce`.
  *
  * Announcement text is admin-authored catalog content, so it is rendered as-is
  * (not run through i18n). Renders nothing when there are no announcements.
@@ -136,29 +134,6 @@ export function AnnouncementBar({ announcements }: { announcements: Announcement
             })}
           </div>
         </div>
-
-        {count > 1 && (
-          <>
-            <span
-              className="mh-ann-counter"
-              aria-label={`Announcement ${i + 1} of ${count}`}
-            >
-              <span className="mh-ann-counter-current">{i + 1}</span>
-              <span className="mh-ann-counter-sep">/</span>
-              <span className="mh-ann-counter-total">{count}</span>
-            </span>
-
-            <button
-              type="button"
-              className="mh-ann-next"
-              onClick={advance}
-              aria-label="Next announcement"
-            >
-              <ChevronRight className="icon-sm" aria-hidden="true" />
-            </button>
-          </>
-        )}
-
       </div>
     </div>
   );
