@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Headset, Image as ImageIcon, Maximize2, X } from "lucide-react";
+import { ArrowRight, Image as ImageIcon, Maximize2, X } from "lucide-react";
+import { HeadsetIcon } from "@/components/shared/icons/headset-icon";
 
 import { useAuthUI } from "@/components/providers/auth-ui";
 import { useI18n } from "@/components/providers/language-provider";
@@ -261,7 +262,7 @@ export function LiveChat() {
             <div className="lc-gate-hero" aria-hidden="true">
               <span className="lc-gate-halo" />
               <span className="lc-gate-icon">
-                <Headset />
+                <HeadsetIcon />
               </span>
             </div>
 
@@ -299,7 +300,7 @@ export function LiveChat() {
         aria-label={open ? "Close chat" : "Open live chat"}
       >
         <span className="lc-fab-icon lc-fab-chat" aria-hidden="true">
-          <Headset />
+          <HeadsetIcon />
         </span>
         {!open && <span className="lc-fab-status" aria-hidden="true" />}
         <span className="lc-fab-icon lc-fab-close" aria-hidden="true">
