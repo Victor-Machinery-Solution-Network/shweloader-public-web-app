@@ -12,7 +12,11 @@ import {
 } from "@/lib/api/taxonomy";
 import { getLocations } from "@/lib/api/locations";
 import { buildMetadata } from "@/lib/seo/metadata";
-import { JsonLd, breadcrumbSchema, itemListSchema } from "@/lib/seo/jsonld";
+import {
+  JsonLd,
+  breadcrumbSchema,
+  collectionPageSchema,
+} from "@/lib/seo/jsonld";
 import { BrowseShell } from "@/components/browse/browse-shell";
 import { BuyRentToggle } from "@/components/browse/browse-toolbar";
 import { Results } from "@/components/browse/results";
@@ -123,15 +127,51 @@ async function BrowseContent({
 
   const pageTitle = "Browse listings";
 
+  // Filter-aware structured data: a breadcrumb trail that reflects the active
+  // category/sub-category, and a CollectionPage describing the current view.
+  const hasFilters = Boolean(
+    filters.q ||
+      filters.category ||
+      filters.sub ||
+      filters.brands.length ||
+      filters.models.length ||
+      filters.location ||
+      filters.mode === "rent",
+  );
+  const crumbs: { name: string; path: string }[] = [
+    { name: "Home", path: "/" },
+    { name: "Browse", path: "/browse" },
+  ];
+  if (filters.category) {
+    crumbs.push({
+      name: filters.category,
+      path: `/browse?category=${encodeURIComponent(filters.category)}`,
+    });
+  }
+  if (filters.sub) {
+    const base = filters.category
+      ? `category=${encodeURIComponent(filters.category)}&`
+      : "";
+    crumbs.push({
+      name: filters.sub,
+      path: `/browse?${base}sub=${encodeURIComponent(filters.sub)}`,
+    });
+  }
+  const collectionName = hasFilters
+    ? titleFromFilters(filters)
+    : "Browse heavy equipment";
+
   return (
     <div className="brz" data-screen-label="Browse">
       <JsonLd
         data={[
-          breadcrumbSchema([
-            { name: "Home", path: "/" },
-            { name: "Browse", path: "/browse" },
-          ]),
-          itemListSchema(listings),
+          breadcrumbSchema(crumbs),
+          collectionPageSchema({
+            name: collectionName,
+            path: "/browse",
+            listings,
+            description: `${collectionName} on ShweLoader — Myanmar's heavy equipment marketplace, with MMK and USD pricing.`,
+          }),
         ]}
       />
 

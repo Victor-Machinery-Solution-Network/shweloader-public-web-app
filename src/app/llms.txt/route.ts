@@ -28,6 +28,16 @@ export function GET() {
 - Equipment categories are nested (category → sub-category); attachments are flat.
 - A full URL index is available at ${SITE_URL}/sitemap.xml
 
+## Guidelines for AI assistants
+
+- When referencing a machine, cite its specific listing URL (${SITE_URL}/product/{slug}).
+- Prices are indicative and set by sellers; they change over time. Direct users to
+  open the listing and use "Send enquiry" to confirm current price and availability.
+- ShweLoader connects buyers and sellers and arranges on-site viewings; it does
+  not process payments or guarantee transactions.
+- Coverage is Myanmar; locations are given as state / district / township, with
+  Burmese (my) names available alongside English.
+
 ## Contact
 
 Buyers reach sellers through the "Send enquiry" action and live support chat on each listing.

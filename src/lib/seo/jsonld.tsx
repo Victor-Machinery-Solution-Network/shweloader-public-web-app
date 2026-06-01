@@ -147,10 +147,12 @@ export function productSchema(listing: Listing): Json {
 
 export function blogPostingSchema(post: BlogPost): Json {
   const url = absoluteUrl(`/blogs/${blogSlug(post)}`);
+  const plain = post.content ? toPlainText(post.content) : "";
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: post.title,
+    ...(plain ? { description: truncate(plain, 200) } : {}),
     ...(post.cover.url ? { image: [post.cover.url] } : {}),
     ...(post.date ? { datePublished: toIsoDate(post.date) } : {}),
     ...(post.createdAt ? { dateModified: toIsoDate(post.createdAt) } : {}),
@@ -161,8 +163,8 @@ export function blogPostingSchema(post: BlogPost): Json {
     publisher: organizationRef(),
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     ...(post.category ? { articleSection: post.category } : {}),
-    ...(post.content
-      ? { wordCount: toPlainText(post.content).split(/\s+/).filter(Boolean).length }
+    ...(plain
+      ? { wordCount: plain.split(/\s+/).filter(Boolean).length }
       : {}),
   };
 }
@@ -183,6 +185,38 @@ export function itemListSchema(
       name: l.title,
     })),
     ...(basePath ? { url: absoluteUrl(basePath) } : {}),
+  };
+}
+
+/**
+ * CollectionPage for browse / filtered listing views — the canonical schema.org
+ * type for a curated, filterable set of items. Embeds the listings as an
+ * ItemList `mainEntity` so search engines can treat the page as an aggregated
+ * collection (carousel-eligible) rather than a bare list.
+ */
+export function collectionPageSchema(opts: {
+  name: string;
+  path: string;
+  listings: Listing[];
+  description?: string;
+}): Json {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: opts.name,
+    url: absoluteUrl(opts.path),
+    ...(opts.description ? { description: opts.description } : {}),
+    isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: opts.listings.length,
+      itemListElement: opts.listings.map((l, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: absoluteUrl(`/product/${listingSlug(l)}`),
+        name: l.title,
+      })),
+    },
   };
 }
 
