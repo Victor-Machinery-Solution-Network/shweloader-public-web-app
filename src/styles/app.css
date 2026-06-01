@@ -954,7 +954,7 @@ html, body {
 .mh-lang-opt {
   position: relative; z-index: 1;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  height: 36px; padding: 0 10px;
+  height: 33px; padding: 0 10px;
   border: 0; border-radius: 9999px;
   background: transparent; cursor: pointer;
   font-family: var(--font-sans); font-size: 12px; font-weight: 600;
