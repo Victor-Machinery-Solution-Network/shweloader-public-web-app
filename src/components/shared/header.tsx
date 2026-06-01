@@ -130,7 +130,7 @@ export function Header() {
         >
           <ThemeToggle />
           <Link href="/saved" className="mh-icon" aria-label={t("actions.saved")}>
-            <Heart strokeWidth={1.75} />
+            <Heart size={20} strokeWidth={1.75} />
           </Link>
           <LangSwitch />
           <span className="mh-divider" />
