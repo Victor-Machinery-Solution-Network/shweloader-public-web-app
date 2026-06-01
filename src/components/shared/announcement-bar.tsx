@@ -43,8 +43,6 @@ export function AnnouncementBar({ announcements }: { announcements: Announcement
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
-  // Re-mounts the progress fill on each step so its CSS animation restarts.
-  const [tick, setTick] = useState(0);
   // Overflow distance (px) of the active message — 0 means it fits, no marquee.
   const [mq, setMq] = useState(0);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -60,7 +58,6 @@ export function AnnouncementBar({ announcements }: { announcements: Announcement
 
   const advance = useCallback(() => {
     setI((n) => (count ? (n + 1) % count : 0));
-    setTick((t) => t + 1);
   }, [count]);
 
   // Auto-advance, unless paused, reduced-motion, or there's only one message.
@@ -162,15 +159,6 @@ export function AnnouncementBar({ announcements }: { announcements: Announcement
           </>
         )}
 
-        <span className="mh-ann-progress" aria-hidden="true">
-          {!reduceMotion && count > 1 && (
-            <span
-              key={tick}
-              className="mh-ann-progress-fill"
-              style={{ animationDuration: `${ANN_DURATION}ms` }}
-            />
-          )}
-        </span>
       </div>
     </div>
   );
