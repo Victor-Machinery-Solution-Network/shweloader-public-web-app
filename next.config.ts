@@ -36,6 +36,11 @@ const nextConfig: NextConfig = {
   // Trim client bundles for icon-heavy imports.
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    // Inline the global stylesheet into <style> in the <head> on first load
+    // (production only) instead of a render-blocking <link> — removes the
+    // ~1s render-blocking CSS round-trip that delayed FCP/LCP. Prerendered
+    // pages still use <link> for client-side nav to avoid RSC duplication.
+    inlineCss: true,
   },
 
   // Use the native sharp pipeline for next/image optimization.

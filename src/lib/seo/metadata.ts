@@ -76,6 +76,17 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
   const { title, description, path, images, type, noindex } = input;
   const canonical = path || undefined;
   const resolvedDescription = description ?? DEFAULT_DESCRIPTION;
+  // Always emit an og:image. Per-page metadata replaces (doesn't deep-merge) the
+  // root's openGraph, which drops the file-convention opengraph-image — so default
+  // to the generated /opengraph-image route when a page passes no explicit images.
+  const ogImages = images ?? [
+    {
+      url: absoluteUrl("/opengraph-image"),
+      width: 1200,
+      height: 630,
+      alt: title ?? DEFAULT_TITLE,
+    },
+  ];
 
   return {
     // Pages with a title get the "%s · ShweLoader" template; pages without one
@@ -106,7 +117,7 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
       url: canonical ? absoluteUrl(canonical) : SITE_URL,
       locale: "en_MM",
       alternateLocale: ["my_MM"],
-      ...(images ? { images } : {}),
+      images: ogImages,
       ...(input.publishedTime
         ? { publishedTime: input.publishedTime }
         : {}),
@@ -117,7 +128,7 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
       card: "summary_large_image",
       title: title ?? DEFAULT_TITLE,
       description: description ?? DEFAULT_DESCRIPTION,
-      ...(images ? { images: images.map((i) => i.url) } : {}),
+      images: ogImages.map((i) => i.url),
     },
   };
 }

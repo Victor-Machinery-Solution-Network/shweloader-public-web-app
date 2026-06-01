@@ -75,7 +75,11 @@ export function Hero({ slides }: { slides: Slide[] }) {
                 alt=""
                 fill
                 priority={i === 0}
-                sizes="(max-width: 640px) 86vw, 100vw"
+                fetchPriority={i === 0 ? "high" : undefined}
+                // The hero lives inside `.container` (max 1280px), so cap the
+                // requested width at 1280 on large screens instead of letting
+                // `100vw` pull a 1920px source — fewer LCP bytes + cheaper optimize.
+                sizes="(max-width: 640px) 86vw, (max-width: 1280px) calc(100vw - 48px), 1280px"
                 className={cn("hero-slide-img", isActive && "is-active")}
                 style={{
                   objectFit: "cover",
