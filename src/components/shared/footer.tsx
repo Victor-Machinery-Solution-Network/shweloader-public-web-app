@@ -46,13 +46,19 @@ export function Footer() {
           </p>
           <ul className="sl-footer-contact">
             <li>
-              <a href={`tel:${HOTLINE_TEL}`} aria-label="Call our hotline">
+              <a
+                href={`tel:${HOTLINE_TEL}`}
+                aria-label={`Call our hotline ${HOTLINE_DISPLAY}`}
+              >
                 <Phone width={14} height={14} strokeWidth={2} aria-hidden="true" />
                 <span>{HOTLINE_DISPLAY}</span>
               </a>
             </li>
             <li>
-              <a href={`mailto:${SALES_EMAIL}`} aria-label="Email our sales team">
+              <a
+                href={`mailto:${SALES_EMAIL}`}
+                aria-label={`Email our sales team ${SALES_EMAIL}`}
+              >
                 <Mail width={14} height={14} strokeWidth={2} aria-hidden="true" />
                 <span>{SALES_EMAIL}</span>
               </a>

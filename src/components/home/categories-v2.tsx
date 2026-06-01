@@ -139,7 +139,9 @@ export function CategoriesV2({
                         {img ? (
                           <Image
                             src={img}
-                            alt={item.name}
+                            // Decorative: the category name is shown as visible
+                            // text below, so a name alt would be redundant (a11y).
+                            alt=""
                             width={120}
                             height={120}
                             sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 120px"

@@ -155,6 +155,7 @@ export function Header() {
       <div
         className={"mh-drawer" + (menuOpen ? " is-open" : "")}
         aria-hidden={!menuOpen}
+        inert={!menuOpen}
       >
         <nav className="mh-drawer-nav" aria-label="Mobile">
           {LINKS.map((l) => (

@@ -137,6 +137,7 @@ export function LiveChat() {
         role="dialog"
         aria-label={t("chat.title")}
         aria-hidden={!open}
+        inert={!open}
       >
         <div className="lc-head">
           <div className="lc-head-avatar" aria-hidden="true">

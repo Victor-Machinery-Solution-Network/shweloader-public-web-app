@@ -80,7 +80,7 @@ a:focus-visible {
   --m-ink:       #1a1813;        /* primary text — warm near-black */
   --m-ink-2:     #3a3730;        /* secondary heading */
   --m-fg-2:      #62605a;        /* body, labels (AA on bg) */
-  --m-fg-3:      #98948b;        /* muted captions */
+  --m-fg-3:      #767064;        /* muted captions (darkened to pass WCAG AA 4.5:1 on light bg; was #98948b ≈ 3.0:1) */
   --m-line:      #ebe6d8;        /* hairline */
   --m-line-2:    #d4cebd;        /* hairline strong */
   --m-gold:      #fbb811;        /* brand accent — bright client gold */
@@ -2935,8 +2935,8 @@ html, body {
 
 /* NEW badge — vibrant emerald in light, muted forest green in dark */
 :root {
-  --badge-new-bg: #22c55e;
-  --badge-new-shadow: 0 2px 8px -2px rgba(34,197,94,0.45), 0 1px 0 rgba(255,255,255,0.25) inset;
+  --badge-new-bg: #15803d;  /* darkened: white text on #22c55e was 2.27:1; #15803d ≈ 5:1 (WCAG AA) */
+  --badge-new-shadow: 0 2px 8px -2px rgba(21,128,61,0.45), 0 1px 0 rgba(255,255,255,0.25) inset;
 }
 [data-theme="dark"] {
   --badge-new-bg: rgba(31,138,76,0.95);
