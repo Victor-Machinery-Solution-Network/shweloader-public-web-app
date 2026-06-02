@@ -60,11 +60,29 @@ export async function generateMetadata({
     ? `${title} on ShweLoader — Myanmar's heavy equipment marketplace. Compare listings with MMK and USD pricing.`
     : "Browse excavators, wheel loaders, cranes, bulldozers, and attachments for sale and rent across Myanmar on ShweLoader.";
 
+  // A clean single-category view (no other filters, page 1) gets its OWN
+  // canonical so it can rank as a long-tail landing page ("Excavators for sale
+  // in Myanmar"). Noisier combos (sub-category, brand, location, search) keep
+  // consolidating to /browse to avoid thin/duplicate pages.
+  const onlyCategory =
+    !!filters.category &&
+    !filters.sub &&
+    !filters.brands.length &&
+    !filters.models.length &&
+    !filters.location &&
+    !filters.q;
+  const canonicalPath =
+    onlyCategory && filters.page === 1
+      ? `/browse?category=${encodeURIComponent(filters.category)}${
+          filters.mode === "rent" ? "&mode=rent" : ""
+        }`
+      : "/browse";
+
   return buildMetadata({
     title,
     description,
-    path: "/browse",
-    // Filtered/paginated permutations shouldn't dilute the canonical index.
+    path: canonicalPath,
+    // Paginated permutations shouldn't dilute the canonical index.
     noindex: filters.page > 1,
   });
 }

@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/env";
 import { getAllListingsForSitemap } from "@/lib/api/listings";
 import { getBlogs } from "@/lib/api/blogs";
+import {
+  getEquipmentCategories,
+  getAttachmentCategories,
+} from "@/lib/api/taxonomy";
 import { listingSlug, blogSlug } from "@/lib/slug";
 
 function asDate(value: string | null | undefined): Date | undefined {
@@ -21,10 +25,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Tolerate API outages — a partial sitemap beats a 500.
-  const [listings, posts] = await Promise.all([
+  const [listings, posts, equipCats, attachCats] = await Promise.all([
     getAllListingsForSitemap().catch(() => []),
     getBlogs({ limit: 200 }).catch(() => []),
+    getEquipmentCategories().catch(() => []),
+    getAttachmentCategories().catch(() => []),
   ]);
+
+  // Top-level category landing pages — self-canonical long-tail entry points
+  // ("Excavators for sale in Myanmar"). Generated from the live taxonomy, so
+  // they track whatever categories the admin defines. URL must match the
+  // self-canonical the browse page emits for a clean single-category view.
+  const categoryEntries: MetadataRoute.Sitemap = [...equipCats, ...attachCats].map(
+    (c) => ({
+      url: absoluteUrl(`/browse?category=${encodeURIComponent(c.name)}`),
+      changeFrequency: "daily",
+      priority: 0.75,
+    }),
+  );
 
   const listingEntries: MetadataRoute.Sitemap = listings.map((l) => ({
     url: absoluteUrl(`/product/${listingSlug(l)}`),
@@ -40,5 +58,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...listingEntries, ...blogEntries];
+  return [
+    ...staticRoutes,
+    ...categoryEntries,
+    ...listingEntries,
+    ...blogEntries,
+  ];
 }
