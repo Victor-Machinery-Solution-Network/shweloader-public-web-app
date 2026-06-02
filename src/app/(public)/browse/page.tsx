@@ -4,7 +4,9 @@ import Link from "next/link";
 
 import "@/styles/pages/browse.css";
 
+import { cacheLife, cacheTag } from "next/cache";
 import { browseListings } from "@/lib/api/listings";
+import { CACHE_TAGS } from "@/lib/api/cache-tags";
 import {
   getAttachmentCategories,
   getBrands,
@@ -102,12 +104,31 @@ export default function BrowsePage({
   );
 }
 
+// Thin dynamic boundary: read the (dynamic) searchParams, then hand the parsed,
+// serializable filters to the cached view below. Keeping searchParams out of the
+// cached function is what lets the heavy render be cached.
 async function BrowseContent({
   searchParams,
 }: {
   searchParams: Promise<RawSearchParams>;
 }) {
   const filters = parseFilters(await searchParams);
+  return <BrowseView filters={filters} />;
+}
+
+// The expensive part — fetch + the full sidebar/grid render — cached PER filter
+// combination. The common views (default /browse, the category landing pages =
+// most traffic) are served from cache and skip the ~0.5s re-render entirely.
+// Tagged with listings+categories so the /api/revalidate webhook busts it the
+// moment the admin changes catalog content (no extra staleness vs the data).
+async function BrowseView({
+  filters,
+}: {
+  filters: ReturnType<typeof parseFilters>;
+}) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.listings, CACHE_TAGS.categories);
 
   const [categories, attachmentCategories, brands, locations] = await Promise.all([
     getEquipmentCategories(),
