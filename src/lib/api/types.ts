@@ -310,4 +310,6 @@ export interface ListingQuery {
   township_id?: number;
   district_id?: number;
   state_region_id?: number;
+  /** Server-side sort: newest | price-asc | price-desc. */
+  sort?: string;
 }

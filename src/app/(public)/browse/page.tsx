@@ -147,20 +147,9 @@ async function BrowseView({
     conditionTypes,
     locations,
   });
-  let listings = await browseListings({ mode: filters.mode, query });
-
-  // Sort within the page (the list API has no price sort param).
-  if (filters.sort === "price-asc" || filters.sort === "price-desc") {
-    const priceOf = (l: (typeof listings)[number]) => {
-      const p = filters.mode === "rent" ? l.rent : l.sale;
-      return p?.mmk ?? p?.usd ?? Number.POSITIVE_INFINITY;
-    };
-    listings = [...listings].sort((a, b) =>
-      filters.sort === "price-asc"
-        ? priceOf(a) - priceOf(b)
-        : priceOf(b) - priceOf(a),
-    );
-  }
+  // Sorting is now done server-side (worker ORDER BY) across the full result
+  // set, not just the current page.
+  const listings = await browseListings({ mode: filters.mode, query });
 
   const pageTitle = "Browse listings";
 

@@ -253,7 +253,18 @@ export function toListingQuery(
   // Price range — send with the currency so the worker filters the right column.
   if (f.priceMin) query.price_min = f.priceMin;
   if (f.priceMax) query.price_max = f.priceMax;
-  if (f.priceMin || f.priceMax) query.currency = f.currency;
+
+  // Sort server-side (over the full result set). Price sorts need the currency
+  // so the worker orders by the matching column.
+  query.sort = f.sort;
+  if (
+    f.priceMin ||
+    f.priceMax ||
+    f.sort === "price-asc" ||
+    f.sort === "price-desc"
+  ) {
+    query.currency = f.currency;
+  }
 
   // Location — resolve the selected name to township/district/state id.
   const loc = findLocation(f.location, catalogs.locations);
