@@ -18,6 +18,7 @@ import {
   collectionPageSchema,
 } from "@/lib/seo/jsonld";
 import { BrowseShell } from "@/components/browse/browse-shell";
+import { BrowseSkeleton } from "@/components/browse/browse-skeleton";
 import { BuyRentToggle } from "@/components/browse/browse-toolbar";
 import { Results } from "@/components/browse/results";
 import {
@@ -95,15 +96,7 @@ export default function BrowsePage({
   // Browse reads searchParams (dynamic). Under Cache Components the dynamic
   // render must sit inside Suspense so the static shell can prerender.
   return (
-    <Suspense
-      fallback={
-        <div
-          className="container"
-          style={{ minHeight: "60vh", padding: "32px 0" }}
-          aria-busy="true"
-        />
-      }
-    >
+    <Suspense fallback={<BrowseSkeleton />}>
       <BrowseContent searchParams={searchParams} />
     </Suspense>
   );

@@ -831,6 +831,9 @@
 
 /* Skeletons */
 @keyframes skel-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+/* Loading-state sidebar placeholder — hidden where the real filter rail collapses. */
+.brz-skel-aside { display: flex; flex-direction: column; }
+@media (max-width: 1024px) { .brz-skel-aside { display: none; } }
 .skel-img, .skel-line {
   background: var(--m-bg-2);
   animation: skel-pulse 1.5s ease-in-out infinite;
