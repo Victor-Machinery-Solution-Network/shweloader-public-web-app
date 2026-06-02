@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 import type { Brand } from "@/lib/api/types";
 import {
   buildBrowseHref,
-  CONDITIONS,
   type BrowseFilters,
   type Sort,
 } from "./filters";
@@ -205,12 +204,12 @@ function ActiveFilters({
       remove: () => push({ models: filters.models.filter((x) => x !== id) }),
     });
   });
-  filters.conditions.forEach((id) => {
-    const c = CONDITIONS.find((x) => x.id === id);
+  filters.conditions.forEach((name) => {
     chips.push({
-      key: "cond:" + id,
-      label: c?.label ?? id,
-      remove: () => push({ conditions: filters.conditions.filter((x) => x !== id) }),
+      key: "cond:" + name,
+      label: name,
+      remove: () =>
+        push({ conditions: filters.conditions.filter((x) => x !== name) }),
     });
   });
   if (filters.location) {

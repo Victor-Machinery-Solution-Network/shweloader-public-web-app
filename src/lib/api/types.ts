@@ -285,6 +285,11 @@ export interface StateRegion {
 }
 
 /** Listing browse/query params accepted by /listings/sale|rent. */
+export interface ConditionType {
+  id: number;
+  name: string;
+}
+
 export interface ListingQuery {
   limit?: number;
   offset?: number;
@@ -295,5 +300,14 @@ export interface ListingQuery {
   model_id?: number | string;
   brand_id?: number | string;
   search?: string;
-  condition_id?: number;
+  /** Comma-separated condition_type ids (sale listings only). */
+  condition_id?: number | string;
+  /** Price range, filtered against the column matching `currency`. */
+  price_min?: string;
+  price_max?: string;
+  currency?: "MMK" | "USD";
+  /** Location — the most specific level selected. */
+  township_id?: number;
+  district_id?: number;
+  state_region_id?: number;
 }

@@ -10,6 +10,7 @@ import { CACHE_TAGS } from "@/lib/api/cache-tags";
 import {
   getAttachmentCategories,
   getBrands,
+  getConditionTypes,
   getEquipmentCategories,
 } from "@/lib/api/taxonomy";
 import { getLocations } from "@/lib/api/locations";
@@ -130,17 +131,21 @@ async function BrowseView({
   cacheLife("hours");
   cacheTag(CACHE_TAGS.listings, CACHE_TAGS.categories);
 
-  const [categories, attachmentCategories, brands, locations] = await Promise.all([
-    getEquipmentCategories(),
-    getAttachmentCategories(),
-    getBrands(),
-    getLocations(),
-  ]);
+  const [categories, attachmentCategories, brands, locations, conditionTypes] =
+    await Promise.all([
+      getEquipmentCategories(),
+      getAttachmentCategories(),
+      getBrands(),
+      getLocations(),
+      getConditionTypes(),
+    ]);
 
   const query = toListingQuery(filters, {
     categories,
     attachmentCategories,
     brands,
+    conditionTypes,
+    locations,
   });
   let listings = await browseListings({ mode: filters.mode, query });
 
@@ -227,6 +232,7 @@ async function BrowseView({
         attachmentCategories={attachmentCategories}
         brands={brands}
         locations={locations}
+        conditionTypes={conditionTypes}
         total={listings.length}
       >
         <Results listings={listings} filters={filters} />

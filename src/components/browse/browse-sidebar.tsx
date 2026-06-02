@@ -10,11 +10,15 @@ import {
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 
-import type { Brand, Category, StateRegion } from "@/lib/api/types";
+import type {
+  Brand,
+  Category,
+  ConditionType,
+  StateRegion,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import {
   buildBrowseHref,
-  CONDITIONS,
   type BrowseFilters,
   type Currency,
 } from "./filters";
@@ -405,20 +409,26 @@ function BrandGroup({
   );
 }
 
-/* ── Condition — multi-select list ──────────────────────────── */
+/* ── Condition — multi-select list (admin-managed condition_type catalog) ──── */
 function ConditionGroup({
   filters,
   apply,
+  conditionTypes,
 }: {
   filters: BrowseFilters;
   apply: (patch: Partial<BrowseFilters>) => void;
+  conditionTypes: ConditionType[];
 }) {
-  const toggle = (id: string) =>
+  // Stored by name (resolved to condition_type id in toListingQuery), matching
+  // how category/brand facets work.
+  const toggle = (name: string) =>
     apply({
-      conditions: filters.conditions.includes(id)
-        ? filters.conditions.filter((x) => x !== id)
-        : [...filters.conditions, id],
+      conditions: filters.conditions.includes(name)
+        ? filters.conditions.filter((x) => x !== name)
+        : [...filters.conditions, name],
     });
+
+  if (conditionTypes.length === 0) return null;
 
   return (
     <SidebarGroup
@@ -437,13 +447,13 @@ function ConditionGroup({
       }
     >
       <div className="bsb-tree">
-        {CONDITIONS.map((c) => (
+        {conditionTypes.map((c) => (
           <TreeRow
             key={c.id}
-            label={c.label}
-            on={filters.conditions.includes(c.id)}
+            label={c.name}
+            on={filters.conditions.includes(c.name)}
             depth={0}
-            onToggle={() => toggle(c.id)}
+            onToggle={() => toggle(c.name)}
           />
         ))}
       </div>
@@ -876,6 +886,7 @@ export function BrowseSidebar({
   attachmentCategories,
   brands,
   locations,
+  conditionTypes,
   total,
   open,
   onClose,
@@ -885,6 +896,7 @@ export function BrowseSidebar({
   attachmentCategories: Category[];
   brands: Brand[];
   locations: StateRegion[];
+  conditionTypes: ConditionType[];
   /** Result count on the current page (no public grand total). */
   total: number;
   open: boolean;
@@ -973,7 +985,11 @@ export function BrowseSidebar({
           apply={apply}
         />
         <BrandGroup brands={brands} filters={filters} apply={apply} />
-        <ConditionGroup filters={filters} apply={apply} />
+        <ConditionGroup
+          filters={filters}
+          apply={apply}
+          conditionTypes={conditionTypes}
+        />
         <PriceGroup filters={filters} apply={apply} />
         <LocationGroup locations={locations} filters={filters} apply={apply} />
 

@@ -11,7 +11,13 @@ function slugify(input: string): string {
     .toString()
     .toLowerCase()
     .normalize("NFKD") // decomposes accents → base char + combining mark
-    .replace(/[^a-z0-9က-႟]+/g, "-") // keep a-z, 0-9, Myanmar block
+    .replace(/[̀-ͯ]/g, "") // drop the combining marks
+    // ASCII-only slugs ON PURPOSE: a slug must be usable in an HTTP `Location`
+    // header (Latin-1), and canonicalization redirects to it — a non-Latin
+    // (e.g. Burmese) slug throws a ByteString error and breaks the build. The
+    // Burmese title still drives the <h1>, metadata, and JSON-LD, so its SEO is
+    // unaffected; only the URL slug is romanised/trimmed.
+    .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80)
     .replace(/-+$/g, "");

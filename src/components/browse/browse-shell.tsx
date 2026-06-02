@@ -2,7 +2,12 @@
 
 import { useState, type ReactNode } from "react";
 
-import type { Brand, Category, StateRegion } from "@/lib/api/types";
+import type {
+  Brand,
+  Category,
+  ConditionType,
+  StateRegion,
+} from "@/lib/api/types";
 import { BrowseSidebar } from "./browse-sidebar";
 import { BrowseToolbar } from "./browse-toolbar";
 import type { BrowseFilters } from "./filters";
@@ -18,6 +23,7 @@ export function BrowseShell({
   attachmentCategories,
   brands,
   locations,
+  conditionTypes,
   total,
   children,
 }: {
@@ -26,6 +32,7 @@ export function BrowseShell({
   attachmentCategories: Category[];
   brands: Brand[];
   locations: StateRegion[];
+  conditionTypes: ConditionType[];
   total: number;
   children: ReactNode;
 }) {
@@ -39,6 +46,7 @@ export function BrowseShell({
         attachmentCategories={attachmentCategories}
         brands={brands}
         locations={locations}
+        conditionTypes={conditionTypes}
         total={total}
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}

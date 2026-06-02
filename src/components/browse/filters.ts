@@ -1,4 +1,10 @@
-import type { Brand, Category, ListingQuery } from "@/lib/api/types";
+import type {
+  Brand,
+  Category,
+  ConditionType,
+  ListingQuery,
+  StateRegion,
+} from "@/lib/api/types";
 
 /**
  * Browse filter state shared between the server page (which reads it from the
@@ -38,16 +44,6 @@ export interface BrowseFilters {
   view: View;
   page: number;
 }
-
-/** Heavy-equipment condition catalog — no dedicated API endpoint exists, so the
- *  facet list is fixed here. Order matches the typical admin condition set. */
-export const CONDITIONS: { id: string; label: string }[] = [
-  { id: "new", label: "New" },
-  { id: "used", label: "Used" },
-  { id: "reconditioned", label: "Reconditioned" },
-  { id: "refurbished", label: "Refurbished" },
-  { id: "for-parts", label: "For parts" },
-];
 
 const SORTS: Sort[] = ["newest", "price-asc", "price-desc"];
 
@@ -156,11 +152,35 @@ function findSubCategory(
   return undefined;
 }
 
+/** Resolve a location name to the most specific level it matches (township →
+ *  district → state), so the worker can filter by the right id column. */
+function findLocation(
+  name: string,
+  locations: StateRegion[],
+):
+  | { township_id: number }
+  | { district_id: number }
+  | { state_region_id: number }
+  | undefined {
+  if (!name) return undefined;
+  const lc = name.toLowerCase();
+  for (const s of locations)
+    for (const d of s.districts)
+      for (const t of d.townships)
+        if (t.name.toLowerCase() === lc) return { township_id: t.id };
+  for (const s of locations)
+    for (const d of s.districts)
+      if (d.name.toLowerCase() === lc) return { district_id: d.id };
+  for (const s of locations)
+    if (s.name.toLowerCase() === lc) return { state_region_id: s.id };
+  return undefined;
+}
+
 /**
  * Build the API `ListingQuery` from parsed filters + the fetched catalogs.
- * Only id-resolvable facets become structured params; free text + the leading
- * brand fall back to `search`. Conditions/locations have no id catalog, so the
- * sidebar exposes them as chips and they refine the `search` term.
+ * Every facet maps to a structured, id-resolvable param the worker filters on:
+ * category/sub/brand/model, condition (name→id), location (name→level+id), and
+ * the price range (sent with its currency). Free text becomes `search`.
  */
 export function toListingQuery(
   f: BrowseFilters,
@@ -168,6 +188,8 @@ export function toListingQuery(
     categories: Category[];
     attachmentCategories: Category[];
     brands: Brand[];
+    conditionTypes: ConditionType[];
+    locations: StateRegion[];
   },
 ): ListingQuery {
   const query: ListingQuery = {
@@ -214,6 +236,28 @@ export function toListingQuery(
 
   const search = searchTerms.join(" ").trim();
   if (search) query.search = search;
+
+  // Condition — resolve selected condition names to their condition_type ids.
+  if (f.conditions.length) {
+    const ids = f.conditions
+      .map(
+        (name) =>
+          catalogs.conditionTypes.find(
+            (c) => c.name.toLowerCase() === name.toLowerCase(),
+          )?.id,
+      )
+      .filter((x): x is number => x != null);
+    if (ids.length) query.condition_id = ids.join(",");
+  }
+
+  // Price range — send with the currency so the worker filters the right column.
+  if (f.priceMin) query.price_min = f.priceMin;
+  if (f.priceMax) query.price_max = f.priceMax;
+  if (f.priceMin || f.priceMax) query.currency = f.currency;
+
+  // Location — resolve the selected name to township/district/state id.
+  const loc = findLocation(f.location, catalogs.locations);
+  if (loc) Object.assign(query, loc);
 
   return query;
 }
