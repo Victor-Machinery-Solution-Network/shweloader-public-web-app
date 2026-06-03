@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
@@ -70,22 +69,33 @@ export function Hero({ slides }: { slides: Slide[] }) {
         const slide = (
           <>
             {src && (
-              <Image
-                src={src}
-                alt=""
-                fill
-                priority={i === 0}
-                fetchPriority={i === 0 ? "high" : undefined}
-                // The hero lives inside `.container` (max 1280px), so cap the
-                // requested width at 1280 on large screens instead of letting
-                // `100vw` pull a 1920px source — fewer LCP bytes + cheaper optimize.
-                sizes="(max-width: 640px) 86vw, (max-width: 1280px) calc(100vw - 48px), 1280px"
-                className={cn("hero-slide-img", isActive && "is-active")}
-                style={{
-                  objectFit: "cover",
-                  objectPosition: focalPosition(s.focalX, s.focalY),
-                }}
-              />
+              // Art-directed: a dedicated 16:9 image is served on phones
+              // (≤640px), the 21:9 image elsewhere. next/image can't drive
+              // <source media>, so this is a plain <picture>; each image is
+              // already resized by the admin upload pipeline. Per-breakpoint
+              // focal point rides on CSS vars (see `.hero-slide-img` in app.css).
+              <picture>
+                {s.mobileImage && (
+                  <source
+                    media="(max-width: 640px)"
+                    srcSet={s.mobileImage}
+                  />
+                )}
+                <img
+                  src={src}
+                  alt=""
+                  loading={i === 0 ? "eager" : "lazy"}
+                  fetchPriority={i === 0 ? "high" : undefined}
+                  decoding="async"
+                  className={cn("hero-slide-img", isActive && "is-active")}
+                  style={
+                    {
+                      "--hero-pos": focalPosition(s.focalX, s.focalY),
+                      "--hero-pos-m": focalPosition(s.mobileFocalX, s.mobileFocalY),
+                    } as CSSProperties
+                  }
+                />
+              </picture>
             )}
             <div className="hero-slide-vignette" aria-hidden="true" />
           </>

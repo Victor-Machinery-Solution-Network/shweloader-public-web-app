@@ -126,11 +126,18 @@ export interface ApiCarousel {
   image_id: number;
   display_order?: string | null;
   link_url?: string | null;
+  // Desktop (21:9)
   image_url: string;
   thumb_url?: string | null;
   blurhash?: string | null;
   focal_x?: number | null;
   focal_y?: number | null;
+  // Mobile (16:9)
+  mobile_image_url: string;
+  mobile_thumb_url?: string | null;
+  mobile_blurhash?: string | null;
+  mobile_focal_x?: number | null;
+  mobile_focal_y?: number | null;
 }
 
 export interface ApiAnnouncement {
@@ -255,10 +262,15 @@ export interface Brand {
 export interface Slide {
   id: number;
   href: string | null;
+  /** Desktop 21:9 image (absolute URL). */
   image: string | null;
   blurhash: string | null;
   focalX: number;
   focalY: number;
+  /** Mobile 16:9 image (absolute URL). */
+  mobileImage: string | null;
+  mobileFocalX: number;
+  mobileFocalY: number;
 }
 
 export interface Announcement {

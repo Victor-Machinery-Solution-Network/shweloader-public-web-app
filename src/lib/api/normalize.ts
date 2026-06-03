@@ -187,6 +187,9 @@ export function normalizeSlide(r: ApiCarousel): Slide {
     blurhash: r.blurhash ?? null,
     focalX: typeof r.focal_x === "number" ? r.focal_x : 0.5,
     focalY: typeof r.focal_y === "number" ? r.focal_y : 0.5,
+    mobileImage: assetUrl(r.mobile_image_url),
+    mobileFocalX: typeof r.mobile_focal_x === "number" ? r.mobile_focal_x : 0.5,
+    mobileFocalY: typeof r.mobile_focal_y === "number" ? r.mobile_focal_y : 0.5,
   };
 }
 
