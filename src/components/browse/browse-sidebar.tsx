@@ -897,8 +897,8 @@ export function BrowseSidebar({
   brands: Brand[];
   locations: StateRegion[];
   conditionTypes: ConditionType[];
-  /** Result count on the current page (no public grand total). */
-  total: number;
+  /** Result count on the current page; omitted while listings stream. */
+  total?: number;
   open: boolean;
   onClose: () => void;
 }) {
@@ -953,11 +953,13 @@ export function BrowseSidebar({
       <aside className={cn("bsb", open && "is-open")} aria-label="Filters">
         <header className="bsb-head">
           <h3 className="bsb-head-title">Filters</h3>
-          <div className="bsb-head-meta">
-            <span className="bsb-head-count">
-              <span className="tnum">{total}</span> result{total === 1 ? "" : "s"}
-            </span>
-          </div>
+          {total != null && (
+            <div className="bsb-head-meta">
+              <span className="bsb-head-count">
+                <span className="tnum">{total}</span> result{total === 1 ? "" : "s"}
+              </span>
+            </div>
+          )}
           <button
             type="button"
             className="bsb-close"

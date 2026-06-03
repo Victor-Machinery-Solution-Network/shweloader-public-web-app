@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import "@/styles/pages/browse.css";
 
@@ -22,13 +21,14 @@ import {
 } from "@/lib/seo/jsonld";
 import { BrowseShell } from "@/components/browse/browse-shell";
 import { BrowseSkeleton } from "@/components/browse/browse-skeleton";
-import { BuyRentToggle } from "@/components/browse/browse-toolbar";
 import { Results } from "@/components/browse/results";
 import {
   parseFilters,
   toListingQuery,
+  type BrowseFilters,
   type RawSearchParams,
 } from "@/components/browse/filters";
+import type { ListingQuery } from "@/lib/api/types";
 
 /* ── Page-title helpers ─────────────────────────────────────── */
 function titleFromFilters(f: ReturnType<typeof parseFilters>): string {
@@ -91,46 +91,16 @@ export async function generateMetadata({
   });
 }
 
-export default function BrowsePage({
+export default async function BrowsePage({
   searchParams,
 }: {
   searchParams: Promise<RawSearchParams>;
 }) {
-  // Browse reads searchParams (dynamic). Under Cache Components the dynamic
-  // render must sit inside Suspense so the static shell can prerender.
-  return (
-    <Suspense fallback={<BrowseSkeleton />}>
-      <BrowseContent searchParams={searchParams} />
-    </Suspense>
-  );
-}
-
-// Thin dynamic boundary: read the (dynamic) searchParams, then hand the parsed,
-// serializable filters to the cached view below. Keeping searchParams out of the
-// cached function is what lets the heavy render be cached.
-async function BrowseContent({
-  searchParams,
-}: {
-  searchParams: Promise<RawSearchParams>;
-}) {
-  const filters = parseFilters(await searchParams);
-  return <BrowseView filters={filters} />;
-}
-
-// The expensive part — fetch + the full sidebar/grid render — cached PER filter
-// combination. The common views (default /browse, the category landing pages =
-// most traffic) are served from cache and skip the ~0.5s re-render entirely.
-// Tagged with listings+categories so the /api/revalidate webhook busts it the
-// moment the admin changes catalog content (no extra staleness vs the data).
-async function BrowseView({
-  filters,
-}: {
-  filters: ReturnType<typeof parseFilters>;
-}) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CACHE_TAGS.listings, CACHE_TAGS.categories);
-
+  // STATIC shell: fetch the (cached) sidebar taxonomy once and render the full
+  // browse chrome — page head, filter sidebar, toolbar — into the prerender.
+  // This paints instantly from the CDN; only the listings grid streams behind
+  // the Suspense boundary. Because the 5 taxonomy feeds are fetched here (at
+  // build/revalidate), the dynamic part only fetches the listings.
   const [categories, attachmentCategories, brands, locations, conditionTypes] =
     await Promise.all([
       getEquipmentCategories(),
@@ -140,6 +110,53 @@ async function BrowseView({
       getConditionTypes(),
     ]);
 
+  return (
+    // The chrome (sidebar + toolbar) reads the URL via useSearchParams, which
+    // Cache Components requires inside Suspense — so it streams in fast (no data
+    // fetch, server-rendered selected-state) while the listings stream
+    // independently behind the inner boundary.
+    <Suspense fallback={<BrowseSkeleton />}>
+      <BrowseShell
+        categories={categories}
+        attachmentCategories={attachmentCategories}
+        brands={brands}
+        locations={locations}
+        conditionTypes={conditionTypes}
+      >
+        <Suspense fallback={<ResultsSkeleton />}>
+          <ListingsSection
+            searchParams={searchParams}
+            categories={categories}
+            attachmentCategories={attachmentCategories}
+            brands={brands}
+            conditionTypes={conditionTypes}
+            locations={locations}
+          />
+        </Suspense>
+      </BrowseShell>
+    </Suspense>
+  );
+}
+
+// Dynamic boundary: read the (dynamic) searchParams, resolve the filter names to
+// ids using the already-fetched taxonomy, and hand the small, serializable query
+// to the cached grid.
+async function ListingsSection({
+  searchParams,
+  categories,
+  attachmentCategories,
+  brands,
+  conditionTypes,
+  locations,
+}: {
+  searchParams: Promise<RawSearchParams>;
+  categories: Awaited<ReturnType<typeof getEquipmentCategories>>;
+  attachmentCategories: Awaited<ReturnType<typeof getAttachmentCategories>>;
+  brands: Awaited<ReturnType<typeof getBrands>>;
+  conditionTypes: Awaited<ReturnType<typeof getConditionTypes>>;
+  locations: Awaited<ReturnType<typeof getLocations>>;
+}) {
+  const filters = parseFilters(await searchParams);
   const query = toListingQuery(filters, {
     categories,
     attachmentCategories,
@@ -147,14 +164,26 @@ async function BrowseView({
     conditionTypes,
     locations,
   });
-  // Sorting is now done server-side (worker ORDER BY) across the full result
-  // set, not just the current page.
+  return <ListingsGrid query={query} filters={filters} />;
+}
+
+// The listings render, cached per resolved query — light now (just the grid +
+// its JSON-LD; the heavy sidebar lives in the static shell). Sort is server-side
+// (worker ORDER BY). Busted on catalog changes via the /api/revalidate webhook.
+async function ListingsGrid({
+  query,
+  filters,
+}: {
+  query: ListingQuery;
+  filters: BrowseFilters;
+}) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.listings);
+
   const listings = await browseListings({ mode: filters.mode, query });
 
-  const pageTitle = "Browse listings";
-
-  // Filter-aware structured data: a breadcrumb trail that reflects the active
-  // category/sub-category, and a CollectionPage describing the current view.
+  // Filter-aware structured data, server-rendered for SEO.
   const hasFilters = Boolean(
     filters.q ||
       filters.category ||
@@ -188,7 +217,7 @@ async function BrowseView({
     : "Browse heavy equipment";
 
   return (
-    <div className="brz" data-screen-label="Browse">
+    <>
       <JsonLd
         data={[
           breadcrumbSchema(crumbs),
@@ -200,32 +229,25 @@ async function BrowseView({
           }),
         ]}
       />
+      <Results listings={listings} filters={filters} />
+    </>
+  );
+}
 
-      <div className="container brz-pagehead">
-        <div className="brz-pagehead-l">
-          <nav className="brz-crumbs" aria-label="Breadcrumb">
-            <Link href="/">Home</Link>
-            <span className="brz-crumbs-sep">/</span>
-            <span>Browse</span>
-          </nav>
-          <h1 className="brz-h1">{pageTitle}</h1>
+// Listings-only skeleton — the sidebar + chrome are already painted by the shell.
+function ResultsSkeleton() {
+  return (
+    <div className="brz-grid" aria-busy="true" aria-label="Loading listings">
+      {Array.from({ length: 9 }).map((_, i) => (
+        <div key={i} className="skel-card">
+          <div className="skel-img" />
+          <div className="skel-body">
+            <div className="skel-line" />
+            <div className="skel-line" style={{ width: "65%" }} />
+            <div className="skel-price" />
+          </div>
         </div>
-        <div className="brz-pagehead-r">
-          <BuyRentToggle filters={filters} />
-        </div>
-      </div>
-
-      <BrowseShell
-        filters={filters}
-        categories={categories}
-        attachmentCategories={attachmentCategories}
-        brands={brands}
-        locations={locations}
-        conditionTypes={conditionTypes}
-        total={listings.length}
-      >
-        <Results listings={listings} filters={filters} />
-      </BrowseShell>
+      ))}
     </div>
   );
 }

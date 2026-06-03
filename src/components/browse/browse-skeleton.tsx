@@ -1,13 +1,11 @@
 /**
- * Static skeleton for the /browse Suspense fallback. Paints a full filter rail +
- * listings grid instantly (instead of a blank box) while the server streams the
- * real, filtered results — big perceived-performance win on navigation. Pure
- * markup reusing the existing `.skel-*` styles, so it ships inside the static
- * PPR shell with zero data dependency.
+ * Full-page browse skeleton — the static prerendered fallback shown instantly
+ * from the CDN while the chrome (sidebar + toolbar) streams in. Pure markup
+ * reusing the existing `.skel-*` styles, zero data dependency.
  */
 export function BrowseSkeleton() {
   return (
-    <div className="brz" aria-busy="true" aria-label="Loading listings">
+    <div className="brz" aria-busy="true" aria-label="Loading">
       <div className="container brz-pagehead">
         <div className="brz-pagehead-l">
           <div className="skel-line" style={{ width: 84, height: 11 }} />
