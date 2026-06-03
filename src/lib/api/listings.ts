@@ -49,7 +49,11 @@ export async function browseListings(opts: {
 export async function getListing(id: number): Promise<Listing | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag(CACHE_TAGS.listings, listingTag(id));
+  // Per-item tag ONLY (not the broad `listings` collection tag). This lets an
+  // admin edit bust just THIS product page via `listing:<id>` while every other
+  // product page stays warm. Collection views (browse/featured/related) carry
+  // the broad `listings` tag and refresh independently.
+  cacheTag(listingTag(id));
   const data = await apiFetchOrNull<ApiListing>(`/listings/${id}`);
   return data ? normalizeListing(data) : null;
 }

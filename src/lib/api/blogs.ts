@@ -19,6 +19,10 @@ export async function getBlogs(
 export async function getBlog(id: number): Promise<BlogPost | null> {
   "use cache";
   cacheLife("hours");
+  // Blogs use BROAD invalidation: an article edit busts the `blogs` tag via the
+  // admin choke-point, refreshing the list + detail pages together (low volume,
+  // so the surgical listing:<id> treatment isn't worth the per-action surface).
+  // The `blog:<id>` tag is kept for any future targeted bust.
   cacheTag(CACHE_TAGS.blogs, blogTag(id));
   const data = await apiFetchOrNull<ApiBlog>(`/blogs/${id}`);
   return data ? normalizeBlog(data) : null;
