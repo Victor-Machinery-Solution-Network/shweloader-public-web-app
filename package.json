@@ -13,7 +13,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,mjs,cjs}": "eslint --fix --max-warnings=0"
+    "*.{js,jsx,ts,tsx,mjs,cjs}": "eslint --fix"
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",

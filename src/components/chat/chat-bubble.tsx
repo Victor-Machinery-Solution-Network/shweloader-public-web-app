@@ -78,7 +78,6 @@ export function ChatBubble({ block }: { block: ChatBlock }) {
       <div className="cgrp cgrp-me">
         {block.items.map((m, j) =>
           m.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <a
               key={j}
               className="cbubble cbubble-img"
