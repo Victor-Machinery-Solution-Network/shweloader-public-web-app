@@ -3306,21 +3306,13 @@ html, body {
   height: 100%;
   /* Per-breakpoint focal point (set inline as CSS vars by Hero). */
   object-position: var(--hero-pos, 50% 50%);
-  transform-origin: 55% 50%;
-  transition: transform 7.5s linear, filter .6s ease;
 }
 /* On phones the slide shows the dedicated 16:9 image with its own focal. */
 @media (max-width: 640px) {
   .hero-slide-img { object-position: var(--hero-pos-m, 50% 50%); }
 }
-/* Active slide slowly pans+zooms (Ken Burns) */
-.hero-slide.is-active .hero-slide-img {
-  transform: scale(1.06) translate(-1.5%, -0.5%);
-}
-/* Previous slide eases out with a tiny opposite drift for liveliness */
-.hero-slide.is-prev .hero-slide-img {
-  transform: scale(1.04) translate(1%, 0.5%);
-}
+/* Ken Burns pan/zoom removed per design — image stays static; only the
+   slide cross-fade (.hero-slide opacity) animates between slides. */
 
 /* Subtle vignette + bottom gradient for depth and dot legibility */
 .hero-slide-vignette {
