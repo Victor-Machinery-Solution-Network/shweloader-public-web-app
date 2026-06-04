@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 
 import "@/styles/pages/browse.css";
@@ -18,7 +17,6 @@ import {
   collectionPageSchema,
 } from "@/lib/seo/jsonld";
 import { BrowseShell } from "@/components/browse/browse-shell";
-import { BrowseSkeleton } from "@/components/browse/browse-skeleton";
 import { ListingsView } from "@/components/browse/listings-view";
 import {
   parseFilters,
@@ -139,24 +137,23 @@ export default async function BrowsePage() {
           }),
         ]}
       />
-      {/* The chrome (sidebar + toolbar) reads the URL via useSearchParams, which
-          Cache Components requires inside Suspense — it prerenders with default
-          selected-state and hydrates. The listings paint from the baked default. */}
-      <Suspense fallback={<BrowseSkeleton />}>
-        <BrowseShell
-          categories={categories}
-          attachmentCategories={attachmentCategories}
-          brands={brands}
-          locations={locations}
-          conditionTypes={conditionTypes}
-        >
-          <ListingsView
-            initialListings={initialListings}
-            initialFilters={DEFAULT_FILTERS}
-            catalogs={catalogs}
-          />
-        </BrowseShell>
-      </Suspense>
+      {/* No Suspense/skeleton: the chrome derives filter state via
+          useBrowseFilters (default on first render → syncs from URL after mount),
+          NOT useSearchParams, so the whole shell + baked default listings stay in
+          the static prerender and paint instantly on a direct load. */}
+      <BrowseShell
+        categories={categories}
+        attachmentCategories={attachmentCategories}
+        brands={brands}
+        locations={locations}
+        conditionTypes={conditionTypes}
+      >
+        <ListingsView
+          initialListings={initialListings}
+          initialFilters={DEFAULT_FILTERS}
+          catalogs={catalogs}
+        />
+      </BrowseShell>
     </>
   );
 }

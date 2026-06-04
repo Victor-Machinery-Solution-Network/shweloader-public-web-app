@@ -3,7 +3,7 @@ import { ListingRow } from "@/components/shared/listing-row";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Pagination } from "@/components/shared/pagination";
 import type { Listing } from "@/lib/api/types";
-import { PAGE_SIZE, type BrowseFilters } from "./filters";
+import { buildBrowseHref, PAGE_SIZE, type BrowseFilters } from "./filters";
 
 /**
  * Results region: grid of `ListingCard`s or list of `ListingRow`s per `view`, an
@@ -57,6 +57,7 @@ export function Results({
         page={filters.page}
         hasPrev={hasPrev}
         hasNext={hasNext}
+        hrefForPage={(p) => buildBrowseHref({ ...filters, page: p })}
         onNavigate={onNavigate}
       />
     </>

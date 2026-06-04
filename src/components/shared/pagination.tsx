@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,11 +11,14 @@ export interface PaginationProps {
   hasPrev: boolean;
   /** Whether a next page exists. */
   hasNext: boolean;
+  /** Build the real `href` for a target page (kept for crawlers + middle-click).
+   *  Provided by the caller so this component reads no `useSearchParams` — that
+   *  would pull the whole browse subtree out of the static prerender. */
+  hrefForPage: (page: number) => string;
   /**
-   * When provided, page links do a shallow client swap (the caller updates the
-   * URL + fetches client-side) instead of a full navigation. The real `href` is
-   * kept for crawlers + middle-click/open-in-new-tab; only a plain left-click is
-   * intercepted. Used by Browse's client ListingsView.
+   * When provided, a plain left-click does a shallow client swap (the caller
+   * updates the URL + fetches client-side) instead of a full navigation;
+   * modifier-/middle-clicks still follow the real `href`.
    */
   onNavigate?: (page: number) => void;
 }
@@ -25,29 +27,17 @@ export interface PaginationProps {
  * Prev / current-page / Next control for Browse-style listings.
  *
  * The upstream API exposes no total count, so there is no last page and no
- * numbered range — we only know whether a previous and next page exist. Hrefs
- * are built from the CURRENT URL (preserving every active filter, changing only
- * `page`) on the client, so no function prop crosses the server→client boundary.
- * Markup reuses the design's `.pgn` / `.pgn-btn` / `.pgn-list` / `.pgn-num`.
+ * numbered range — we only know whether a previous and next page exist. Markup
+ * reuses the design's `.pgn` / `.pgn-btn` / `.pgn-list` / `.pgn-num`.
  */
 export function Pagination({
   page,
   hasPrev,
   hasNext,
+  hrefForPage,
   onNavigate,
 }: PaginationProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
   if (!hasPrev && !hasNext) return null;
-
-  const hrefForPage = (p: number) => {
-    const sp = new URLSearchParams(searchParams?.toString() ?? "");
-    if (p <= 1) sp.delete("page");
-    else sp.set("page", String(p));
-    const qs = sp.toString();
-    return qs ? `${pathname}?${qs}` : pathname;
-  };
 
   // Intercept only plain left-clicks so modifier-clicks / middle-click still
   // open in a new tab via the real href.

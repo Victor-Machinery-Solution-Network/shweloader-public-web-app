@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 import type {
   Brand,
@@ -13,9 +12,9 @@ import type {
 import { fetchBrowseListings } from "@/lib/api/listings-client";
 import { Results } from "./results";
 import { pushBrowseUrl } from "./navigate";
+import { useBrowseFilters } from "./use-browse-filters";
 import {
   buildBrowseHref,
-  parseFilters,
   toListingQuery,
   type BrowseFilters,
 } from "./filters";
@@ -31,15 +30,13 @@ export interface ListingsViewCatalogs {
 /**
  * Client listings region for /browse.
  *
- * First render (SSR + hydration) shows `initialListings` / `initialFilters` —
- * the unfiltered first page the server prerendered into the static HTML (instant,
- * indexable, no cold start). State is INITIALIZED to those props (not derived
- * from the URL) so the server and client-first renders are identical — no
- * hydration mismatch on a direct filtered URL. After mount, an effect reads the
- * URL: when the filters match the default it keeps the prerendered listings (no
- * network); otherwise it fetches the same-origin /api/listings proxy and swaps.
- * Filter/sort/pagination changes update the URL shallowly (no Vercel function /
- * full navigation).
+ * First render (SSR + hydration) shows `initialListings` — the unfiltered first
+ * page the server prerendered into the static HTML (instant, indexable, no cold
+ * start). Filter state comes from `useBrowseFilters` (NOT `useSearchParams`), so
+ * this stays in the static prerender (no Suspense fallback / skeleton flash). The
+ * hook returns the default on first render then syncs to the URL after mount;
+ * when the active filters differ from default it fetches the same-origin
+ * /api/listings proxy and swaps the grid.
  */
 export function ListingsView({
   initialListings,
@@ -50,24 +47,19 @@ export function ListingsView({
   initialFilters: BrowseFilters;
   catalogs: ListingsViewCatalogs;
 }) {
-  const searchParams = useSearchParams();
-  const spString = searchParams.toString();
-
-  // A URL whose parsed filters match this fingerprint never triggers a fetch.
+  const filters = useBrowseFilters();
+  const filtersKey = JSON.stringify(filters);
   const defaultKey = useRef(JSON.stringify(initialFilters));
 
   const [listings, setListings] = useState<Listing[]>(initialListings);
-  const [filters, setFilters] = useState<BrowseFilters>(initialFilters);
   const [loading, setLoading] = useState(false);
   const [errored, setErrored] = useState(false);
 
   useEffect(() => {
-    const next = parseFilters(Object.fromEntries(new URLSearchParams(spString)));
-    setFilters(next);
     setErrored(false);
 
     // Default view → reuse the prerendered listings, no network.
-    if (JSON.stringify(next) === defaultKey.current) {
+    if (filtersKey === defaultKey.current) {
       setListings(initialListings);
       setLoading(false);
       return;
@@ -75,7 +67,7 @@ export function ListingsView({
 
     const controller = new AbortController();
     setLoading(true);
-    fetchBrowseListings(next.mode, toListingQuery(next, catalogs), controller.signal)
+    fetchBrowseListings(filters.mode, toListingQuery(filters, catalogs), controller.signal)
       .then((rows) => {
         setListings(rows);
         setLoading(false);
@@ -87,9 +79,10 @@ export function ListingsView({
       });
 
     return () => controller.abort();
-    // catalogs/initialListings are render-stable props from the server page.
+    // `filters`/catalogs/initialListings are all captured via `filtersKey`;
+    // catalogs + initialListings are render-stable props from the server page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spString]);
+  }, [filtersKey]);
 
   if (loading) return <ResultsSkeleton />;
   if (errored) {
@@ -111,7 +104,8 @@ export function ListingsView({
   );
 }
 
-// Listings-only skeleton — the sidebar + chrome are already painted by the shell.
+// Listings-only skeleton — shown only while a FILTER fetch is in flight (never on
+// the default/direct load, which renders the prerendered listings immediately).
 function ResultsSkeleton() {
   return (
     <div className="brz-grid" aria-busy="true" aria-label="Loading listings">

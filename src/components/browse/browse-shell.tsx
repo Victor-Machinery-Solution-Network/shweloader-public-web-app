@@ -2,7 +2,6 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 import type {
   Brand,
@@ -12,17 +11,15 @@ import type {
 } from "@/lib/api/types";
 import { BrowseSidebar } from "./browse-sidebar";
 import { BrowseToolbar, BuyRentToggle } from "./browse-toolbar";
-import { parseFilters } from "./filters";
+import { useBrowseFilters } from "./use-browse-filters";
 
 /**
- * Static browse chrome — page head, filter sidebar, toolbar. This renders in the
- * prerendered shell (NOT behind the dynamic listings fetch), so the whole filter
- * UI + page head paint instantly from the CDN; only the listings grid (passed as
- * `children`) streams in behind a Suspense boundary.
- *
- * Filter selected-state is read from the URL on the client, so the shell is
- * filter-agnostic — one cached prerender serves every `/browse?…` view, and the
- * dynamic function only has to fetch + render the listings.
+ * Browse chrome — page head, filter sidebar, toolbar. Renders fully in the
+ * STATIC prerender: it derives filter selected-state via `useBrowseFilters`
+ * (NOT `useSearchParams`), which returns the default on the server + first client
+ * render and syncs to the URL after hydration. That keeps the chrome (and the
+ * baked default listings passed as `children`) in the prerendered shell, so a
+ * direct /browse load paints instantly with no skeleton flash.
  */
 export function BrowseShell({
   categories,
@@ -39,8 +36,7 @@ export function BrowseShell({
   conditionTypes: ConditionType[];
   children: ReactNode;
 }) {
-  const sp = useSearchParams();
-  const filters = parseFilters(Object.fromEntries(sp.entries()));
+  const filters = useBrowseFilters();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   return (
