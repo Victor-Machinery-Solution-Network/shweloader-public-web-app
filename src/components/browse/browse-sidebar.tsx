@@ -7,7 +7,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 
 import type {
@@ -17,6 +16,7 @@ import type {
   StateRegion,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { pushBrowseUrl } from "./navigate";
 import {
   buildBrowseHref,
   type BrowseFilters,
@@ -902,9 +902,8 @@ export function BrowseSidebar({
   open: boolean;
   onClose: () => void;
 }) {
-  const router = useRouter();
   const apply = (patch: Partial<BrowseFilters>) =>
-    router.push(buildBrowseHref({ ...filters, ...patch, page: 1 }));
+    pushBrowseUrl(buildBrowseHref({ ...filters, ...patch, page: 1 }));
 
   const activeCount =
     (filters.category ? 1 : 0) +

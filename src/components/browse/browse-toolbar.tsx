@@ -7,11 +7,11 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { Brand } from "@/lib/api/types";
+import { pushBrowseUrl } from "./navigate";
 import {
   buildBrowseHref,
   type BrowseFilters,
@@ -26,7 +26,6 @@ const SORT_OPTS: { id: Sort; label: string }[] = [
 
 /* ── Buy / Rent toggle (page head) ──────────────────────────── */
 export function BuyRentToggle({ filters }: { filters: BrowseFilters }) {
-  const router = useRouter();
   const opts = [
     { id: "sale" as const, label: "Buy" },
     { id: "rent" as const, label: "Rent" },
@@ -35,7 +34,7 @@ export function BuyRentToggle({ filters }: { filters: BrowseFilters }) {
 
   const go = (mode: "sale" | "rent") => {
     if (mode === filters.mode) return;
-    router.push(buildBrowseHref({ ...filters, mode, page: 1 }));
+    pushBrowseUrl(buildBrowseHref({ ...filters, mode, page: 1 }));
   };
 
   return (
@@ -62,7 +61,6 @@ export function BuyRentToggle({ filters }: { filters: BrowseFilters }) {
 
 /* ── Sort dropdown ──────────────────────────────────────────── */
 function SortSelect({ filters }: { filters: BrowseFilters }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const cur = SORT_OPTS.find((o) => o.id === filters.sort) ?? SORT_OPTS[0];
@@ -78,7 +76,7 @@ function SortSelect({ filters }: { filters: BrowseFilters }) {
 
   const pick = (sort: Sort) => {
     setOpen(false);
-    router.push(buildBrowseHref({ ...filters, sort, page: 1 }));
+    pushBrowseUrl(buildBrowseHref({ ...filters, sort, page: 1 }));
   };
 
   return (
@@ -111,10 +109,9 @@ function SortSelect({ filters }: { filters: BrowseFilters }) {
 
 /* ── Grid / List view toggle ────────────────────────────────── */
 function ViewToggle({ filters }: { filters: BrowseFilters }) {
-  const router = useRouter();
   const set = (view: "grid" | "list") => {
     if (view === filters.view) return;
-    router.push(buildBrowseHref({ ...filters, view }));
+    pushBrowseUrl(buildBrowseHref({ ...filters, view }));
   };
   return (
     <div className="vts" role="group" aria-label="View">
@@ -171,9 +168,8 @@ function ActiveFilters({
   filters: BrowseFilters;
   brands: Brand[];
 }) {
-  const router = useRouter();
   const push = (next: Partial<BrowseFilters>) =>
-    router.push(buildBrowseHref({ ...filters, ...next, page: 1 }));
+    pushBrowseUrl(buildBrowseHref({ ...filters, ...next, page: 1 }));
 
   const chips: { key: string; label: string; remove: () => void }[] = [];
 
@@ -263,7 +259,6 @@ function ActiveFilters({
 
 /* ── Search-within-results input ────────────────────────────── */
 function ResultsSearch({ filters }: { filters: BrowseFilters }) {
-  const router = useRouter();
   const [value, setValue] = useState(filters.q);
 
   // Keep the input in sync if the URL changes from elsewhere (chips, nav).
@@ -274,14 +269,14 @@ function ResultsSearch({ filters }: { filters: BrowseFilters }) {
   const submit = useCallback(
     (e: FormEvent) => {
       e.preventDefault();
-      router.push(buildBrowseHref({ ...filters, q: value.trim(), page: 1 }));
+      pushBrowseUrl(buildBrowseHref({ ...filters, q: value.trim(), page: 1 }));
     },
-    [router, filters, value],
+    [filters, value],
   );
 
   const clear = () => {
     setValue("");
-    router.push(buildBrowseHref({ ...filters, q: "", page: 1 }));
+    pushBrowseUrl(buildBrowseHref({ ...filters, q: "", page: 1 }));
   };
 
   return (

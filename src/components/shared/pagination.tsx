@@ -12,6 +12,13 @@ export interface PaginationProps {
   hasPrev: boolean;
   /** Whether a next page exists. */
   hasNext: boolean;
+  /**
+   * When provided, page links do a shallow client swap (the caller updates the
+   * URL + fetches client-side) instead of a full navigation. The real `href` is
+   * kept for crawlers + middle-click/open-in-new-tab; only a plain left-click is
+   * intercepted. Used by Browse's client ListingsView.
+   */
+  onNavigate?: (page: number) => void;
 }
 
 /**
@@ -23,7 +30,12 @@ export interface PaginationProps {
  * `page`) on the client, so no function prop crosses the server→client boundary.
  * Markup reuses the design's `.pgn` / `.pgn-btn` / `.pgn-list` / `.pgn-num`.
  */
-export function Pagination({ page, hasPrev, hasNext }: PaginationProps) {
+export function Pagination({
+  page,
+  hasPrev,
+  hasNext,
+  onNavigate,
+}: PaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -37,6 +49,24 @@ export function Pagination({ page, hasPrev, hasNext }: PaginationProps) {
     return qs ? `${pathname}?${qs}` : pathname;
   };
 
+  // Intercept only plain left-clicks so modifier-clicks / middle-click still
+  // open in a new tab via the real href.
+  const handleClick =
+    (targetPage: number) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (!onNavigate) return;
+      if (
+        e.defaultPrevented ||
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      )
+        return;
+      e.preventDefault();
+      onNavigate(targetPage);
+    };
+
   return (
     <nav className="pgn" aria-label="Pagination">
       {hasPrev ? (
@@ -45,6 +75,7 @@ export function Pagination({ page, hasPrev, hasNext }: PaginationProps) {
           href={hrefForPage(page - 1)}
           rel="prev"
           aria-label="Previous page"
+          onClick={handleClick(page - 1)}
         >
           <ArrowRight
             className="icon-sm"
@@ -78,6 +109,7 @@ export function Pagination({ page, hasPrev, hasNext }: PaginationProps) {
           href={hrefForPage(page + 1)}
           rel="next"
           aria-label="Next page"
+          onClick={handleClick(page + 1)}
         >
           Next
           <ArrowRight className="icon-sm" strokeWidth={1.75} aria-hidden="true" />

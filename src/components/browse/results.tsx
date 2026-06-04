@@ -6,17 +6,22 @@ import type { Listing } from "@/lib/api/types";
 import { PAGE_SIZE, type BrowseFilters } from "./filters";
 
 /**
- * Server-rendered results region: grid of `ListingCard`s or list of
- * `ListingRow`s per `view`, an `EmptyState` when nothing matches, and a
- * `Pagination` control. No public grand total — `hasNext` is inferred from a
- * full page of results (`length === PAGE_SIZE`).
+ * Results region: grid of `ListingCard`s or list of `ListingRow`s per `view`, an
+ * `EmptyState` when nothing matches, and a `Pagination` control. No public grand
+ * total — `hasNext` is inferred from a full page of results
+ * (`length === PAGE_SIZE`).
+ *
+ * `onNavigate`, when provided (by the client ListingsView), makes pagination
+ * update the URL shallowly + fetch client-side instead of a full navigation.
  */
 export function Results({
   listings,
   filters,
+  onNavigate,
 }: {
   listings: Listing[];
   filters: BrowseFilters;
+  onNavigate?: (page: number) => void;
 }) {
   const mode = filters.mode;
 
@@ -48,7 +53,12 @@ export function Results({
         </div>
       )}
 
-      <Pagination page={filters.page} hasPrev={hasPrev} hasNext={hasNext} />
+      <Pagination
+        page={filters.page}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        onNavigate={onNavigate}
+      />
     </>
   );
 }
