@@ -19,11 +19,16 @@ export type Mode = "sale" | "rent";
 export type Sort = "newest" | "price-asc" | "price-desc";
 export type View = "grid" | "list";
 export type Currency = "MMK" | "USD";
+/** Catalog split — equipment vs attachment. A stable, code-level dimension
+ *  (not admin-editable data), so it's safe to deep-link from chrome. */
+export type CatalogType = "equipment" | "attachment";
 
 export const PAGE_SIZE = 24;
 
 export interface BrowseFilters {
   q: string;
+  /** Catalog split: "" = both, else equipment-only / attachment-only. */
+  type: CatalogType | "";
   /** Selected equipment/attachment category name (single, from the design tree). */
   category: string;
   /** Selected sub-category name. */
@@ -83,8 +88,13 @@ export function parseFilters(sp: RawSearchParams): BrowseFilters {
   const pageNum = parseInt(one(sp.page), 10);
   const page = Number.isFinite(pageNum) && pageNum > 0 ? pageNum : 1;
 
+  const typeRaw = one(sp.type).toLowerCase();
+  const type: CatalogType | "" =
+    typeRaw === "equipment" || typeRaw === "attachment" ? typeRaw : "";
+
   return {
     q: one(sp.q),
+    type,
     category: one(sp.category),
     sub: one(sp.sub),
     brands: many(sp.brand),
@@ -105,6 +115,7 @@ export function parseFilters(sp: RawSearchParams): BrowseFilters {
 export function buildBrowseHref(f: Partial<BrowseFilters>): string {
   const p = new URLSearchParams();
   if (f.q) p.set("q", f.q);
+  if (f.type) p.set("type", f.type);
   if (f.category) p.set("category", f.category);
   if (f.sub) p.set("sub", f.sub);
   if (f.brands && f.brands.length) p.set("brand", f.brands.join(","));
@@ -196,6 +207,10 @@ export function toListingQuery(
     limit: PAGE_SIZE,
     offset: (f.page - 1) * PAGE_SIZE,
   };
+
+  // Catalog split (equipment vs attachment) — a structural, id-free filter the
+  // worker applies directly.
+  if (f.type) query.type = f.type;
 
   // Sub-category wins over category (and pins its parent).
   const sub = findSubCategory(f.sub, catalogs.categories, catalogs.attachmentCategories);

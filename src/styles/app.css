@@ -1866,6 +1866,11 @@ html, body {
 }
 .mh-ann-row {
   display: flex; align-items: center; gap: 14px;
+  /* Own the 1280 max-width + centering (was inherited from `.container`), so the
+     global `.container { padding-inline: 0 }` @media at ≥1280px no longer clobbers
+     the pill's internal padding below. */
+  max-width: 1280px;
+  margin-inline: auto;
   min-height: 40px;
   padding: 6px 16px 6px 12px;
   background: var(--m-bg-2);
@@ -1880,7 +1885,6 @@ html, body {
 .mh-ann-mega {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px;
-  padding-left: 12px;
   box-sizing: content-box;
   color: var(--m-ink);
   flex-shrink: 0;
@@ -3430,7 +3434,7 @@ html, body {
   gap: 48px;
 }
 .sl-footer-brand { min-width: 0; }
-.sl-footer-logo { height: 56px; display: block; }
+.sl-footer-logo { height: 80px; width: auto; display: block; }
 .sl-footer-tagline {
   font-size: 14px;
   margin: 16px 0 0;

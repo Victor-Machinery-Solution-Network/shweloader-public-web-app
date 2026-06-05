@@ -8,7 +8,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { Volume2 } from "lucide-react";
+import { Megaphone } from "lucide-react";
 
 import type { Announcement } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -102,9 +102,9 @@ export function AnnouncementBar({ announcements }: { announcements: Announcement
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="container mh-ann-row">
+      <div className="mh-ann-row">
         <span className="mh-ann-mega" aria-hidden="true">
-          <Volume2 className="icon-sm" />
+          <Megaphone className="icon-sm" />
         </span>
 
         <div className="mh-ann-stage" ref={stageRef}>

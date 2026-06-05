@@ -15,11 +15,14 @@ const HOTLINE_DISPLAY = "+95 9 940 475 000";
 const HOTLINE_TEL = "+959940475000";
 const SALES_EMAIL = "sales@shweloader.com";
 
+// Stable, code-level links only — no admin-editable (CRUD) category names, so a
+// rename in the catalog can never break these. `type` is the equipment/attachment
+// catalog split and `sort` is a code enum.
 const MARKETPLACE_LINKS: { label: string; href: string }[] = [
-  { label: "Browse", href: "/browse" },
-  { label: "Excavators", href: "/browse?category=excavators" },
-  { label: "Wheel Loaders", href: "/browse?category=wheel-loaders" },
-  { label: "Cranes", href: "/browse?category=cranes" },
+  { label: "Browse All", href: "/browse" },
+  { label: "Equipment", href: "/browse?type=equipment" },
+  { label: "Attachments", href: "/browse?type=attachment" },
+  { label: "Newest Items", href: "/browse?sort=newest" },
   { label: "Saved", href: "/saved" },
 ];
 
@@ -34,10 +37,10 @@ export function Footer() {
       <div className="container sl-footer-grid">
         <div className="sl-footer-brand">
           <Image
-            src="/brand/logo_white_with_slogan.svg"
-            alt="ShweLoader"
-            width={200}
-            height={56}
+            src="/brand/parent_company_logo.png"
+            alt="Victor Machinery Solution Network Co., Ltd"
+            width={297}
+            height={80}
             className="sl-footer-logo"
             priority={false}
           />
@@ -93,16 +96,20 @@ export function Footer() {
           <div className="sl-footer-col-h" style={{ marginTop: 20 }}>
             <T path="footer.legal" />
           </div>
+          {/* Native anchors (not next/link): the legal page is a single route
+              with hash-driven tabs, and Next's client nav updates the hash via
+              pushState WITHOUT firing `hashchange`, so the tab wouldn't switch
+              when already on /legal. A plain <a> does real hash navigation. */}
           <ul className="sl-footer-col-list">
             <li>
-              <Link href="/legal#terms">
+              <a href="/legal#terms">
                 <T path="footer.terms" />
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="/legal#privacy">
+              <a href="/legal#privacy">
                 <T path="footer.privacy" />
-              </Link>
+              </a>
             </li>
           </ul>
         </div>

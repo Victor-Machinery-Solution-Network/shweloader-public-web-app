@@ -14,7 +14,6 @@
 .lg-crumbs .cur { color: var(--m-ink); font-weight: 600; }
 
 /* Head */
-.lg-head { padding-bottom: 22px; border-bottom: 1px solid var(--m-line); margin-bottom: 8px; }
 .lg-h1 {
   font-family: var(--font-sans);
   font-size: 30px; font-weight: 700; letter-spacing: -0.02em;
@@ -24,25 +23,37 @@
 
 /* Tabs */
 .lg-tabs {
+  position: relative;
   display: inline-flex; gap: 4px; margin: 22px 0 4px;
   padding: 4px; border-radius: 9999px;
   background: var(--m-bg-2); border: 1px solid var(--m-line);
 }
+/* Sliding highlight — JS measures the active tab and sets transform/width. */
+.lg-tab-glide {
+  position: absolute; top: 4px; left: 0;
+  height: calc(100% - 8px);
+  border-radius: 9999px;
+  background: var(--m-ink);
+  pointer-events: none;
+  transition: transform .3s cubic-bezier(.7, 0, .2, 1),
+              width .3s cubic-bezier(.7, 0, .2, 1);
+}
+[data-theme="dark"] .lg-tab-glide { background: var(--m-gold); }
 .lg-tab {
+  position: relative; z-index: 1;
   appearance: none; border: 0; cursor: pointer;
   padding: 8px 20px; border-radius: 9999px;
   background: transparent; color: var(--m-fg-2);
   font-family: var(--font-sans); font-size: 14px; font-weight: 600;
-  transition: background .15s, color .15s;
+  white-space: nowrap;
+  transition: color .25s ease;
 }
 .lg-tab:hover { color: var(--m-ink); }
-.lg-tab.is-on { background: var(--m-ink); color: var(--m-bg); }
-[data-theme="dark"] .lg-tab.is-on { background: var(--m-gold); color: #14110a; }
+.lg-tab.is-on { color: var(--m-bg); }
+[data-theme="dark"] .lg-tab.is-on { color: #14110a; }
 
 /* Layout */
 .lg-grid {
-  display: grid; grid-template-columns: 240px 1fr;
-  gap: 48px; align-items: start;
   margin-top: 28px;
 }
 .lg-nav { position: sticky; top: 28px; display: flex; flex-direction: column; gap: 2px; }
@@ -63,7 +74,7 @@
 }
 
 /* Content */
-.lg-content { min-width: 0; }
+.lg-content { min-width: 0; max-width: 760px; }
 .lg-section { padding-bottom: 40px; scroll-margin-top: 88px; }
 .lg-section:not(:last-child) { border-bottom: 1px solid var(--m-line); margin-bottom: 40px; }
 .lg-section-h {
