@@ -15,13 +15,22 @@ type TabId = "equipment" | "attachments";
 interface CatGroup {
   id: string;
   name: string;
-  items: { id: string; name: string; image: string | null }[];
+  items: { id: string; name: string; image: string | null; href: string }[];
 }
 
 /**
  * Flatten the real taxonomy into "group → subcategory item" form. Equipment
  * categories expose their nested sub-categories; flat attachment categories
  * (no sub-categories) render the category itself as a single item.
+ *
+ * Each item carries the CORRECT Browse href:
+ *  - a sub-category links with `sub=<name>` + its parent `category=<parent>`
+ *    (matching how the Browse sidebar applies a sub), so /browse resolves it to a
+ *    `sub_category_id`;
+ *  - a top-level category links with `category=<name>`.
+ * Linking a sub-category as `category=<subName>` would NOT resolve on Browse
+ * (sub names aren't top-level categories) → the page would show every listing
+ * unfiltered. That was the "clicking a subcategory shows wrong results" bug.
  */
 function toGroups(categories: Category[]): CatGroup[] {
   return categories.map((c) => ({
@@ -33,14 +42,19 @@ function toGroups(categories: Category[]): CatGroup[] {
             id: `s-${s.id}`,
             name: s.name,
             image: s.image,
+            href: `/browse?category=${encodeURIComponent(
+              c.name,
+            )}&sub=${encodeURIComponent(s.name)}`,
           }))
-        : [{ id: `c-${c.id}-self`, name: c.name, image: c.image }],
+        : [
+            {
+              id: `c-${c.id}-self`,
+              name: c.name,
+              image: c.image,
+              href: `/browse?category=${encodeURIComponent(c.name)}`,
+            },
+          ],
   }));
-}
-
-/** A category item links into Browse filtered by that (sub)category name. */
-function browseHref(categoryName: string): string {
-  return `/browse?category=${encodeURIComponent(categoryName)}`;
 }
 
 /**
@@ -133,7 +147,7 @@ export function CategoriesV2({
                     <Link
                       key={item.id}
                       className="cat-v2-item"
-                      href={browseHref(item.name)}
+                      href={item.href}
                     >
                       <div className="cat-v2-img">
                         {img ? (

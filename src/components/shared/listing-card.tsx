@@ -76,17 +76,7 @@ export function ListingCard({
         ) : null}
 
         {(isNew || isSold) && (
-          <div
-            style={{
-              position: "absolute",
-              top: 10,
-              left: 10,
-              zIndex: 2,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 6,
-            }}
-          >
+          <div className="lcard-badges">
             {/* Design uses NEW / SOLD pills only; rent is conveyed by the
                 kind-rent treatment + "/ day" price suffix. */}
             {isNew && <StatusPill variant="new" />}

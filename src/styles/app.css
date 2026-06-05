@@ -3737,6 +3737,17 @@ html, body {
 }
 .lcard-fav:hover { background: #fff; color: var(--m-ink); transform: scale(1.08); }
 .lcard-fav svg { width: 18px; height: 18px; fill: transparent; stroke-width: 1.75; transition: fill .15s, stroke .15s, transform .25s cubic-bezier(.2,.7,.2,1); }
+
+/* NEW / SOLD badge stack — mirrors the heart's 10px inset on the left.
+   `.feat-ribbon` positions itself absolute by default; the wrapper owns the
+   placement here, so neutralize the ribbon's own offset (and let two badges
+   sit in a row). Without this the ribbon's top/left:10 stacked on the
+   wrapper's top/left:10 → a 20px double offset vs the heart's 10px. */
+.lcard-badges {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.lcard-badges .feat-ribbon { position: static; top: auto; left: auto; }
 .lcard-fav.is-on { background: rgba(255,255,255,0.96); color: var(--m-danger); }
 .lcard-fav.is-on svg { fill: var(--m-danger); stroke: var(--m-danger); animation: favPop .35s cubic-bezier(.2,.7,.2,1); }
 .lcard-fav:active svg { transform: scale(0.86); }
