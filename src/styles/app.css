@@ -321,9 +321,11 @@ html, body {
   transition: transform .25s cubic-bezier(.2,.7,.2,1), opacity .15s;
   transform-origin: center;
 }
-.mh-burger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+/* Bars are 2px tall with 4px gaps → centers are 6px apart, so each end bar folds
+   exactly 6px onto the middle for a symmetric X (was 7px → crossed off-centre). */
+.mh-burger.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
 .mh-burger.is-open span:nth-child(2) { opacity: 0; }
-.mh-burger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.mh-burger.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
 .mh-drawer-backdrop {
   display: none;
