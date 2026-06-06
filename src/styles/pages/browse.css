@@ -15,7 +15,11 @@
 .brz-pagehead {
   display: flex; justify-content: space-between; align-items: flex-end;
   gap: 24px; flex-wrap: wrap;
-  padding: 36px 0 28px;
+  /* Vertical only — let the side gutter come from `.container` (16px phones /
+     24px tablet / 0 at ≥1280 where it aligns to the rail), matching .brz-layout
+     so the breadcrumb header lines up with the content at every breakpoint. */
+  padding-top: 36px;
+  padding-bottom: 28px;
   border-bottom: 1px solid var(--m-line);
 }
 .brz-pagehead-l { min-width: 0; }
@@ -1550,6 +1554,10 @@
 
   /* Stack results into single column (already grid 1fr at this breakpoint) */
   .brz-results-bar { flex-wrap: wrap; gap: 10px; }
+  /* Keep Filters + Sort/View on the first line; the active-filter pills wrap to
+     their own full-width second line so they don't collide with Sort. */
+  .brz-results-r { order: 2; margin-left: auto; }
+  .brz-results-l { order: 3; flex-basis: 100%; }
 }
 
 /* Drag handle bar at the top of the sheet (purely decorative) */
