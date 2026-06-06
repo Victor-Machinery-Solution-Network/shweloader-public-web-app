@@ -382,7 +382,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0 24px 24px;
+  padding: 0 16px 16px;
   background: var(--m-bg);
 }
 .mh-drawer-action {
