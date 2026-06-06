@@ -1888,16 +1888,19 @@ html, body {
   position: relative;
   background: transparent;
   color: var(--m-ink);
+  /* The bar is the container: same rail as .container — max-width + auto-center,
+     24px gutter (16px on phones, 0 at ≥1180) — so the pill lines up with the
+     page content. The pill's own padding lives on .mh-ann-row, unaffected. */
+  max-width: 1180px;
+  margin-inline: auto;
   padding: 16px 24px 0;
   overflow: visible;
 }
+@media (min-width: 1180px) { .mh-ann { padding-inline: 0; } }
+@media (max-width: 640px) { .mh-ann { padding-inline: 16px; } }
 .mh-ann-row {
   display: flex; align-items: center; gap: 14px;
-  /* Own the 1280 max-width + centering (was inherited from `.container`), so the
-     global `.container { padding-inline: 0 }` @media at ≥1180px no longer clobbers
-     the pill's internal padding below. */
-  max-width: 1180px;
-  margin-inline: auto;
+  /* The pill fills the .mh-ann container, which owns the max-width + gutter. */
   min-height: 40px;
   padding: 6px 16px 6px 12px;
   background: var(--m-bg-2);
