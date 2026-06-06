@@ -3,8 +3,8 @@
 
 /* ---------- Breadcrumbs ---------- */
 .pdp-crumbs {
-  display: flex; align-items: center; gap: 6px;
-  padding: 20px 0 14px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 32px 0 24px;
   font-size: 14px; color: var(--m-fg-2);
   min-width: 0; overflow: hidden;
 }
@@ -19,8 +19,9 @@
   color: var(--m-ink); font-weight: 500;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
-.pdp-crumbs svg { color: var(--m-fg-3); width: 15px; height: 15px; flex: none; }
-@media (max-width: 640px) { .pdp-crumbs { font-size: 13px; padding: 14px 0 12px; } }
+/* Slash separator — matches the browse/blog breadcrumbs for consistency. */
+.pdp-crumbs-sep { color: var(--m-fg-3); flex: none; }
+@media (max-width: 640px) { .pdp-crumbs { font-size: 13px; padding: 22px 0 18px; } }
 
 /* ---------- Action row ---------- */
 .pdp-actions {

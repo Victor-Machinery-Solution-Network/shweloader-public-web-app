@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ChevronRight } from "lucide-react";
 import { ProductActions } from "@/components/product/product-actions";
 import { StatusPill } from "@/components/shared/status-pill";
 import { T } from "@/components/t";
@@ -156,17 +155,17 @@ export default async function ProductPage({ params }: PageProps) {
           <Link href="/">
             <T path="nav.home" />
           </Link>
-          <ChevronRight aria-hidden="true" />
+          <span className="pdp-crumbs-sep" aria-hidden="true">/</span>
           <Link href={`/browse?mode=${listing.isRent ? "rent" : "sale"}`}>
             <T path={listing.isRent ? "search.rent" : "search.buy"} />
           </Link>
           {listing.category && (
             <>
-              <ChevronRight aria-hidden="true" />
+              <span className="pdp-crumbs-sep" aria-hidden="true">/</span>
               <Link href="/browse">{listing.category}</Link>
             </>
           )}
-          <ChevronRight aria-hidden="true" />
+          <span className="pdp-crumbs-sep" aria-hidden="true">/</span>
           <span className="cur">{listing.title}</span>
         </nav>
 
