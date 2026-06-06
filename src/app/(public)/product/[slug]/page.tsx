@@ -5,7 +5,9 @@ import { StatusPill } from "@/components/shared/status-pill";
 
 import { Gallery } from "@/components/product/gallery";
 import {
-  OverviewCard,
+  ProductPrice,
+  ProductOverviewList,
+  ContactCard,
   listingMode,
   priceFields,
   splitPrice,
@@ -145,53 +147,52 @@ export default async function ProductPage({ params }: PageProps) {
       />
 
       <div className="container">
-        <ProductActions
-          variant="row"
-          listingId={listing.id}
-          title={listing.title}
-        />
+        {/* Full-width gallery on top (PropertyGuru-style). */}
+        <div className="pdp-gallery-wrap">
+          {/* Mobile-only floating Back / Share / Save over the image. */}
+          <ProductActions
+            variant="overlay"
+            listingId={listing.id}
+            title={listing.title}
+          />
+          <Gallery
+            images={[listing.thumbnail, ...listing.images]}
+            title={listing.title}
+            isNew={isNew}
+            isSold={listing.isSoldOut}
+            isRented={listing.isRented}
+          />
+        </div>
 
+        {/* 2-column body: details (left) + sticky contact card (right). */}
         <div className="pdp-layout">
-          {/* On mobile the grid reorders so the title sits below the (full-bleed)
-              gallery; on desktop it spans the top as before. */}
-          <div className="pdp-title">
-            {/* Mobile-only: the NEW badge moves here (above the category eyebrow)
-                so it doesn't collide with the overlaid Back button on the image.
-                Desktop/tablet keep it on the image. */}
-            {isNew && (
-              <div className="pdp-title-badge">
-                <StatusPill variant="new" />
-              </div>
-            )}
-            {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
-            <h1 className="t-h">{listing.title}</h1>
+          <div className="pdp-main">
+            <div className="pdp-title">
+              {/* Mobile-only: NEW badge above the eyebrow (off the image, where it
+                  collides with the overlaid Back button). Desktop keeps it on the image. */}
+              {isNew && (
+                <div className="pdp-title-badge">
+                  <StatusPill variant="new" />
+                </div>
+              )}
+              {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
+              <h1 className="t-h">{listing.title}</h1>
+            </div>
+
+            <ProductPrice listing={listing} />
+            <ProductOverviewList listing={listing} />
+            <Description html={descriptionHtml} pdfUrl={pdfUrl} />
           </div>
 
-          <div className="pdp-gallery-wrap">
-            {/* Mobile-only floating Back / Share / Save over the image. */}
+          <aside className="pdp-side">
+            {/* Actions row: Back · Share · Save */}
             <ProductActions
-              variant="overlay"
+              variant="row"
               listingId={listing.id}
               title={listing.title}
             />
-            <Gallery
-              images={[listing.thumbnail, ...listing.images]}
-              title={listing.title}
-              isNew={isNew}
-              isSold={listing.isSoldOut}
-              isRented={listing.isRented}
-            />
-          </div>
-
-          <div className="pdp-col-r">
-            <OverviewCard listing={listing} />
-          </div>
-
-          <div className="pdp-col-l">
-            <div className="pdp-body-l">
-              <Description html={descriptionHtml} pdfUrl={pdfUrl} />
-            </div>
-          </div>
+            <ContactCard listing={listing} />
+          </aside>
         </div>
       </div>
 

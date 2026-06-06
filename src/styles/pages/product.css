@@ -205,20 +205,27 @@
 }
 .pdp-title .t-loc .t-sep { color: var(--m-fg-3); }
 
-/* ---------- Combined layout: gallery + body on the left, overview sticky on the right ---------- */
+/* ---------- PropertyGuru-style: full-width gallery on top, then a 2-col body
+   (details left, sticky contact card right) ---------- */
+.pdp-gallery-wrap { position: relative; min-width: 0; margin-bottom: 28px; }
 .pdp-layout {
-  display: grid; grid-template-columns: 1fr 390px;
-  grid-template-areas:
-    "title   title"
-    "gallery overview"
-    "body    overview";
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 32px;
   align-items: start;
 }
-.pdp-title { grid-area: title; }
-.pdp-gallery-wrap { grid-area: gallery; min-width: 0; position: relative; }
-.pdp-col-l { grid-area: body; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
-.pdp-col-r { grid-area: overview; position: sticky; top: 88px; }
+.pdp-main { min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+.pdp-side {
+  position: sticky; top: 88px;
+  display: flex; flex-direction: column; gap: 14px;
+  min-width: 0;
+}
+/* Compact the actions row inside the narrow side column (no top padding, smaller
+   buttons) so Back / Share / Save stay on one line. */
+.pdp-side .pdp-actions { padding: 0; gap: 8px; }
+.pdp-side .pdp-actions .pdp-btn { padding: 8px 12px; font-size: 13px; white-space: nowrap; }
+.pdp-side .pdp-actions .pdp-btn-label { white-space: nowrap; }
+.pdp-side .pdp-actions .pdp-btn .icon-sm { width: 15px; height: 15px; }
 /* Floating Back/Share/Save over the gallery image — mobile only (shown in the
    ≤768 block); hidden on desktop where the labelled .pdp-actions row is used. */
 .pdp-gallery-actions { display: none; }
@@ -236,7 +243,7 @@
 .pdp-hero-l { min-width: 0; }
 
 /* ---------- Overview card ---------- */
-.pdp-overview {
+.pdp-contact {
   border: 1px solid var(--m-line);
   border-radius: var(--radius-lg);
   background: var(--m-bg);
@@ -244,95 +251,95 @@
   display: flex; flex-direction: column;
   box-shadow: 0 1px 3px rgba(20,20,26,0.03);
 }
-.pdp-overview .ov-price {
+.ov-price {
   display: flex; flex-direction: column;
   gap: 4px;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--m-line);
 }
-.pdp-overview .ov-price-l {
+.ov-price-l {
   font-size: 11px; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--m-fg-2);
 }
-.pdp-overview .ov-price-r {
+.ov-price-r {
   display: inline-flex; align-items: baseline; gap: 6px;
 }
-.pdp-overview .ov-price-units {
+.ov-price-units {
   font-size: 15px; color: var(--m-fg-2); font-weight: 600;
 }
-.pdp-overview .ov-price-num {
+.ov-price-num {
   font-size: 36px; font-weight: 700; letter-spacing: -0.025em;
   color: var(--m-ink);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
-.pdp-overview .ov-price-suf {
+.ov-price-suf {
   font-size: 14px; color: var(--m-fg-2); font-weight: 600;
 }
 
-.pdp-overview .ov-trust {
+.ov-trust {
   display: flex; flex-wrap: wrap; gap: 6px 12px;
   padding: 14px 0 16px;
   border-bottom: 1px solid var(--m-line);
 }
-.pdp-overview .ov-trust-i {
+.ov-trust-i {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 12px; color: var(--m-ink-2, var(--m-ink));
   font-weight: 500;
 }
-.pdp-overview .ov-trust-i .icon-sm { color: var(--m-gold-ink, #5b4416); }
+.ov-trust-i .icon-sm { color: var(--m-gold-ink, #5b4416); }
 
-.pdp-overview .ov-list {
+.ov-list {
   display: flex; flex-direction: column;
   margin: 0; padding: 16px 0 14px;
 }
-.pdp-overview .ov-list-eyebrow {
+.ov-list-eyebrow {
   display: flex; align-items: center; gap: 6px;
   white-space: nowrap;
   font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--m-fg-3);
   margin-bottom: 8px;
 }
-.pdp-overview .ov-eyebrow-i { width: 14px; height: 14px; color: var(--m-fg-3); flex: 0 0 auto; }
-.pdp-overview .ov-seller {
+.ov-eyebrow-i { width: 14px; height: 14px; color: var(--m-fg-3); flex: 0 0 auto; }
+.ov-seller {
   border-top: 1px solid var(--m-line);
   padding: 16px 0 4px;
   margin-bottom: 4px;
 }
-.pdp-overview .ov-seller-eyebrow {
+.ov-seller-eyebrow {
   display: flex; align-items: center; gap: 6px;
   white-space: nowrap;
   font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--m-fg-3);
   margin-bottom: 8px;
 }
-.pdp-overview .ov-seller-rows {
+.ov-seller-rows {
   display: flex; flex-direction: column; margin: 0;
 }
-.pdp-overview .ov-seller-phone {
+.ov-seller-phone {
   color: var(--m-ink); text-decoration: none; font-weight: 500;
 }
-.pdp-overview .ov-seller-phone:hover { text-decoration: underline; }
-.pdp-overview .ov-row {
+.ov-seller-phone:hover { text-decoration: underline; }
+.ov-row {
   display: grid; grid-template-columns: 130px 1fr;
   gap: 14px;
   padding: 8px 0;
   font-size: 14px;
 }
-.pdp-overview .ov-row dt {
+.ov-row dt {
   color: var(--m-fg-2); font-weight: 400;
 }
-.pdp-overview .ov-row dd {
+.ov-row dd {
   margin: 0; color: var(--m-ink); font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
-.pdp-overview .ov-cta {
+.ov-cta {
   display: flex; flex-direction: column; gap: 8px;  padding-top: 14px;
   border-top: 1px solid var(--m-line);
 }
-.pdp-overview .ov-btn {
+.ov-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 14px 16px;
   border-radius: var(--radius-md);
@@ -342,18 +349,18 @@
   border: 1px solid transparent;
   transition: background .15s, border-color .15s, color .15s, transform .15s;
 }
-.pdp-overview .ov-btn-primary {
+.ov-btn-primary {
   background: var(--m-gold); color: #14141a;
   box-shadow: 0 1px 2px rgba(20,20,26,0.08);
 }
-.pdp-overview .ov-btn-primary:hover { background: var(--m-gold-2, #d3a23b); transform: translateY(-1px); }
-.pdp-overview .ov-btn-secondary {
+.ov-btn-primary:hover { background: var(--m-gold-2, #d3a23b); transform: translateY(-1px); }
+.ov-btn-secondary {
   background: transparent; color: var(--m-ink);
   border-color: var(--m-line);
 }
-.pdp-overview .ov-btn-secondary:hover { border-color: var(--m-ink); }
+.ov-btn-secondary:hover { border-color: var(--m-ink); }
 
-.pdp-overview .ov-foot {
+.ov-foot {
   text-align: center;
   font-size: 11px; color: var(--m-fg-3);
   letter-spacing: 0.02em;
@@ -639,7 +646,7 @@
 
 /* Price block reused inside the overview aside — give it a bottom border to
    separate from the trust list, matching the old ov-price treatment. */
-.pdp-overview .cc-price { padding: 0 0 4px; }
+.cc-price { padding: 0 0 4px; }
 /* Sale+rent listings: two stacked price sections (pill + price), the second
    divided from the first by a hairline. */
 .cc-price-stack { display: flex; flex-direction: column; }
@@ -660,36 +667,36 @@
 [data-theme="dark"] .cc-rent-lbl { color: var(--m-green); }
 .cc-rent-val { font-size: 18px; font-weight: 700; color: var(--m-ink); letter-spacing: -0.01em; }
 .cc-rent-suf { font-size: 13px; color: var(--m-fg-2); font-weight: 600; }
-.pdp-overview .cc-kind {
+.cc-kind {
   padding-bottom: 14px;
   border-bottom: 1px solid var(--m-line);
 }
 /* "For sale" pill sits above the price */
-.pdp-overview .cc-kind-top {
+.cc-kind-top {
   margin-bottom: 8px;
 }
-.pdp-overview .cc-kind-top .t-kind-tag {
+.cc-kind-top .t-kind-tag {
   display: inline-flex; align-items: center;
   padding: 4px 12px; border-radius: 9999px;
   font-size: 11px; font-weight: 700; white-space: nowrap;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
-.pdp-overview .cc-kind-top .t-kind-tag--sale {
+.cc-kind-top .t-kind-tag--sale {
   background: var(--m-green-soft, rgba(46,160,90,0.13)); color: var(--m-green-ink, #1c6b3f);
 }
-[data-theme="dark"] .pdp-overview .cc-kind-top .t-kind-tag--sale {
+[data-theme="dark"] .cc-kind-top .t-kind-tag--sale {
   background: rgba(46,160,90,0.18); color: var(--m-green, #5fcf8e);
 }
-.pdp-overview .cc-kind-top .t-kind-tag--rent,
-.pdp-overview .cc-kind-top .t-kind-tag--both {
+.cc-kind-top .t-kind-tag--rent,
+.cc-kind-top .t-kind-tag--both {
   background: var(--m-gold-soft, rgba(251,184,17,0.16)); color: var(--m-gold-ink, #5b4416);
 }
-[data-theme="dark"] .pdp-overview .cc-kind-top .t-kind-tag--rent,
-[data-theme="dark"] .pdp-overview .cc-kind-top .t-kind-tag--both {
+[data-theme="dark"] .cc-kind-top .t-kind-tag--rent,
+[data-theme="dark"] .cc-kind-top .t-kind-tag--both {
   background: rgba(251,184,17,0.16); color: var(--m-gold);
 }
 /* Divider before the spec list (price block has no bottom border now) */
-.pdp-overview .ov-list {
+.ov-list {
   border-top: 1px solid var(--m-line);
   margin-top: 14px;
 }
@@ -917,7 +924,7 @@
 }
 .pdp-gallery .g-mini-more:hover .g-more-badge { background: rgba(20, 20, 26, 0.72); }
 [data-density="compact"] .pdp-hero { gap: 24px; grid-template-columns: 1fr 340px; }
-[data-density="compact"] .pdp-overview { padding: 18px 18px 14px; }
+[data-density="compact"] .pdp-contact { padding: 18px 18px 14px; }
 
 /* ============================================================
    MOBILE STICKY ACTION BAR — price + contact, hidden on desktop
@@ -949,22 +956,15 @@
 }
 
 @media (max-width: 1024px) {
-  /* Stack: gallery → overview card → description */
-  .pdp-layout {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "title"
-      "gallery"
-      "overview"
-      "body";
-    gap: 28px;
-  }
-  .pdp-col-l { gap: 40px; margin-top: 0; }
-  /* When stacked, draw a divider above the Description so it reads as separate
-     from the Seller information that ends the overview card just above it.
-     Scoped to the section itself so a description-less listing shows no stray line. */
-  .pdp-col-l .pdp-section { border-top: 1px solid var(--m-line); padding-top: 28px; }
-  .pdp-col-r { position: static; top: auto; }
+  /* Single column: gallery (on top) → details (main) → contact (side). */
+  .pdp-layout { grid-template-columns: 1fr; gap: 28px; }
+  .pdp-main { gap: 28px; }
+  .pdp-side { position: static; top: auto; }
+  /* The labelled actions row is replaced by the floating overlay on phones; the
+     enquiry form is replaced by the sticky bottom bar — so the side column only
+     carries the seller card on mobile. */
+  /* Divider above the Description so it reads as a separate section. */
+  .pdp-main .pdp-section { border-top: 1px solid var(--m-line); padding-top: 28px; }
   .pdp-hero { grid-template-columns: 1fr; gap: 24px; }
   .pdp-body:has(.pdp-body-r) { grid-template-columns: 1fr; }
 
@@ -1056,36 +1056,34 @@
   }
   .pdp-mbar-cta:active { transform: translateY(1px); }
 
-  /* Card enquiry block is replaced by the bottom sheet on mobile */
-  .pdp-overview .ov-cta { display: none; }
-  /* Price + kind tag are shown in the sticky bottom bar — hide the duplicate up top */
-  .pdp-overview .cc-kind-top,
-  .pdp-overview .cc-price-stack,
-  .pdp-overview .cc-price { display: none; }
+  /* Enquiry form is replaced by the sticky bottom sheet on mobile. */
+  .ov-cta { display: none; }
+  /* Price is shown in the sticky bottom bar — hide the in-flow block up top. */
+  .pdp-price { display: none; }
 
-  /* Overview card loses its chrome on mobile — specs & seller read as
-     standalone sections with Description-style headers */
-  .pdp-overview {
+  /* Contact card loses its chrome on mobile — seller reads as a standalone
+     section with a Description-style header. */
+  .pdp-contact {
     border: 0; border-radius: 0; background: none;
     padding: 0; box-shadow: none;
   }
-  .pdp-overview .ov-list {
+  .ov-list {
     border-top: 0; margin-top: 0;
     padding: 4px 0 24px;
     border-bottom: 1px solid var(--m-line);
   }
-  .pdp-overview .ov-seller {
+  .ov-seller {
     border-top: 0;
     padding: 24px 0 4px;
   }
-  .pdp-overview .ov-list-eyebrow,
-  .pdp-overview .ov-seller-eyebrow {
+  .ov-list-eyebrow,
+  .ov-seller-eyebrow {
     font-size: clamp(20px, 3.4vw, 24px);
     font-weight: 600; letter-spacing: -0.015em;
     text-transform: none; color: var(--m-ink);
     margin-bottom: 16px; gap: 8px;
   }
-  .pdp-overview .ov-eyebrow-i { width: 19px; height: 19px; color: var(--m-fg-2); }
+  .ov-eyebrow-i { width: 19px; height: 19px; color: var(--m-fg-2); }
 
   /* Bottom sheet */
   .pdp-sheet-root {
@@ -1145,17 +1143,10 @@
    Full-bleed image at the top with Back/Share/Save floating over it, and the
    title moved below the image. Kept last so it wins over the ≤1024 stack. */
 @media (max-width: 768px) {
-  /* Reorder: image first, then title, then price (overview), then description. */
-  .pdp-layout {
-    grid-template-areas:
-      "gallery"
-      "title"
-      "overview"
-      "body";
-    gap: 20px;
-  }
+  /* Gallery is already full-width on top; the single-column body stacks below. */
+  .pdp-layout { gap: 20px; }
   /* Gallery breaks out of the container gutter to sit edge-to-edge. */
-  .pdp-gallery-wrap { margin-inline: -24px; }
+  .pdp-gallery-wrap { margin-inline: -24px; margin-bottom: 16px; }
   .pdp-gallery .g-hero { border-radius: 0; max-height: 78vw; }
   /* Hero is full-bleed, but re-pad the thumbnail strip so the minis don't run
      to the screen edge (align them back with the page gutter). */

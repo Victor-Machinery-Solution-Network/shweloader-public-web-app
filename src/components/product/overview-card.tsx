@@ -67,60 +67,15 @@ export const KIND_KEY: Record<ProductMode, string> = {
   both: "product.forBoth",
 };
 
-/**
- * Sticky overview card: kind tag, price, product-overview spec list, seller
- * information (only when visible), and the enquiry form.
- */
-export function OverviewCard({ listing }: { listing: Listing }) {
-  const mode = listingMode(listing);
-
-  const fields = priceFields(listing);
-  const primaryRaw = formatListingPrice(fields, mode === "rent" ? "rent" : "sale");
-  const primary = splitPrice(primaryRaw);
-  const primaryOnRequest = primaryRaw === PRICE_ON_REQUEST;
-  const rentSecondaryRaw =
-    mode === "both" ? formatListingPrice(fields, "rent") : null;
-  const rentSecondary = rentSecondaryRaw ? splitPrice(rentSecondaryRaw) : null;
-  const rentSecondaryOnRequest = rentSecondaryRaw === PRICE_ON_REQUEST;
-
-  const condition = listing.condition;
-  const locationLabel =
-    listing.location.township ||
-    listing.location.state ||
-    listing.location.district ||
-    null;
-
-  // All admin specs (customFields) live under Product overview alongside the
-  // listing-level Condition + Location highlights — they're all key-value pairs.
-  // Deduped by label.
-  // Static rows (Condition, Location) carry an i18n key so their LABEL localizes;
-  // their values + the admin customFields stay as authored (dynamic content).
-  const rows: { label: string; value: string; i18nKey?: string }[] = [];
-  const seen = new Set<string>();
-  const addRow = (k: string, v: string, i18nKey?: string) => {
-    const key = k.trim();
-    const val = v.trim();
-    if (!key || !val || seen.has(key.toLowerCase())) return;
-    seen.add(key.toLowerCase());
-    rows.push({ label: key, value: val, i18nKey });
-  };
-  if (condition) addRow("Condition", condition, "product.condition");
-  if (locationLabel) addRow("Location", locationLabel, "product.location");
-  for (const f of listing.customFields) {
-    addRow(f.label || f.key || "", f.value ?? "");
-  }
-
-  const seller =
-    listing.seller && !listing.seller.hidden ? listing.seller : null;
-
-  // One price "section": a kind pill (green for sale, gold for rent) above the
-  // stacked price. A sale+rent listing shows two of these stacked; otherwise one.
-  const priceBlock = (
-    variant: "sale" | "rent",
-    labelKey: string,
-    p: ReturnType<typeof splitPrice>,
-    onRequest: boolean,
-  ) => (
+/** One price "section": a kind pill (green for sale, gold for rent) above the
+ *  stacked price. A sale+rent listing shows two of these stacked; otherwise one. */
+function priceBlock(
+  variant: "sale" | "rent",
+  labelKey: string,
+  p: ReturnType<typeof splitPrice>,
+  onRequest: boolean,
+) {
+  return (
     <div className="cc-price-block">
       <div className="cc-kind-top">
         <span className={`t-kind-tag t-kind-tag--${variant}`}>
@@ -142,9 +97,22 @@ export function OverviewCard({ listing }: { listing: Listing }) {
       </div>
     </div>
   );
+}
+
+/** Price section(s) — sits in the left main column. */
+export function ProductPrice({ listing }: { listing: Listing }) {
+  const mode = listingMode(listing);
+  const fields = priceFields(listing);
+  const primaryRaw = formatListingPrice(fields, mode === "rent" ? "rent" : "sale");
+  const primary = splitPrice(primaryRaw);
+  const primaryOnRequest = primaryRaw === PRICE_ON_REQUEST;
+  const rentSecondaryRaw =
+    mode === "both" ? formatListingPrice(fields, "rent") : null;
+  const rentSecondary = rentSecondaryRaw ? splitPrice(rentSecondaryRaw) : null;
+  const rentSecondaryOnRequest = rentSecondaryRaw === PRICE_ON_REQUEST;
 
   return (
-    <aside className="pdp-overview">
+    <div className="pdp-price">
       {mode === "both" && rentSecondary ? (
         <div className="cc-price-stack">
           {priceBlock("sale", "product.forSale", primary, primaryOnRequest)}
@@ -163,22 +131,64 @@ export function OverviewCard({ listing }: { listing: Listing }) {
           primaryOnRequest,
         )
       )}
+    </div>
+  );
+}
 
-      {rows.length > 0 && (
-        <dl className="ov-list">
-          <div className="ov-list-eyebrow">
-            <Package className="ov-eyebrow-i" aria-hidden="true" />
-            <T path="product.overviewTitle" />
-          </div>
-          {rows.map((r) => (
-            <div key={r.label} className="ov-row">
-              <dt>{r.i18nKey ? <T path={r.i18nKey} /> : r.label}</dt>
-              <dd>{r.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
+/** Build the Product-overview rows (Condition + Location highlights + admin
+ *  customFields), deduped by label. Static rows carry an i18n key so their
+ *  LABEL localizes; values + customFields stay as authored (dynamic content). */
+function overviewRows(listing: Listing) {
+  const rows: { label: string; value: string; i18nKey?: string }[] = [];
+  const seen = new Set<string>();
+  const addRow = (k: string, v: string, i18nKey?: string) => {
+    const key = k.trim();
+    const val = v.trim();
+    if (!key || !val || seen.has(key.toLowerCase())) return;
+    seen.add(key.toLowerCase());
+    rows.push({ label: key, value: val, i18nKey });
+  };
+  if (listing.condition) addRow("Condition", listing.condition, "product.condition");
+  const locationLabel =
+    listing.location.township ||
+    listing.location.state ||
+    listing.location.district ||
+    null;
+  if (locationLabel) addRow("Location", locationLabel, "product.location");
+  for (const f of listing.customFields) {
+    addRow(f.label || f.key || "", f.value ?? "");
+  }
+  return rows;
+}
 
+/** Product overview key/value list — sits in the left main column. */
+export function ProductOverviewList({ listing }: { listing: Listing }) {
+  const rows = overviewRows(listing);
+  if (rows.length === 0) return null;
+  return (
+    <dl className="ov-list">
+      <div className="ov-list-eyebrow">
+        <Package className="ov-eyebrow-i" aria-hidden="true" />
+        <T path="product.overviewTitle" />
+      </div>
+      {rows.map((r) => (
+        <div key={r.label} className="ov-row">
+          <dt>{r.i18nKey ? <T path={r.i18nKey} /> : r.label}</dt>
+          <dd>{r.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** Sticky right-column contact card: seller information (when visible) + the
+ *  enquiry form. */
+export function ContactCard({ listing }: { listing: Listing }) {
+  const seller =
+    listing.seller && !listing.seller.hidden ? listing.seller : null;
+
+  return (
+    <div className="pdp-contact">
       {seller && (
         <div className="ov-seller">
           <div className="ov-seller-eyebrow">
@@ -222,6 +232,6 @@ export function OverviewCard({ listing }: { listing: Listing }) {
           phone={seller?.phone ?? null}
         />
       </div>
-    </aside>
+    </div>
   );
 }
