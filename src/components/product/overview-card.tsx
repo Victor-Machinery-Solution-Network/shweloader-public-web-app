@@ -129,7 +129,7 @@ export function OverviewCard({ listing }: { listing: Listing }) {
       </div>
       <div className="cc-price">
         {onRequest ? (
-          <span className="cc-num tnum">
+          <span className="cc-num cc-num--request">
             <T path="product.priceOnRequest" />
           </span>
         ) : (

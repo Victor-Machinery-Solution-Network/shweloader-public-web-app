@@ -66,7 +66,7 @@ export function MobileBar({
           </span>
           <span className="pdp-mbar-amount">
             {priceOnRequest ? (
-              <span className="pdp-mbar-num tnum">
+              <span className="pdp-mbar-num pdp-mbar-num--request">
                 {t("product.priceOnRequest")}
               </span>
             ) : (

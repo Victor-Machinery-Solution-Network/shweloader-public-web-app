@@ -622,6 +622,9 @@
 }
 .cc-units { font-size: 14px; color: var(--m-fg-2); font-weight: 600; }
 .cc-num   { font-size: 30px; font-weight: 600; color: var(--m-ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+/* "Price on request" is a phrase, not a number — much longer in Burmese, so it
+   would look huge at the 30px number size. Render it smaller. */
+.cc-num--request { font-size: 18px; letter-spacing: -0.01em; }
 .cc-suf   { font-size: 14px; color: var(--m-fg-2); }
 .cc-kind  { font-size: 14px; color: var(--m-fg-2); }
 .pdp-contact .cc-kind { margin-top: -16px; }
@@ -1014,6 +1017,8 @@
   .pdp-mbar-amount { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
   .pdp-mbar-units { font-size: 11px; font-weight: 600; color: var(--m-fg-3); }
   .pdp-mbar-num { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: var(--m-ink); font-variant-numeric: tabular-nums; }
+  /* "Price on request" label (longer in Burmese) — smaller than the number. */
+  .pdp-mbar-num--request { font-size: 13px; letter-spacing: 0; }
   .pdp-mbar-suf { font-size: 12px; font-weight: 500; color: var(--m-fg-3); }
   .pdp-mbar-actions { display: flex; align-items: stretch; gap: 10px; flex: 0 0 auto; }
   .pdp-mbar-call {
