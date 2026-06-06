@@ -61,11 +61,15 @@ export async function setSession(
         partner: !!(u.is_approved_partner ?? u.partner),
         memberSince: u.created_at,
       };
+      // Lifetime is pinned to the access token (sl_token, 7d) so the client's
+      // "signed in" view (which reads sl_user) can never outlive the server-side
+      // gate (middleware, which checks sl_token). A longer sl_user would leave
+      // the UI thinking you're logged in while private routes redirect you out.
       store.set(USER, JSON.stringify(display), {
         secure: isProd,
         sameSite: "lax",
         path: "/",
-        maxAge: 60 * 60 * 24 * 30,
+        maxAge: 60 * 60 * 24 * 7,
       });
     }
   } catch {

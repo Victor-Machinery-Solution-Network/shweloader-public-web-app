@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "./theme-provider";
 import { LanguageProvider } from "./language-provider";
 import { AuthUIProvider } from "./auth-ui";
+import { AuthIntent } from "./auth-intent";
 import { AuthProvider } from "@/lib/auth/use-auth";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -11,7 +12,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
-          <AuthUIProvider>{children}</AuthUIProvider>
+          <AuthUIProvider>
+            <AuthIntent />
+            {children}
+          </AuthUIProvider>
         </AuthProvider>
         <Toaster
           position="top-center"

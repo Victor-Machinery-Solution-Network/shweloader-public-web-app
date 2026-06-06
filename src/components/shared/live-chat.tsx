@@ -56,13 +56,11 @@ export function LiveChat() {
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const openPanel = useCallback(() => {
-    // Signed-out users can't chat — route them to the auth modal instead.
-    if (!signedIn) {
-      openAuth("signin");
-      return;
-    }
+    // Always open the panel. Signed-out users see the sign-in gate (with the
+    // "Sign in →" CTA that routes to the auth modal) — so the bubble shows the
+    // teasing "3 online" presence rather than jumping straight to auth.
     setOpen(true);
-  }, [signedIn, openAuth]);
+  }, []);
 
   // Allow any part of the app (header Messages link, etc.) to open the chat.
   useEffect(() => {
@@ -280,12 +278,13 @@ export function LiveChat() {
                 <ArrowRight className="icon-sm" />
               </button>
               <div className="lc-gate-foot">
+                New here?{" "}
                 <button
                   type="button"
                   className="lc-gate-link"
                   onClick={() => openAuth("register")}
                 >
-                  Create an account
+                  Create a free account
                 </button>
               </div>
             </div>
