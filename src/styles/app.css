@@ -312,7 +312,13 @@ html, body {
   border-radius: 10px;
   transition: background .15s;
 }
-.mh-burger:hover { background: var(--m-bg-2); }
+/* :hover sticks on touch (a tap leaves the element "hovered" until you tap
+   elsewhere), so gate it to real hover devices; use :active for tap feedback
+   that clears the moment you lift your finger. */
+@media (hover: hover) {
+  .mh-burger:hover { background: var(--m-bg-2); }
+}
+.mh-burger:active { background: var(--m-bg-2); }
 .mh-burger span {
   display: block;
   width: 20px; height: 2px;
