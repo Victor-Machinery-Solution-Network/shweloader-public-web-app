@@ -144,15 +144,27 @@ export default async function ProductPage({ params }: PageProps) {
       />
 
       <div className="container">
-        <ProductActions listingId={listing.id} title={listing.title} />
-
-        <div className="pdp-title">
-          {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
-          <h1 className="t-h">{listing.title}</h1>
-        </div>
+        <ProductActions
+          variant="row"
+          listingId={listing.id}
+          title={listing.title}
+        />
 
         <div className="pdp-layout">
+          {/* On mobile the grid reorders so the title sits below the (full-bleed)
+              gallery; on desktop it spans the top as before. */}
+          <div className="pdp-title">
+            {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
+            <h1 className="t-h">{listing.title}</h1>
+          </div>
+
           <div className="pdp-gallery-wrap">
+            {/* Mobile-only floating Back / Share / Save over the image. */}
+            <ProductActions
+              variant="overlay"
+              listingId={listing.id}
+              title={listing.title}
+            />
             <Gallery
               images={[listing.thumbnail, ...listing.images]}
               title={listing.title}

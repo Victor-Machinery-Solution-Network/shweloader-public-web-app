@@ -28,9 +28,13 @@ function readSaved(): number[] {
 export function ProductActions({
   listingId,
   title,
+  variant = "row",
 }: {
   listingId: number;
   title: string;
+  /** "row" = the labelled action bar (desktop). "overlay" = floating circular
+   *  icon buttons over the gallery image (mobile). */
+  variant?: "row" | "overlay";
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -75,6 +79,50 @@ export function ProductActions({
       /* user dismissed the share sheet */
     }
   }, [title]);
+
+  if (variant === "overlay") {
+    return (
+      <div className="pdp-gallery-actions">
+        <button
+          type="button"
+          className="pdp-gact"
+          onClick={goBack}
+          aria-label={t("actions.backToResults")}
+        >
+          <ArrowRight
+            className="icon-sm"
+            strokeWidth={2}
+            style={{ transform: "rotate(180deg)" }}
+            aria-hidden="true"
+          />
+        </button>
+        <div className="pdp-gact-right">
+          <button
+            type="button"
+            className="pdp-gact"
+            onClick={share}
+            aria-label={t("actions.share")}
+          >
+            <ShareIcon className="icon-sm" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={"pdp-gact" + (saved ? " is-on" : "")}
+            onClick={toggleSave}
+            aria-pressed={saved}
+            aria-label={saved ? t("actions.saved") : t("actions.save")}
+          >
+            <Heart
+              className="icon-sm"
+              strokeWidth={2}
+              style={saved ? { fill: "currentColor" } : undefined}
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pdp-actions">

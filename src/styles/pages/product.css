@@ -178,7 +178,7 @@
 
 /* ---------- Title header ---------- */
 .pdp-title {
-  padding: 8px 0 24px;
+  padding: 8px 0 0;
 }
 .pdp-title .t-eyebrow {
   display: flex; align-items: center; gap: 10px;
@@ -206,14 +206,19 @@
 .pdp-layout {
   display: grid; grid-template-columns: 1fr 390px;
   grid-template-areas:
+    "title   title"
     "gallery overview"
     "body    overview";
   gap: 32px;
   align-items: start;
 }
-.pdp-gallery-wrap { grid-area: gallery; min-width: 0; }
+.pdp-title { grid-area: title; }
+.pdp-gallery-wrap { grid-area: gallery; min-width: 0; position: relative; }
 .pdp-col-l { grid-area: body; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
 .pdp-col-r { grid-area: overview; position: sticky; top: 88px; }
+/* Floating Back/Share/Save over the gallery image — mobile only (shown in the
+   ≤768 block); hidden on desktop where the labelled .pdp-actions row is used. */
+.pdp-gallery-actions { display: none; }
 
 /* ---------- Hero 2-column (gallery + overview) ---------- */
 .pdp-hero {
@@ -945,6 +950,7 @@
   .pdp-layout {
     grid-template-columns: 1fr;
     grid-template-areas:
+      "title"
       "gallery"
       "overview"
       "body";
@@ -1127,4 +1133,59 @@
 @media (max-width: 480px) {
   .pdp-title .t-h { font-size: 24px; }
   .pdp-similar-grid > * { flex-basis: 84%; }
+}
+
+/* ── Mobile (phones): immersive gallery (PropertyGuru / Airbnb / app style) ──
+   Full-bleed image at the top with Back/Share/Save floating over it, and the
+   title moved below the image. Kept last so it wins over the ≤1024 stack. */
+@media (max-width: 768px) {
+  /* Reorder: image first, then title, then price (overview), then description. */
+  .pdp-layout {
+    grid-template-areas:
+      "gallery"
+      "title"
+      "overview"
+      "body";
+    gap: 20px;
+  }
+  /* Gallery breaks out of the container gutter to sit edge-to-edge. */
+  .pdp-gallery-wrap { margin-inline: -24px; }
+  .pdp-gallery .g-hero { border-radius: 0; max-height: 78vw; }
+
+  /* The labelled action row is replaced by the floating overlay. */
+  .pdp-actions { display: none; }
+  .pdp-title { padding-top: 0; }
+
+  /* Floating Back (left) + Share/Save (right) over the image. */
+  .pdp-gallery-actions {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    top: 12px; left: 12px; right: 12px;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .pdp-gact-right { display: flex; gap: 10px; }
+  .pdp-gact {
+    pointer-events: auto;
+    width: 40px; height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.92);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    border: 1px solid rgba(20, 18, 12, 0.08);
+    color: var(--m-ink);
+    box-shadow: 0 2px 10px rgba(20, 18, 12, 0.18);
+    cursor: pointer;
+  }
+  .pdp-gact .icon-sm { width: 18px; height: 18px; }
+  .pdp-gact.is-on { color: var(--m-gold); }
+  [data-theme="dark"] .pdp-gact {
+    background: rgba(26, 27, 32, 0.82); border-color: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+}
+@media (max-width: 640px) {
+  /* Container gutter is 16px here, so match the full-bleed break-out. */
+  .pdp-gallery-wrap { margin-inline: -16px; }
 }
