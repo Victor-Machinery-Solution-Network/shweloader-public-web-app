@@ -329,12 +329,10 @@ html, body {
   display: none;
   position: fixed; inset: 64px 0 0 0;
   z-index: 49;
-  background: rgba(20, 18, 12, 0.5);
-  /* Light blur only — real-time backdrop blur is GPU-heavy on phones; 8px while
-     the drawer animated was a major stutter source. A stronger dim compensates. */
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-
+  /* No backdrop-filter: real-time blur is the main GPU cost on phones and was
+     repainting every frame while the drawer animated. A solid dim is cheap
+     (composited) and keeps the focus on the menu. */
+  background: rgba(20, 18, 12, 0.55);
   border: 0; padding: 0;
   cursor: pointer;
   animation: mhBackdrop .2s ease-out;
@@ -349,9 +347,12 @@ html, body {
   background: var(--m-bg);
   border-bottom: 1px solid var(--m-line);
   box-shadow: 0 16px 40px -16px rgba(20,18,12,0.18);
-  /* Height "drop"/unfold reveal — animates max-height open. */
+  /* Height "drop"/unfold reveal — animates max-height open. `contain: layout`
+     isolates the drawer's layout so the per-frame reflow stays scoped to it
+     (it's already position:absolute, so the page never reflows). */
   max-height: 0;
   overflow: hidden;
+  contain: layout;
   transition: max-height .3s cubic-bezier(.2,.7,.2,1);
 }
 .mh-drawer.is-open { max-height: 80vh; overflow-y: auto; }
