@@ -176,6 +176,112 @@
   opacity: 0.85;
 }
 
+/* ---------- Desktop hero + 2×2 thumbnail collage (PropertyGuru-style) ----------
+   By default (phones/tablets) the stage is just the hero and the collage is
+   hidden — the horizontal strip handles browsing. The ≥1025 block below turns
+   the stage into a hero + 2×2 grid and hides the strip. */
+.pdp-gallery .g-stage { display: block; }
+.pdp-gallery .g-collage { display: none; }
+.pdp-gallery .g-tile {
+  position: relative;
+  border: 0; padding: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  background: #f1f1f1;
+  transition: opacity .15s;
+}
+[data-theme="dark"] .pdp-gallery .g-tile { background: #1a1b20; }
+.pdp-gallery .g-tile:hover { opacity: 0.92; }
+.pdp-gallery .g-tile.is-on { outline: 2px solid var(--m-gold); outline-offset: -2px; }
+.pdp-gallery .g-tile-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+  background: rgba(20, 20, 26, 0.55);
+  color: #fff;
+  transition: background .15s;
+}
+.pdp-gallery .g-tile-more:hover .g-tile-overlay { background: rgba(20, 20, 26, 0.68); }
+.pdp-gallery .g-tile-num {
+  font-size: 26px; font-weight: 700; letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.pdp-gallery .g-tile-cta { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+
+/* ---------- Full-screen lightbox ---------- */
+.g-lightbox {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(8, 8, 12, 0.96);
+  display: flex; flex-direction: column;
+  padding: 56px 16px 16px;
+  animation: g-lb-in .18s ease;
+}
+@keyframes g-lb-in { from { opacity: 0; } to { opacity: 1; } }
+.g-lb-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.12); color: #fff;
+  border: 0; border-radius: 9999px; cursor: pointer;
+  transition: background .15s;
+}
+.g-lb-close:hover { background: rgba(255, 255, 255, 0.24); }
+.g-lb-stage {
+  position: relative; flex: 1; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.g-lb-img { position: relative; width: 100%; height: 100%; }
+.g-lb-stage .g-nav { opacity: 1; background: rgba(255, 255, 255, 0.14); }
+.g-lb-stage .g-nav:hover { background: rgba(255, 255, 255, 0.26); }
+.g-lb-stage .g-prev { left: 8px; }
+.g-lb-stage .g-next { right: 8px; }
+.g-lb-counter {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  padding: 6px 14px; border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.5); color: #fff;
+  font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.g-lb-rail {
+  display: flex; gap: 8px; justify-content: center;
+  overflow-x: auto; padding: 14px 4px 2px;
+}
+.g-lb-rail::-webkit-scrollbar { display: none; }
+.g-lb-mini {
+  position: relative; flex: 0 0 72px; height: 54px;
+  border: 2px solid transparent; border-radius: 8px;
+  overflow: hidden; cursor: pointer; padding: 0; background: #222;
+  opacity: 0.6; transition: opacity .15s, border-color .15s;
+}
+.g-lb-mini:hover { opacity: 1; }
+.g-lb-mini.is-on { opacity: 1; border-color: var(--m-gold); }
+
+/* Desktop: split the stage into hero (left) + a 2×2 collage (right) and drop the
+   horizontal strip. Only when a collage is actually rendered (≥ 4 photos). */
+@media (min-width: 1025px) {
+  .pdp-gallery:has(.g-collage) .g-stage {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    gap: 10px;
+    aspect-ratio: 21 / 9;
+    align-items: stretch;
+  }
+  .pdp-gallery:has(.g-collage) .g-stage .g-hero {
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+  .pdp-gallery:has(.g-collage) .g-collage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    height: 100%;
+  }
+  .pdp-gallery:has(.g-collage) .g-strip { display: none; }
+}
+
 /* ---------- Title header ---------- */
 .pdp-title {
   padding: 8px 0 0;
