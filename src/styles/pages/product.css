@@ -1151,6 +1151,9 @@
   /* Gallery breaks out of the container gutter to sit edge-to-edge. */
   .pdp-gallery-wrap { margin-inline: -24px; }
   .pdp-gallery .g-hero { border-radius: 0; max-height: 78vw; }
+  /* No prev/next arrows on phones — the gallery is swipe-driven and the arrows
+     clutter the immersive image. */
+  .pdp-gallery .g-nav { display: none; }
 
   /* The labelled action row is replaced by the floating overlay. */
   .pdp-actions { display: none; }
