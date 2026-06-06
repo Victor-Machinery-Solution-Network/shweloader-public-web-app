@@ -77,6 +77,22 @@ export function UserMenu() {
     };
   }, [open]);
 
+  // Lock body scroll while open on mobile (it's a full overlay there); on desktop
+  // it's a small anchored dropdown, so leave the page scrollable.
+  useEffect(() => {
+    if (!open) return;
+    if (
+      typeof window === "undefined" ||
+      !window.matchMedia("(max-width: 880px)").matches
+    )
+      return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   // Keep the menu mounted through its close animation, then unmount the backdrop.
   useEffect(() => {
     if (open) {

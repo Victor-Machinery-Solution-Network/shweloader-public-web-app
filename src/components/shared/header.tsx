@@ -58,6 +58,16 @@ export function Header() {
     };
   }, [menuOpen]);
 
+  // Lock body scroll while the drawer is open so the page behind it can't scroll.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
   // Close the drawer when the route changes.
   useEffect(() => {
     setMenuOpen(false);
