@@ -4,7 +4,7 @@
 /* The product page's main rail is a touch narrower than the global 1280
    container. Scoped to the direct child only, so the "You may also like"
    section below keeps the global 1280 width + edge-bleed carousel. */
-.pdp-page > .container { max-width: 1120px; }
+.pdp-page > .container { max-width: 1180px; }
 
 /* ---------- Breadcrumbs ---------- */
 .pdp-crumbs {
@@ -1043,10 +1043,10 @@
 }
 /* ≥1280: pad to the centered 1280 rail so the first card lines up with the page
    content while the strip bleeds into the side margins. */
-@media (min-width: 1120px) {
+@media (min-width: 1180px) {
   .pdp-similar-grid {
-    padding-inline: calc(50vw - 560px);
-    scroll-padding-inline: calc(50vw - 560px);
+    padding-inline: calc(50vw - 590px);
+    scroll-padding-inline: calc(50vw - 590px);
   }
 }
 

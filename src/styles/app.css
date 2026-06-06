@@ -1888,9 +1888,9 @@ html, body {
 .mh-ann-row {
   display: flex; align-items: center; gap: 14px;
   /* Own the 1280 max-width + centering (was inherited from `.container`), so the
-     global `.container { padding-inline: 0 }` @media at ≥1120px no longer clobbers
+     global `.container { padding-inline: 0 }` @media at ≥1180px no longer clobbers
      the pill's internal padding below. */
-  max-width: 1120px;
+  max-width: 1180px;
   margin-inline: auto;
   min-height: 40px;
   padding: 6px 16px 6px 12px;

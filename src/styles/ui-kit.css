@@ -69,10 +69,10 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.06em; color: var(--fg-2);
 }
 
-.container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
-.rail      { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+.container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.rail      { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 
-/* Phones: tighten the side gutter to 16px (tablets keep 24px; ≥1120px is 0). */
+/* Phones: tighten the side gutter to 16px (tablets keep 24px; ≥1180px is 0). */
 @media (max-width: 640px) {
   .container { padding-inline: 16px; }
 }

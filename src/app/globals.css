@@ -66,10 +66,10 @@
 
 /* `.container` (max 1280 / 24px gutter) is provided by ui-kit.css. */
 
-/* Big screens (≥1120px): drop the 24px side gutter on every .container so all
+/* Big screens (≥1180px): drop the 24px side gutter on every .container so all
    content spans the full 1280 rail and the header lines up with page content.
    The gutter stays on smaller screens so content never touches the edge. */
-@media (min-width: 1120px) {
+@media (min-width: 1180px) {
   .container {
     padding-inline: 0;
   }
