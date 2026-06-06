@@ -14,6 +14,25 @@ import { useAuth } from "@/lib/auth/use-auth";
 let pendingNext: string | null = null;
 
 /**
+ * Only accept a same-origin internal path as a post-login destination. Rejects
+ * absolute URLs, protocol-relative (`//evil.com`) and backslash (`/\evil.com`)
+ * tricks, then resolves against our origin and confirms it stayed there — so a
+ * crafted `?next=` can never bounce the user off-site (open redirect).
+ */
+function safeNext(raw: string | null): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) {
+    return null;
+  }
+  try {
+    const u = new URL(raw, window.location.origin);
+    if (u.origin !== window.location.origin) return null;
+    return u.pathname + u.search + u.hash;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Bridges the server-side gate (middleware) to the client auth modal:
  *  - On landing at `/?signin=1&next=…`, auto-open the sign-in modal and stash
  *    `next`, then strip the params so refresh/back is clean.
@@ -31,8 +50,7 @@ export function AuthIntent() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("signin") !== "1") return;
 
-    const next = params.get("next");
-    pendingNext = next && next.startsWith("/") ? next : null;
+    pendingNext = safeNext(params.get("next"));
     open("signin");
 
     params.delete("signin");

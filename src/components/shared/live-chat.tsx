@@ -171,9 +171,11 @@ export function LiveChat() {
               <span className="lc-dot" /> Online · replies in ~2 min
             </div>
           </div>
-          <Link className="lc-expand" href="/chat" aria-label="Open full screen">
-            <Maximize2 />
-          </Link>
+          {signedIn && (
+            <Link className="lc-expand" href="/chat" aria-label="Open full screen">
+              <Maximize2 />
+            </Link>
+          )}
           <button
             type="button"
             className="lc-close"
