@@ -813,6 +813,8 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
+/* "Price on request" phrase (longer in Burmese) — smaller than the 22px number. */
+.lrow-price.is-request { font-size: 14px; letter-spacing: 0; }
 .lrow-per { font-size: 14px; font-weight: 400; color: var(--m-fg-2); }
 .lrow-cta {
   display: inline-flex; align-items: center; gap: 6px;

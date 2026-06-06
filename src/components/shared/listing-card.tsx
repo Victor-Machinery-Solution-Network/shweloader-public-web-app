@@ -58,8 +58,8 @@ export function ListingCard({
   const href = `/product/${listingSlug(listing)}`;
   const photo = assetUrl(listing.thumbnail.thumbUrl ?? listing.thumbnail.url);
   const rawPrice = formatListingPrice(priceFields(listing), mode);
-  const price =
-    rawPrice === PRICE_ON_REQUEST ? t("product.priceOnRequest") : rawPrice;
+  const isOnRequest = rawPrice === PRICE_ON_REQUEST;
+  const price = isOnRequest ? t("product.priceOnRequest") : rawPrice;
   const location = locationLabel(listing);
   const eyebrow = listing.category ?? listing.brand ?? null;
 
@@ -117,7 +117,7 @@ export function ListingCard({
         {eyebrow && <div className="feat-cat">{eyebrow}</div>}
         <div className="ti">{listing.title}</div>
         <div className="feat-sale tnum">
-          <span className="big">{price}</span>
+          <span className={"big" + (isOnRequest ? " is-request" : "")}>{price}</span>
           {location && <span className="sub">{location}</span>}
         </div>
       </div>

@@ -103,7 +103,7 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
             <span />
           )}
           <div className="lrow-side">
-            <div className="lrow-price">
+            <div className={"lrow-price" + (isOnRequest ? " is-request" : "")}>
               {priceLabel}
               {isRent && perUnit ? <span className="lrow-per"> / {perUnit}</span> : null}
             </div>
