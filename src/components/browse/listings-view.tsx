@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { useI18n } from "@/components/providers/language-provider";
 import type {
   Brand,
   Category,
@@ -47,6 +48,7 @@ export function ListingsView({
   initialFilters: BrowseFilters;
   catalogs: ListingsViewCatalogs;
 }) {
+  const { t } = useI18n();
   const filters = useBrowseFilters();
   const filtersKey = JSON.stringify(filters);
   const defaultKey = useRef(JSON.stringify(initialFilters));
@@ -88,7 +90,7 @@ export function ListingsView({
   if (errored) {
     return (
       <div className="brz-grid-error" role="alert">
-        <p>Couldn&apos;t load listings. Please check your connection and try again.</p>
+        <p>{t("browse.loadError")}</p>
       </div>
     );
   }
@@ -107,8 +109,9 @@ export function ListingsView({
 // Listings-only skeleton — shown only while a FILTER fetch is in flight (never on
 // the default/direct load, which renders the prerendered listings immediately).
 function ResultsSkeleton() {
+  const { t } = useI18n();
   return (
-    <div className="brz-grid" aria-busy="true" aria-label="Loading listings">
+    <div className="brz-grid" aria-busy="true" aria-label={t("a11y.loadingListings")}>
       {Array.from({ length: 9 }).map((_, i) => (
         <div key={i} className="skel-card">
           <div className="skel-img" />

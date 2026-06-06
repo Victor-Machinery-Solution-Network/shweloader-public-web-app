@@ -3,6 +3,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Download } from "lucide-react";
 
+import { useI18n } from "@/components/providers/language-provider";
+
 // useLayoutEffect on the client (animate before paint, no flash), useEffect on
 // the server (no-op) to avoid React's SSR warning.
 const useIsoLayoutEffect =
@@ -19,6 +21,7 @@ export interface DescriptionProps {
  *  animation) + an optional PDF document card. The HTML is sanitized server-side
  *  (see `renderMarkdown`), so there's no markdown/sanitizer code in this bundle. */
 export function Description({ html, pdfUrl }: DescriptionProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const firstRun = useRef(true);
@@ -56,7 +59,7 @@ export function Description({ html, pdfUrl }: DescriptionProps) {
 
   return (
     <section className="pdp-section" data-screen-label="Description">
-      <h2 className="pdp-h2">Description</h2>
+      <h2 className="pdp-h2">{t("product.description")}</h2>
 
       {hasText && (
         <>
@@ -71,7 +74,7 @@ export function Description({ html, pdfUrl }: DescriptionProps) {
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
           >
-            {open ? "Show less" : "Show more"}
+            {open ? t("actions.showLess") : t("actions.showMore")}
             <ChevronDown
               className="icon-sm"
               aria-hidden="true"
@@ -90,8 +93,8 @@ export function Description({ html, pdfUrl }: DescriptionProps) {
             <span className="d-thumb-tag">PDF</span>
           </div>
           <div className="d-body">
-            <div className="d-eye">Document on file</div>
-            <div className="d-name">Specification document</div>
+            <div className="d-eye">{t("product.documentOnFile")}</div>
+            <div className="d-name">{t("product.document")}</div>
             <div className="d-meta">
               <span>PDF</span>
             </div>
@@ -103,7 +106,7 @@ export function Description({ html, pdfUrl }: DescriptionProps) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Preview
+              {t("actions.preview")}
             </a>
             <a
               className="d-btn d-btn-primary"
@@ -112,7 +115,7 @@ export function Description({ html, pdfUrl }: DescriptionProps) {
               rel="noopener noreferrer"
               download
             >
-              Download
+              {t("actions.download")}
               <Download className="icon-sm" aria-hidden="true" />
             </a>
           </div>

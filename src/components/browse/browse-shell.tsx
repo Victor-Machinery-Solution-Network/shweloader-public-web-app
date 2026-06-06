@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 
+import { useI18n } from "@/components/providers/language-provider";
 import type {
   Brand,
   Category,
@@ -36,6 +37,7 @@ export function BrowseShell({
   conditionTypes: ConditionType[];
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   const filters = useBrowseFilters();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -43,12 +45,12 @@ export function BrowseShell({
     <div className="brz" data-screen-label="Browse">
       <div className="container brz-pagehead">
         <div className="brz-pagehead-l">
-          <nav className="brz-crumbs" aria-label="Breadcrumb">
-            <Link href="/">Home</Link>
+          <nav className="brz-crumbs" aria-label={t("a11y.breadcrumb")}>
+            <Link href="/">{t("nav.home")}</Link>
             <span className="brz-crumbs-sep">/</span>
-            <span>Browse</span>
+            <span>{t("nav.browse")}</span>
           </nav>
-          <h1 className="brz-h1">Browse listings</h1>
+          <h1 className="brz-h1">{t("browse.heading")}</h1>
         </div>
         <div className="brz-pagehead-r">
           <BuyRentToggle filters={filters} />

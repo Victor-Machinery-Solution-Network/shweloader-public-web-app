@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { T } from "@/components/t";
 import { cn } from "@/lib/utils";
 
 type StatusVariant = "new" | "sold" | "rent" | "sale" | "rented";
@@ -24,12 +25,13 @@ const VARIANT_CLASS: Record<StatusVariant, string | undefined> = {
   rent: "rent",
 };
 
-const VARIANT_LABEL: Record<StatusVariant, string> = {
-  new: "NEW",
-  sold: "SOLD OUT",
-  rented: "RENTED",
-  sale: "FOR SALE",
-  rent: "FOR RENT",
+/** i18n key per variant (status.* group), used by <T> at the render site. */
+const VARIANT_LABEL_KEY: Record<StatusVariant, string> = {
+  new: "status.new",
+  sold: "status.soldOut",
+  rented: "status.rented",
+  sale: "status.forSale",
+  rent: "status.forRent",
 };
 
 // Inline styles only where the design used them (gradient variants live in CSS).
@@ -59,7 +61,7 @@ export function StatusPill({ variant }: { variant: StatusVariant }) {
       className={cn("feat-ribbon", VARIANT_CLASS[variant])}
       style={VARIANT_STYLE[variant]}
     >
-      {VARIANT_LABEL[variant]}
+      <T path={VARIANT_LABEL_KEY[variant]} />
     </span>
   );
 }

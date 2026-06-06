@@ -2,6 +2,7 @@ import { ListingCard } from "@/components/shared/listing-card";
 import { ListingRow } from "@/components/shared/listing-row";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Pagination } from "@/components/shared/pagination";
+import { T } from "@/components/t";
 import type { Listing } from "@/lib/api/types";
 import { buildBrowseHref, PAGE_SIZE, type BrowseFilters } from "./filters";
 
@@ -28,8 +29,8 @@ export function Results({
   if (listings.length === 0) {
     return (
       <EmptyState
-        title="No listings match your filters"
-        hint="Try widening the price range, removing a region, or clearing some filters."
+        title={<T path="browse.emptyTitle" />}
+        hint={<T path="browse.emptyHint" />}
       />
     );
   }

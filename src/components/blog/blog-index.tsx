@@ -74,7 +74,7 @@ export function BlogIndex({
           <Search className="bx-search-icon" />
           <input
             type="text"
-            placeholder="Search stories…"
+            placeholder={t("blog.searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search stories"
@@ -95,9 +95,9 @@ export function BlogIndex({
       {filtered.length === 0 ? (
         <div className="bx-empty">
           <Search className="bx-empty-icon" />
-          <div className="bx-empty-title">No stories found</div>
+          <div className="bx-empty-title">{t("blog.noResults")}</div>
           <div className="bx-empty-sub">
-            Try a different search term or category.
+            {t("blog.noResultsHint")}
           </div>
         </div>
       ) : (

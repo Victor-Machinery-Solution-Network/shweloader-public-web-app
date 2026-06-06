@@ -1,6 +1,7 @@
 import { Package, User } from "lucide-react";
 
 import { EnquiryForm } from "@/components/product/enquiry-form";
+import { T } from "@/components/t";
 import {
   formatListingPrice,
   type ListingPriceFields,
@@ -58,6 +59,13 @@ export const KIND_LABEL: Record<ProductMode, string> = {
   both: "For sale or rent",
 };
 
+/** i18n keys for the kind tag (localized at the render site via <T>). */
+export const KIND_KEY: Record<ProductMode, string> = {
+  sale: "product.forSale",
+  rent: "product.forRent",
+  both: "product.forBoth",
+};
+
 /**
  * Sticky overview card: kind tag, price, product-overview spec list, seller
  * information (only when visible), and the enquiry form.
@@ -82,17 +90,19 @@ export function OverviewCard({ listing }: { listing: Listing }) {
   // All admin specs (customFields) live under Product overview alongside the
   // listing-level Condition + Location highlights — they're all key-value pairs.
   // Deduped by label.
-  const rows: [string, string][] = [];
+  // Static rows (Condition, Location) carry an i18n key so their LABEL localizes;
+  // their values + the admin customFields stay as authored (dynamic content).
+  const rows: { label: string; value: string; i18nKey?: string }[] = [];
   const seen = new Set<string>();
-  const addRow = (k: string, v: string) => {
+  const addRow = (k: string, v: string, i18nKey?: string) => {
     const key = k.trim();
     const val = v.trim();
     if (!key || !val || seen.has(key.toLowerCase())) return;
     seen.add(key.toLowerCase());
-    rows.push([key, val]);
+    rows.push({ label: key, value: val, i18nKey });
   };
-  if (condition) addRow("Condition", condition);
-  if (locationLabel) addRow("Location", locationLabel);
+  if (condition) addRow("Condition", condition, "product.condition");
+  if (locationLabel) addRow("Location", locationLabel, "product.location");
   for (const f of listing.customFields) {
     addRow(f.label || f.key || "", f.value ?? "");
   }
@@ -104,7 +114,7 @@ export function OverviewCard({ listing }: { listing: Listing }) {
     <aside className="pdp-overview">
       <div className="cc-kind-top">
         <span className={`t-kind-tag t-kind-tag--${mode}`}>
-          {KIND_LABEL[mode]}
+          <T path={KIND_KEY[mode]} />
         </span>
       </div>
       <div className="cc-price">
@@ -114,7 +124,7 @@ export function OverviewCard({ listing }: { listing: Listing }) {
       </div>
       {rentSecondary && (
         <div className="cc-rentline">
-          <span className="cc-rent-lbl">For rent</span>
+          <span className="cc-rent-lbl"><T path="product.forRent" /></span>
           <span className="cc-rent-val tnum">
             {[rentSecondary.units, rentSecondary.num]
               .filter(Boolean)
@@ -130,12 +140,12 @@ export function OverviewCard({ listing }: { listing: Listing }) {
         <dl className="ov-list">
           <div className="ov-list-eyebrow">
             <Package className="ov-eyebrow-i" aria-hidden="true" />
-            Product overview
+            <T path="product.overviewTitle" />
           </div>
-          {rows.map(([k, v]) => (
-            <div key={k} className="ov-row">
-              <dt>{k}</dt>
-              <dd>{v}</dd>
+          {rows.map((r) => (
+            <div key={r.label} className="ov-row">
+              <dt>{r.i18nKey ? <T path={r.i18nKey} /> : r.label}</dt>
+              <dd>{r.value}</dd>
             </div>
           ))}
         </dl>
@@ -145,24 +155,24 @@ export function OverviewCard({ listing }: { listing: Listing }) {
         <div className="ov-seller">
           <div className="ov-seller-eyebrow">
             <User className="ov-eyebrow-i" aria-hidden="true" />
-            Seller information
+            <T path="product.sellerInfo" />
           </div>
           <dl className="ov-seller-rows">
             {seller.name && (
               <div className="ov-row">
-                <dt>Name</dt>
+                <dt><T path="product.sellerName" /></dt>
                 <dd>{seller.name}</dd>
               </div>
             )}
             {seller.company && (
               <div className="ov-row">
-                <dt>Company</dt>
+                <dt><T path="product.sellerCompany" /></dt>
                 <dd>{seller.company}</dd>
               </div>
             )}
             {seller.phone && (
               <div className="ov-row">
-                <dt>Phone</dt>
+                <dt><T path="auth.phone" /></dt>
                 <dd>
                   <a
                     className="ov-seller-phone"

@@ -18,8 +18,8 @@ export function EmptyState({
   icon,
   action,
 }: {
-  title: string;
-  hint?: string;
+  title: ReactNode;
+  hint?: ReactNode;
   icon?: ReactNode;
   action?: ReactNode;
 }) {

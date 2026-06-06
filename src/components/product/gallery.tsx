@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 
 import { StatusPill } from "@/components/shared/status-pill";
+import { useI18n } from "@/components/providers/language-provider";
 import { assetUrl, focalPosition } from "@/lib/assets";
 import type { ListingImage } from "@/lib/api/types";
 
@@ -45,6 +46,7 @@ export function Gallery({
   isSold,
   isRented,
 }: GalleryProps) {
+  const { t } = useI18n();
   const photos = images.map(resolve).filter((p) => p.hero);
   const [active, setActive] = useState(0);
   const [showAll, setShowAll] = useState(false);
@@ -81,7 +83,7 @@ export function Gallery({
       >
         <Image
           src={p.hero}
-          alt={i === idx ? `${title} — photo ${idx + 1}` : ""}
+          alt={i === idx ? `${title} — ${t("product.photo")} ${idx + 1}` : ""}
           fill
           // First photo = priority (LCP); the rest load eagerly so swapping is a
           // smooth opacity cross-fade between already-decoded images (lazy ones
@@ -128,7 +130,7 @@ export function Gallery({
           <Image
             className="feat-stamp-sold"
             src="/brand/sold-out-stamp.png"
-            alt={isRented ? "Rented" : "Sold out"}
+            alt={isRented ? t("product.rented") : t("product.soldOut")}
             width={240}
             height={240}
           />
@@ -140,7 +142,7 @@ export function Gallery({
               type="button"
               className="g-nav g-prev"
               onClick={() => go(-1)}
-              aria-label="Previous photo"
+              aria-label={t("product.prevPhoto")}
             >
               <svg viewBox="0 0 16 16" width="16" height="16" fill="none" aria-hidden="true">
                 <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -150,7 +152,7 @@ export function Gallery({
               type="button"
               className="g-nav g-next"
               onClick={() => go(1)}
-              aria-label="Next photo"
+              aria-label={t("product.nextPhoto")}
             >
               <svg viewBox="0 0 16 16" width="16" height="16" fill="none" aria-hidden="true">
                 <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -167,7 +169,7 @@ export function Gallery({
       </div>
 
       {total > 1 && (
-        <div className="g-strip" role="tablist" aria-label="Photo thumbnails">
+        <div className="g-strip" role="tablist" aria-label={t("product.thumbnails")}>
           {visibleThumbs.map((p, i) => {
             const isMore = overflow && i === MAX_VISIBLE_THUMBS - 1;
             return (
@@ -182,7 +184,7 @@ export function Gallery({
                 onClick={() => (isMore ? setShowAll(true) : setActive(i))}
                 role={isMore ? undefined : "tab"}
                 aria-selected={isMore ? undefined : i === idx}
-                aria-label={isMore ? `Show all ${total} photos` : `Photo ${i + 1}`}
+                aria-label={isMore ? t("product.showAllPhotos") : `${t("product.photo")} ${i + 1}`}
               >
                 {p.thumb && (
                   <Image

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Heart, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useI18n } from "@/components/providers/language-provider";
+
 const SAVED_KEY = "shweloader.saved";
 const SAVED_EVENT = "saved-changed";
 
@@ -29,6 +31,7 @@ export function ProductActions({
   listingId: number;
   title: string;
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const [saved, setSaved] = useState(false);
 
@@ -65,7 +68,7 @@ export function ProductActions({
         await navigator.share({ title, url });
       } else {
         await navigator.clipboard.writeText(url);
-        toast.success("Link copied to clipboard");
+        toast.success(t("common.linkCopied"));
       }
     } catch {
       /* user dismissed the share sheet */
@@ -81,12 +84,12 @@ export function ProductActions({
           style={{ transform: "rotate(180deg)" }}
           aria-hidden="true"
         />
-        Back to results
+        {t("actions.backToResults")}
       </button>
       <div style={{ display: "flex", gap: 10 }}>
         <button type="button" className="pdp-btn" onClick={share}>
           <Share2 className="icon-sm" strokeWidth={1.75} aria-hidden="true" />
-          Share
+          {t("actions.share")}
         </button>
         <button
           type="button"
@@ -100,7 +103,7 @@ export function ProductActions({
             style={saved ? { fill: "currentColor" } : undefined}
             aria-hidden="true"
           />
-          {saved ? "Saved" : "Save"}
+          {saved ? t("actions.saved") : t("actions.save")}
         </button>
       </div>
     </div>

@@ -41,7 +41,7 @@ export function EnquiryForm({
   const { signedIn } = useAuth();
   const { open } = useAuthUI();
   const [message, setMessage] = useState(
-    `Hi, I'm interested in the ${title}. Is it still available?`,
+    `${t("product.enquiryMsgPre")}${title}${t("product.enquiryMsgPost")}`,
   );
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",
@@ -78,7 +78,7 @@ export function EnquiryForm({
   return (
     <>
       <label className="cc-field ov-msg-field">
-        <span>Message</span>
+        <span>{t("product.messageLabel")}</span>
         <textarea
           ref={ref}
           rows={3}
@@ -93,12 +93,16 @@ export function EnquiryForm({
         onClick={handleSend}
         disabled={sending || sent}
       >
-        {sent ? "Enquiry sent" : sending ? "Sending…" : t("actions.enquire")}
+        {sent
+          ? t("product.enquirySent")
+          : sending
+            ? t("product.enquirySending")
+            : t("actions.enquire")}
         <ArrowRight className="icon-sm" aria-hidden="true" />
       </button>
       {status === "error" && (
         <p className="ov-foot" role="alert">
-          Couldn’t send your enquiry. Please try again.
+          {t("product.enquiryError")}
         </p>
       )}
       {phone && (

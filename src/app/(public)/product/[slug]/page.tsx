@@ -5,7 +5,6 @@ import { ProductActions } from "@/components/product/product-actions";
 import { Gallery } from "@/components/product/gallery";
 import {
   OverviewCard,
-  KIND_LABEL,
   listingMode,
   priceFields,
   splitPrice,
@@ -183,7 +182,6 @@ export default async function ProductPage({ params }: PageProps) {
         priceUnits={primary.units}
         priceNum={primary.num}
         priceSuffix={primary.suffix}
-        kindLabel={KIND_LABEL[mode]}
         kind={mode}
         phone={seller?.phone ?? null}
       />

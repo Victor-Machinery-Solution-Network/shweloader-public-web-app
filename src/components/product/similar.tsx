@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { ArrowRight } from "lucide-react";
 
 import { ListingCard } from "@/components/shared/listing-card";
+import { useI18n } from "@/components/providers/language-provider";
 import type { Listing } from "@/lib/api/types";
 
 export interface SimilarProps {
@@ -13,6 +14,7 @@ export interface SimilarProps {
 
 /** "You may also like" carousel of related listings with prev/next controls. */
 export function Similar({ listings, mode = "sale" }: SimilarProps) {
+  const { t } = useI18n();
   const gridRef = useRef<HTMLDivElement>(null);
 
   if (listings.length === 0) return null;
@@ -33,7 +35,7 @@ export function Similar({ listings, mode = "sale" }: SimilarProps) {
         <div className="pdp-similar-head">
           <div>
             <h2 className="pdp-h2" style={{ marginBottom: 0 }}>
-              You may also like
+              {t("product.similar")}
             </h2>
           </div>
           {listings.length > 4 && (
@@ -41,7 +43,7 @@ export function Similar({ listings, mode = "sale" }: SimilarProps) {
               <button
                 type="button"
                 className="nav-btn"
-                aria-label="Previous"
+                aria-label={t("product.prev")}
                 onClick={() => scrollBy(-1)}
               >
                 <ArrowRight
@@ -53,7 +55,7 @@ export function Similar({ listings, mode = "sale" }: SimilarProps) {
               <button
                 type="button"
                 className="nav-btn"
-                aria-label="Next"
+                aria-label={t("product.next")}
                 onClick={() => scrollBy(1)}
               >
                 <ArrowRight className="icon-sm" aria-hidden="true" />

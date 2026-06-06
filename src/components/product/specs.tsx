@@ -1,5 +1,6 @@
 import { ChevronDown } from "lucide-react";
 
+import { T } from "@/components/t";
 import type { CustomField } from "@/lib/api/types";
 
 export interface SpecsProps {
@@ -29,7 +30,7 @@ export function Specs({ fields }: SpecsProps) {
 
   return (
     <section className="pdp-section" data-screen-label="Specifications">
-      <h2 className="pdp-h2">Specifications</h2>
+      <h2 className="pdp-h2"><T path="product.specifications" /></h2>
 
       <div className="pdp-spec-grid">
         {preview.map((r, i) => (
@@ -43,7 +44,7 @@ export function Specs({ fields }: SpecsProps) {
       {rest.length > 0 && (
         <details className="pdp-spec-all">
           <summary>
-            View full specification sheet
+            <T path="product.viewFullSpecs" />
             <ChevronDown className="icon-sm" aria-hidden="true" />
           </summary>
           <div className="pdp-spec-all-body">

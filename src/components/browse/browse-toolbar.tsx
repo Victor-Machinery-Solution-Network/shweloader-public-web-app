@@ -10,6 +10,7 @@ import {
 import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/providers/language-provider";
 import type { Brand } from "@/lib/api/types";
 import { pushBrowseUrl } from "./navigate";
 import {
@@ -18,17 +19,18 @@ import {
   type Sort,
 } from "./filters";
 
-const SORT_OPTS: { id: Sort; label: string }[] = [
-  { id: "newest", label: "Newest first" },
-  { id: "price-asc", label: "Price: low → high" },
-  { id: "price-desc", label: "Price: high → low" },
+const SORT_OPTS: { id: Sort; labelKey: string }[] = [
+  { id: "newest", labelKey: "browse.sortNewest" },
+  { id: "price-asc", labelKey: "browse.sortPriceAsc" },
+  { id: "price-desc", labelKey: "browse.sortPriceDesc" },
 ];
 
 /* ── Buy / Rent toggle (page head) ──────────────────────────── */
 export function BuyRentToggle({ filters }: { filters: BrowseFilters }) {
+  const { t } = useI18n();
   const opts = [
-    { id: "sale" as const, label: "Buy" },
-    { id: "rent" as const, label: "Rent" },
+    { id: "sale" as const, label: t("search.buy") },
+    { id: "rent" as const, label: t("search.rent") },
   ];
   const idx = opts.findIndex((o) => o.id === filters.mode);
 
@@ -38,7 +40,7 @@ export function BuyRentToggle({ filters }: { filters: BrowseFilters }) {
   };
 
   return (
-    <div className="brt brt-md" role="tablist" aria-label="Listing type">
+    <div className="brt brt-md" role="tablist" aria-label={t("browse.listingType")}>
       <span
         className="brt-glide"
         style={{ transform: `translateX(${idx * 100}%)` }}
@@ -61,6 +63,7 @@ export function BuyRentToggle({ filters }: { filters: BrowseFilters }) {
 
 /* ── Sort dropdown ──────────────────────────────────────────── */
 function SortSelect({ filters }: { filters: BrowseFilters }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const cur = SORT_OPTS.find((o) => o.id === filters.sort) ?? SORT_OPTS[0];
@@ -82,8 +85,8 @@ function SortSelect({ filters }: { filters: BrowseFilters }) {
   return (
     <div className="srt" ref={ref}>
       <button type="button" className="srt-btn" onClick={() => setOpen((o) => !o)}>
-        <span className="srt-label">Sort</span>
-        <span className="srt-value">{cur.label}</span>
+        <span className="srt-label">{t("browse.sort")}</span>
+        <span className="srt-value">{t(cur.labelKey)}</span>
         <ChevronDown className="icon-sm" aria-hidden="true" />
       </button>
       {open && (
@@ -95,7 +98,7 @@ function SortSelect({ filters }: { filters: BrowseFilters }) {
               className={cn("srt-item", o.id === filters.sort && "is-on")}
               onClick={() => pick(o.id)}
             >
-              {o.label}
+              {t(o.labelKey)}
               {o.id === filters.sort && (
                 <Check className="icon-sm" aria-hidden="true" />
               )}
@@ -109,6 +112,7 @@ function SortSelect({ filters }: { filters: BrowseFilters }) {
 
 /* ── Grid / List view toggle ────────────────────────────────── */
 function ViewToggle({ filters }: { filters: BrowseFilters }) {
+  const { t } = useI18n();
   const set = (view: "grid" | "list") => {
     if (view === filters.view) return;
     pushBrowseUrl(buildBrowseHref({ ...filters, view }));
@@ -119,7 +123,7 @@ function ViewToggle({ filters }: { filters: BrowseFilters }) {
         type="button"
         className={cn("vts-btn", filters.view === "grid" && "is-on")}
         onClick={() => set("grid")}
-        aria-label="Grid view"
+        aria-label={t("a11y.gridView")}
         aria-pressed={filters.view === "grid"}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -133,7 +137,7 @@ function ViewToggle({ filters }: { filters: BrowseFilters }) {
         type="button"
         className={cn("vts-btn", filters.view === "list" && "is-on")}
         onClick={() => set("list")}
-        aria-label="List view"
+        aria-label={t("a11y.listView")}
         aria-pressed={filters.view === "list"}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -168,6 +172,7 @@ function ActiveFilters({
   filters: BrowseFilters;
   brands: Brand[];
 }) {
+  const { t } = useI18n();
   const push = (next: Partial<BrowseFilters>) =>
     pushBrowseUrl(buildBrowseHref({ ...filters, ...next, page: 1 }));
 
@@ -217,7 +222,7 @@ function ActiveFilters({
   }
   if (filters.priceMin || filters.priceMax) {
     const unit = filters.currency === "USD" ? "USD" : "MMK";
-    const label = `${fmtPrice(filters.priceMin) || "Min"} – ${fmtPrice(filters.priceMax) || "Any"} ${unit}`;
+    const label = `${fmtPrice(filters.priceMin) || t("browse.priceFrom")} – ${fmtPrice(filters.priceMax) || t("browse.priceAny")} ${unit}`;
     chips.push({
       key: "price",
       label,
@@ -251,7 +256,7 @@ function ActiveFilters({
           })
         }
       >
-        Clear all
+        {t("actions.clearAll")}
       </button>
     </div>
   );
@@ -259,6 +264,7 @@ function ActiveFilters({
 
 /* ── Search-within-results input ────────────────────────────── */
 function ResultsSearch({ filters }: { filters: BrowseFilters }) {
+  const { t } = useI18n();
   const [value, setValue] = useState(filters.q);
 
   // Keep the input in sync if the URL changes from elsewhere (chips, nav).
@@ -284,17 +290,17 @@ function ResultsSearch({ filters }: { filters: BrowseFilters }) {
       <Search className="brz-results-search-icon" aria-hidden="true" />
       <input
         type="text"
-        placeholder="Search within results — model, brand, or location"
+        placeholder={t("browse.searchInResults")}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        aria-label="Search within results"
+        aria-label={t("browse.searchInResults")}
       />
       {value && (
         <button
           type="button"
           className="brz-results-search-clear"
           onClick={clear}
-          aria-label="Clear search"
+          aria-label={t("a11y.clearSearch")}
         >
           <X className="icon-sm" aria-hidden="true" />
         </button>
@@ -313,6 +319,7 @@ export function BrowseToolbar({
   brands: Brand[];
   onOpenFilters: () => void;
 }) {
+  const { t } = useI18n();
   const activeCount =
     (filters.category ? 1 : 0) +
     (filters.sub ? 1 : 0) +
@@ -330,10 +337,10 @@ export function BrowseToolbar({
           type="button"
           className="brz-filters-btn"
           onClick={onOpenFilters}
-          aria-label="Open filters"
+          aria-label={t("browse.openFilters")}
         >
           <SlidersHorizontal className="icon-sm" aria-hidden="true" />
-          <span>Filters</span>
+          <span>{t("browse.filters")}</span>
           {activeCount > 0 && (
             <span className="brz-filters-btn-n tnum">{activeCount}</span>
           )}

@@ -22,6 +22,7 @@ import type { BlogPost } from "@/lib/api/types";
 
 import { markdownToHtml } from "@/components/blogs/markdown";
 import { BlogShare } from "@/components/blog/blog-share";
+import { T } from "@/components/t";
 
 type Params = Promise<{ slug: string }>;
 
@@ -131,7 +132,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
               style={{ transform: "rotate(180deg)" }}
               aria-hidden="true"
             />
-            Back to blog
+            <T path="actions.backToBlog" />
           </Link>
           <BlogShare title={post.title} />
         </div>
@@ -169,7 +170,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
               {post.readTime ? (
                 <span className="bp-byline-time">
                   <Clock className="bx-byline-clock" aria-hidden="true" />
-                  {post.readTime} min read
+                  {post.readTime} <T path="blog.minRead" />
                 </span>
               ) : null}
             </div>
@@ -209,7 +210,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
         <section className="bp-related-wrap">
           <div className="container">
             <div className="bp-related-head">
-              <span className="bx-section-label">More from the blog</span>
+              <span className="bx-section-label"><T path="blog.relatedTitle" /></span>
             </div>
             <div className="bp-related-grid">
               {related.map((p) => {
@@ -270,7 +271,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
                             </span>
                             <span className="bx-byline-time">
                               <Clock className="bx-byline-clock" aria-hidden="true" />
-                              {p.readTime} min read
+                              {p.readTime} <T path="blog.minRead" />
                             </span>
                           </>
                         ) : null}

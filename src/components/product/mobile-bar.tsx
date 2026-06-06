@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import { Phone, X } from "lucide-react";
 
 import { EnquiryForm } from "@/components/product/enquiry-form";
+import { useI18n } from "@/components/providers/language-provider";
+
+/** i18n keys for the kind tag, keyed by listing mode. */
+const KIND_KEY = {
+  sale: "product.forSale",
+  rent: "product.forRent",
+  both: "product.forBoth",
+} as const;
 
 export interface MobileBarProps {
   title: string;
@@ -12,7 +20,6 @@ export interface MobileBarProps {
   priceUnits: string;
   priceNum: string;
   priceSuffix: string;
-  kindLabel: string;
   kind: "sale" | "rent" | "both";
   /** Visible dealer phone (masking honoured by caller), or null. */
   phone: string | null;
@@ -28,10 +35,10 @@ export function MobileBar({
   priceUnits,
   priceNum,
   priceSuffix,
-  kindLabel,
   kind,
   phone,
 }: MobileBarProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -49,10 +56,10 @@ export function MobileBar({
 
   return (
     <>
-      <div className="pdp-mbar" role="region" aria-label="Contact seller">
+      <div className="pdp-mbar" role="region" aria-label={t("product.contactSeller")}>
         <div className="pdp-mbar-price">
           <span className={`pdp-mbar-kind pdp-mbar-kind--${kind}`}>
-            {kindLabel}
+            {t(KIND_KEY[kind])}
           </span>
           <span className="pdp-mbar-amount">
             {priceUnits && <span className="pdp-mbar-units">{priceUnits}</span>}
@@ -65,7 +72,7 @@ export function MobileBar({
             <a
               href={`tel:${phone.replace(/\s+/g, "")}`}
               className="pdp-mbar-call"
-              aria-label="Call dealer"
+              aria-label={t("actions.callDealer")}
             >
               <Phone aria-hidden="true" />
             </a>
@@ -75,7 +82,7 @@ export function MobileBar({
             className="pdp-mbar-cta"
             onClick={() => setOpen(true)}
           >
-            Enquiry now
+            {t("product.enquiryNow")}
           </button>
         </div>
       </div>
@@ -89,19 +96,19 @@ export function MobileBar({
           className="pdp-sheet"
           role="dialog"
           aria-modal="true"
-          aria-label="Send enquiry"
+          aria-label={t("actions.enquire")}
         >
           <div className="pdp-sheet-grab" onClick={() => setOpen(false)} />
           <div className="pdp-sheet-head">
             <div className="pdp-sheet-titles">
-              <div className="pdp-sheet-title">Send enquiry</div>
+              <div className="pdp-sheet-title">{t("actions.enquire")}</div>
               <div className="pdp-sheet-sub">{title}</div>
             </div>
             <button
               type="button"
               className="pdp-sheet-x"
               onClick={() => setOpen(false)}
-              aria-label="Close"
+              aria-label={t("actions.close")}
             >
               <X className="icon-sm" aria-hidden="true" />
             </button>

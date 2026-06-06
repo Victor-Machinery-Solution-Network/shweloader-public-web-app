@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { BlogIndex } from "@/components/blog/blog-index";
+import { T } from "@/components/t";
 import { getBlogs, getBlogCategories } from "@/lib/api/blogs";
 import { JsonLd, breadcrumbSchema } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -33,11 +34,11 @@ export default async function BlogsPage() {
       <section className="bx-pagehead" data-screen-label="Hero">
         <div className="container">
           <nav className="bx-crumbs" aria-label="Breadcrumb">
-            <Link href="/">Home</Link>
+            <Link href="/"><T path="nav.home" /></Link>
             <span className="bx-crumbs-sep">/</span>
-            <span>Blog</span>
+            <span><T path="nav.blogs" /></span>
           </nav>
-          <h1 className="bx-h1">The ShweLoader Blog</h1>
+          <h1 className="bx-h1"><T path="blog.title" /></h1>
         </div>
       </section>
 

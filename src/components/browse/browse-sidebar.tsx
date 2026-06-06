@@ -16,6 +16,7 @@ import type {
   StateRegion,
 } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/providers/language-provider";
 import { pushBrowseUrl } from "./navigate";
 import {
   buildBrowseHref,
@@ -71,6 +72,7 @@ function TreeRow({
   onToggle: () => void;
   onExpand?: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div
       className={cn(
@@ -102,7 +104,7 @@ function TreeRow({
           className={cn("bsb-tree-chev", expanded && "is-open")}
           onClick={onExpand}
           aria-expanded={expanded}
-          aria-label={expanded ? "Collapse" : "Expand"}
+          aria-label={expanded ? t("a11y.collapse") : t("a11y.expand")}
         >
           <ChevronDown className="icon-sm" />
         </button>
@@ -123,6 +125,7 @@ function CategoryGroup({
   filters: BrowseFilters;
   apply: (patch: Partial<BrowseFilters>) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState<Set<number>>(() => new Set());
   const toggleOpen = (id: number) =>
     setOpen((s) => {
@@ -145,7 +148,7 @@ function CategoryGroup({
 
   return (
     <SidebarGroup
-      label="Type"
+      label={t("browse.type")}
       count={selectedCount}
       action={
         selectedCount > 0 ? (
@@ -154,13 +157,13 @@ function CategoryGroup({
             className="bsb-group-clear"
             onClick={() => apply({ category: "", sub: "" })}
           >
-            Reset
+            {t("actions.reset")}
           </button>
         ) : null
       }
     >
       <div className="bsb-tree-section">
-        <div className="bsb-tree-section-h">Equipment</div>
+        <div className="bsb-tree-section-h">{t("home.equipment")}</div>
         <div className="bsb-tree">
           {categories.map((c) => {
             const expanded = open.has(c.id);
@@ -205,7 +208,7 @@ function CategoryGroup({
 
       {attachmentCategories.length > 0 && (
         <div className="bsb-tree-section">
-          <div className="bsb-tree-section-h">Attachments</div>
+          <div className="bsb-tree-section-h">{t("home.attachments")}</div>
           <div className="bsb-tree">
             {attachmentCategories.map((a) => (
               <TreeRow
@@ -233,6 +236,7 @@ function BrandGroup({
   filters: BrowseFilters;
   apply: (patch: Partial<BrowseFilters>) => void;
 }) {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const [showAll, setShowAll] = useState(false);
   // Per-brand UI state (brand id → …): which are expanded, their model search,
@@ -277,7 +281,7 @@ function BrandGroup({
 
   return (
     <SidebarGroup
-      label="Brand"
+      label={t("browse.brand")}
       count={selectedCount}
       action={
         selectedCount > 0 ? (
@@ -286,7 +290,7 @@ function BrandGroup({
             className="bsb-group-clear"
             onClick={() => apply({ brands: [], models: [] })}
           >
-            Reset
+            {t("actions.reset")}
           </button>
         ) : null
       }
@@ -296,8 +300,8 @@ function BrandGroup({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search brand…"
-          aria-label="Search brand"
+          placeholder={t("browse.searchBrand")}
+          aria-label={t("browse.searchBrand")}
         />
       </div>
       <div className="bsb-tree">
@@ -341,22 +345,22 @@ function BrandGroup({
                       onChange={(e) =>
                         setModelQ((s) => ({ ...s, [b.id]: e.target.value }))
                       }
-                      placeholder={`Search ${b.name} model…`}
-                      aria-label={`Search ${b.name} models`}
+                      placeholder={t("browse.searchModel")}
+                      aria-label={t("browse.searchModel")}
                     />
                     {modelQ[b.id] && (
                       <button
                         type="button"
                         className="bsb-brand-msearch-x"
                         onClick={() => setModelQ((s) => ({ ...s, [b.id]: "" }))}
-                        aria-label="Clear model search"
+                        aria-label={t("a11y.clearSearch")}
                       >
                         <X className="icon-sm" />
                       </button>
                     )}
                   </div>
                   {matched.length === 0 && (
-                    <div className="bsb-empty">No matches</div>
+                    <div className="bsb-empty">{t("browse.noMatches")}</div>
                   )}
                   {matched.map((m) => (
                     <TreeRow
@@ -375,7 +379,7 @@ function BrandGroup({
                         setModelsAll((s) => new Set(s).add(b.id))
                       }
                     >
-                      Show {moreModels} more
+                      {t("actions.showMore")}
                     </button>
                   )}
                 </div>
@@ -383,11 +387,11 @@ function BrandGroup({
             </Fragment>
           );
         })}
-        {visible.length === 0 && <div className="bsb-empty">No matches</div>}
+        {visible.length === 0 && <div className="bsb-empty">{t("browse.noMatches")}</div>}
       </div>
       {!q && hidden > 0 && (
         <button type="button" className="bsb-more" onClick={() => setShowAll(true)}>
-          Show {hidden} more
+          {t("actions.showMore")}
           <svg viewBox="0 0 10 6" width="10" height="6" aria-hidden="true">
             <path
               d="M1 1L5 5L9 1"
@@ -402,7 +406,7 @@ function BrandGroup({
       )}
       {!q && showAll && (
         <button type="button" className="bsb-more" onClick={() => setShowAll(false)}>
-          Show fewer
+          {t("actions.showFewer")}
         </button>
       )}
     </SidebarGroup>
@@ -419,6 +423,7 @@ function ConditionGroup({
   apply: (patch: Partial<BrowseFilters>) => void;
   conditionTypes: ConditionType[];
 }) {
+  const { t } = useI18n();
   // Stored by name (resolved to condition_type id in toListingQuery), matching
   // how category/brand facets work.
   const toggle = (name: string) =>
@@ -432,7 +437,7 @@ function ConditionGroup({
 
   return (
     <SidebarGroup
-      label="Condition"
+      label={t("browse.condition")}
       count={filters.conditions.length}
       action={
         filters.conditions.length > 0 ? (
@@ -441,7 +446,7 @@ function ConditionGroup({
             className="bsb-group-clear"
             onClick={() => apply({ conditions: [] })}
           >
-            Reset
+            {t("actions.reset")}
           </button>
         ) : null
       }
@@ -494,6 +499,7 @@ function PriceGroup({
   filters: BrowseFilters;
   apply: (patch: Partial<BrowseFilters>) => void;
 }) {
+  const { t } = useI18n();
   const currency = filters.currency;
   const RANGE = PRICE_RANGES[currency];
   const active = Boolean(filters.priceMin || filters.priceMax);
@@ -540,7 +546,7 @@ function PriceGroup({
 
   return (
     <SidebarGroup
-      label="Price"
+      label={t("browse.price")}
       action={
         active ? (
           <button
@@ -548,12 +554,12 @@ function PriceGroup({
             className="bsb-group-clear"
             onClick={() => apply({ priceMin: "", priceMax: "" })}
           >
-            Reset
+            {t("actions.reset")}
           </button>
         ) : null
       }
     >
-      <div className="bsb-cur" role="group" aria-label="Currency">
+      <div className="bsb-cur" role="group" aria-label={t("browse.currency")}>
         {(["MMK", "USD"] as Currency[]).map((c) => (
           <button
             key={c}
@@ -570,12 +576,12 @@ function PriceGroup({
       <div className="bsb-pricer">
         <div className="bsb-pricer-vals">
           <span className="bsb-pricer-val">
-            <span className="bsb-pricer-val-tag">From</span>
-            <strong>{lo === RANGE.min ? "Any" : fmtAmt(lo, currency)}</strong>
+            <span className="bsb-pricer-val-tag">{t("browse.priceFrom")}</span>
+            <strong>{lo === RANGE.min ? t("browse.priceAny") : fmtAmt(lo, currency)}</strong>
           </span>
           <span className="bsb-pricer-val">
-            <span className="bsb-pricer-val-tag">To</span>
-            <strong>{hi === RANGE.max ? "Any" : fmtAmt(hi, currency)}</strong>
+            <span className="bsb-pricer-val-tag">{t("browse.priceTo")}</span>
+            <strong>{hi === RANGE.max ? t("browse.priceAny") : fmtAmt(hi, currency)}</strong>
           </span>
         </div>
         <div className="bsb-pricer-slider">
@@ -596,7 +602,7 @@ function PriceGroup({
             onMouseUp={() => commit(lo, hi)}
             onTouchEnd={() => commit(lo, hi)}
             onKeyUp={() => commit(lo, hi)}
-            aria-label="Minimum price"
+            aria-label={t("browse.minPrice")}
           />
           <input
             type="range"
@@ -609,7 +615,7 @@ function PriceGroup({
             onMouseUp={() => commit(lo, hi)}
             onTouchEnd={() => commit(lo, hi)}
             onKeyUp={() => commit(lo, hi)}
-            aria-label="Maximum price"
+            aria-label={t("browse.maxPrice")}
           />
         </div>
         <div className="bsb-pricer-axis" aria-hidden="true">
@@ -646,6 +652,7 @@ function LocationGroup({
   filters: BrowseFilters;
   apply: (patch: Partial<BrowseFilters>) => void;
 }) {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const [openStates, setOpenStates] = useState<Set<number>>(() => new Set());
   const [openDistricts, setOpenDistricts] = useState<Set<number>>(() => new Set());
@@ -709,7 +716,7 @@ function LocationGroup({
 
   return (
     <SidebarGroup
-      label="Location"
+      label={t("browse.location")}
       count={selected ? 1 : 0}
       action={
         selected ? (
@@ -718,7 +725,7 @@ function LocationGroup({
             className="bsb-group-clear"
             onClick={() => apply({ location: "" })}
           >
-            Reset
+            {t("actions.reset")}
           </button>
         ) : null
       }
@@ -727,17 +734,17 @@ function LocationGroup({
         <Search className="bsb-loc-search-icon" aria-hidden="true" />
         <input
           type="text"
-          placeholder="Search state, district, or township"
+          placeholder={t("browse.searchLocation")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          aria-label="Search location"
+          aria-label={t("browse.searchLocation")}
         />
         {q && (
           <button
             type="button"
             className="bsb-loc-search-clear"
             onClick={() => setQ("")}
-            aria-label="Clear search"
+            aria-label={t("a11y.clearSearch")}
           >
             <X className="icon-sm" aria-hidden="true" />
           </button>
@@ -746,7 +753,7 @@ function LocationGroup({
 
       <div className="bsb-tree">
         {filtered.tree.length === 0 && (
-          <div className="bsb-empty">No matches for &ldquo;{q.trim()}&rdquo;</div>
+          <div className="bsb-empty">{t("browse.noMatches")}</div>
         )}
         {filtered.tree.map((s) => {
           const sOpen = isStateOpen(s.id);
@@ -786,7 +793,7 @@ function LocationGroup({
                   className={cn("bsb-tree-chev", sOpen && "is-open")}
                   onClick={() => toggleState(s.id)}
                   aria-expanded={sOpen}
-                  aria-label={sOpen ? "Collapse" : "Expand"}
+                  aria-label={sOpen ? t("a11y.collapse") : t("a11y.expand")}
                 >
                   <ChevronDown className="icon-sm" />
                 </button>
@@ -830,7 +837,7 @@ function LocationGroup({
                             className={cn("bsb-tree-chev", dOpen && "is-open")}
                             onClick={() => toggleDistrict(d.id)}
                             aria-expanded={dOpen}
-                            aria-label={dOpen ? "Collapse" : "Expand"}
+                            aria-label={dOpen ? t("a11y.collapse") : t("a11y.expand")}
                           >
                             <ChevronDown className="icon-sm" />
                           </button>
@@ -902,6 +909,7 @@ export function BrowseSidebar({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const apply = (patch: Partial<BrowseFilters>) =>
     pushBrowseUrl(buildBrowseHref({ ...filters, ...patch, page: 1 }));
 
@@ -949,13 +957,13 @@ export function BrowseSidebar({
           onClick={onClose}
         />
       )}
-      <aside className={cn("bsb", open && "is-open")} aria-label="Filters">
+      <aside className={cn("bsb", open && "is-open")} aria-label={t("browse.filters")}>
         <header className="bsb-head">
-          <h3 className="bsb-head-title">Filters</h3>
+          <h3 className="bsb-head-title">{t("browse.filters")}</h3>
           {total != null && (
             <div className="bsb-head-meta">
               <span className="bsb-head-count">
-                <span className="tnum">{total}</span> result{total === 1 ? "" : "s"}
+                <span className="tnum">{total}</span> {t("browse.resultsLabel")}
               </span>
             </div>
           )}
@@ -963,7 +971,7 @@ export function BrowseSidebar({
             type="button"
             className="bsb-close"
             onClick={onClose}
-            aria-label="Close filters"
+            aria-label={t("browse.closeFilters")}
           >
             <X />
           </button>
@@ -972,9 +980,9 @@ export function BrowseSidebar({
         {activeCount > 0 && (
           <div className="bsb-active-bar">
             <span className="tnum">{activeCount}</span>
-            <span> active filter{activeCount === 1 ? "" : "s"}</span>
+            <span> {t("browse.activeFilters")}</span>
             <button type="button" onClick={clearAll}>
-              Clear all
+              {t("actions.clearAll")}
             </button>
           </div>
         )}
@@ -1001,10 +1009,10 @@ export function BrowseSidebar({
             onClick={clearAll}
             disabled={activeCount === 0}
           >
-            Clear all
+            {t("actions.clearAll")}
           </button>
           <button type="button" className="bsb-foot-apply" onClick={onClose}>
-            Show results
+            {t("actions.showResults")}
           </button>
         </footer>
       </aside>
