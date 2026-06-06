@@ -272,8 +272,10 @@
    horizontal strip. Only when a collage is actually rendered (≥ 4 photos). */
 @media (min-width: 1025px) {
   .pdp-gallery:has(.g-collage) .g-stage {
+    /* 4-column model: the hero spans 2 cols (left half) and the 2×2 thumbnail
+       collage spans the other 2 (right half) — i.e. an even 50/50 split. */
     display: grid;
-    grid-template-columns: 1.7fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     aspect-ratio: 3 / 1;
     align-items: stretch;
