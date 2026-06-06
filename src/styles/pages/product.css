@@ -30,7 +30,14 @@
 /* On phones the 3-button row cramps — collapse to icon-only. The label stays
    in the a11y tree (visually hidden, not display:none) so it's still announced. */
 @media (max-width: 640px) {
-  .pdp-btn { padding: 9px; }
+  /* Match the header hamburger's footprint (40×40 with a ~20px glyph). */
+  .pdp-btn {
+    width: 40px; height: 40px;
+    padding: 0;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  .pdp-btn .icon-sm { width: 20px; height: 20px; }
   .pdp-btn-label {
     position: absolute;
     width: 1px; height: 1px;

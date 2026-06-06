@@ -674,7 +674,14 @@
 /* On phones, collapse Back + Share to icon-only so the top row doesn't cramp.
    Labels stay in the a11y tree (visually hidden, not display:none). */
 @media (max-width: 640px) {
-  .bp-back, .bp-share { padding: 9px; }
+  /* Match the header hamburger's footprint (40×40 with a ~20px glyph). */
+  .bp-back, .bp-share {
+    width: 40px; height: 40px;
+    padding: 0;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  .bp-back .icon-sm, .bp-share .icon-sm { width: 20px; height: 20px; }
   .bp-btn-label {
     position: absolute;
     width: 1px; height: 1px;
