@@ -1097,7 +1097,13 @@ html, body {
     -webkit-overflow-scrolling: touch;
     background: none;
     border-radius: 0;
-    width: calc(100% + 24px);
+    /* Full-bleed: cancel the container's 16px gutter with a negative margin,
+       then re-pad 16px so the first slide lines up with the page content and the
+       next slide peeks at the edge (proper bleed, not a lopsided overflow). */
+    width: auto;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    scroll-padding-inline: 16px;
     touch-action: pan-x;
   }
   .hero-frame::-webkit-scrollbar { display: none; }
