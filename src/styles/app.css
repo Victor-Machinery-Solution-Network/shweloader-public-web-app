@@ -1782,7 +1782,7 @@ html, body {
 /* "Price on request" is a phrase (longer in Burmese), not a number — shrink it
    so it doesn't blow out the card price slot. */
 .feat-sale .big.is-request,
-.feat-rent .big.is-request { font-size: 13px; letter-spacing: 0; }
+.feat-rent .big.is-request { font-size: 16px; letter-spacing: 0; }
 .feat-rent .avail {
   display: inline-flex; align-items: center; gap: 6px;
   margin-top: 4px;
