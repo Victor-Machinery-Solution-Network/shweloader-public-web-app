@@ -41,7 +41,7 @@ export function splitPrice(formatted: string): {
   num: string;
   suffix: string;
 } {
-  // "Price on request" has no numeric part — show it whole in the number slot.
+  // "price on enquiry" has no numeric part — show it whole in the number slot.
   if (!/\d/.test(formatted)) {
     return { units: "", num: formatted, suffix: "" };
   }

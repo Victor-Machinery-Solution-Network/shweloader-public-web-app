@@ -20,7 +20,7 @@ export interface MobileBarProps {
   priceUnits: string;
   priceNum: string;
   priceSuffix: string;
-  /** When true, the amount slot shows the localized "price on request" label. */
+  /** When true, the amount slot shows the localized "price on enquiry" label. */
   priceOnRequest: boolean;
   kind: "sale" | "rent" | "both";
   /** Visible dealer phone (masking honoured by caller), or null. */

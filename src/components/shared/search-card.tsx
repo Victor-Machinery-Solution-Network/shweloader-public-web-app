@@ -180,6 +180,7 @@ function CategoryPicker({
   // it exactly (and stay put when the right rail appears). Updated on resize.
   const [cellW, setCellW] = useState<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Track the Category cell's width and expose it to the menu as --cat-cell-w.
   useEffect(() => {
@@ -191,6 +192,26 @@ function CategoryPicker({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // When the inline (desktop) dropdown opens, scroll it fully into view if it
+  // would be clipped below the fold — without pushing the search bar off-screen.
+  useEffect(() => {
+    if (!open || isModal) return;
+    const raf = requestAnimationFrame(() => {
+      const el = menuRef.current;
+      if (!el) return;
+      const margin = 16;
+      const rect = el.getBoundingClientRect();
+      const overflowBottom = rect.bottom - (window.innerHeight - margin);
+      if (overflowBottom <= 0) return; // already fully visible
+      // Don't scroll so far that the dropdown's top leaves the viewport.
+      const top = Math.min(overflowBottom, Math.max(0, rect.top - margin));
+      if (top <= 0) return;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollBy({ top, behavior: reduce ? "auto" : "smooth" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [open, isModal]);
 
   // Under lg (1024px) switch to a popup modal like the location picker.
   useEffect(() => {
@@ -270,6 +291,7 @@ function CategoryPicker({
 
   const menu = (
     <div
+      ref={menuRef}
       className={cn(
         "cat-menu",
         hovered.subs.length === 0 && "is-single",

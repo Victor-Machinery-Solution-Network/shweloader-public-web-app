@@ -131,7 +131,7 @@ export const en = {
     forSale: "For sale",
     forRent: "For rent",
     forBoth: "For sale or rent",
-    priceOnRequest: "Price on request",
+    priceOnRequest: "Price on enquiry",
     prevPhoto: "Previous photo",
     nextPhoto: "Next photo",
     thumbnails: "Photo thumbnails",

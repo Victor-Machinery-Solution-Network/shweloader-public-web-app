@@ -50,7 +50,7 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
     ? ""
     : formatMoney(price?.mmk, price?.usd, price?.currency);
   // Hidden price, or no price data at all, falls back to the localized
-  // "price on request" label.
+  // "price on enquiry" label.
   const isOnRequest = !formattedPrice;
   const priceLabel = isOnRequest ? t("product.priceOnRequest") : formattedPrice;
   const perUnit =

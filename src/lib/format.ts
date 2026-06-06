@@ -4,7 +4,7 @@
  *   rent:   "MMK 350,000 / day"
  *   hours:  "6,200 hrs"
  *   dates:  "2 February 2026"
- *   hidden price → "Price on request"
+ *   hidden price → "Price on enquiry"
  */
 
 const GROUP = new Intl.NumberFormat("en-US");
@@ -62,7 +62,7 @@ export interface ListingPriceFields {
   rent_rental_unit?: string | null;
 }
 
-export const PRICE_ON_REQUEST = "Price on request";
+export const PRICE_ON_REQUEST = "Price on enquiry";
 
 /** Display price for a listing in a given mode (defaults to sale). */
 export function formatListingPrice(
