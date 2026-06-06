@@ -2594,6 +2594,14 @@ html, body {
   .lc-fab { right: 26px; bottom: 26px; }
 }
 
+/* Product pages: lift the launcher above the sticky enquiry bar so they don't
+   overlap (≤1024, where the bar shows). Driven by the route class on the FAB
+   (.lc-fab--product), so it resets on client navigation. Doubled selector to
+   win over the ≤640 base position. */
+@media (max-width: 1024px) {
+  .lc-fab.lc-fab--product { bottom: calc(88px + env(safe-area-inset-bottom)); }
+}
+
 /* ============================================================
    Brand-accent revamp — gold gradient option
    Toggled via <html data-accent="gradient">

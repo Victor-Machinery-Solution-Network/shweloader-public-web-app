@@ -1195,9 +1195,8 @@
 
   /* Make room for the fixed bar; lift footer above it */
   body { padding-bottom: 72px; }
-  /* Lift the global chat FAB above the sticky bottom bar so they don't overlap
-     (only on the product page, which is the only page with this bar). */
-  body:has(.pdp-mbar) .lc-fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
+  /* (The chat FAB lift lives in app.css, keyed off the route-driven
+     .lc-fab--product class so it resets correctly on client navigation.) */
 
   /* The sticky bottom action bar */
   .pdp-mbar {

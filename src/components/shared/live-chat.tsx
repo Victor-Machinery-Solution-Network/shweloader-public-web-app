@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Image as ImageIcon, Maximize2, X } from "lucide-react";
 import { HeadsetIcon } from "@/components/shared/icons/headset-icon";
@@ -39,6 +40,11 @@ export function LiveChat() {
   const { signedIn } = useAuth();
   const { open: openAuth } = useAuthUI();
   const { t } = useI18n();
+  // Lift the launcher above the product page's sticky enquiry bar. Driven by the
+  // current route (not the DOM) so it resets correctly on client navigation —
+  // route CSS + the product DOM can briefly persist after a soft nav.
+  const pathname = usePathname();
+  const onProductPage = pathname?.startsWith("/product/") ?? false;
 
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
@@ -297,7 +303,11 @@ export function LiveChat() {
       {/* Floating launcher */}
       <button
         type="button"
-        className={"lc-fab" + (open ? " is-open" : "")}
+        className={
+          "lc-fab" +
+          (open ? " is-open" : "") +
+          (onProductPage ? " lc-fab--product" : "")
+        }
         onClick={() => (open ? setOpen(false) : openPanel())}
         aria-label={open ? "Close chat" : "Open live chat"}
       >
