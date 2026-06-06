@@ -71,3 +71,8 @@ a { color: inherit; text-decoration: none; }
 
 .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
 .rail      { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+/* Phones: tighten the side gutter to 16px (tablets keep 24px; ≥1280px is 0). */
+@media (max-width: 640px) {
+  .container { padding-inline: 16px; }
+}
