@@ -3,14 +3,24 @@
 
 /* ---------- Breadcrumbs ---------- */
 .pdp-crumbs {
-  display: flex; align-items: center; gap: 8px;
-  padding: 24px 0 12px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 20px 0 14px;
   font-size: 14px; color: var(--m-fg-2);
+  min-width: 0; overflow: hidden;
 }
-.pdp-crumbs a { color: var(--m-fg-2); cursor: pointer; }
+.pdp-crumbs a {
+  color: var(--m-fg-2); cursor: pointer; text-decoration: none;
+  white-space: nowrap; flex: none;
+}
 .pdp-crumbs a:hover { color: var(--m-ink); }
-.pdp-crumbs .cur { color: var(--m-ink); font-weight: 500; }
-.pdp-crumbs svg { color: var(--m-fg-3); }
+/* The current page (listing title) takes the remaining space and ellipsises so
+   a long title never pushes the row wider than the page. */
+.pdp-crumbs .cur {
+  color: var(--m-ink); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.pdp-crumbs svg { color: var(--m-fg-3); width: 15px; height: 15px; flex: none; }
+@media (max-width: 640px) { .pdp-crumbs { font-size: 13px; padding: 14px 0 12px; } }
 
 /* ---------- Action row ---------- */
 .pdp-actions {

@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 import type { Metadata } from "next";
+import { ChevronRight } from "lucide-react";
 import { ProductActions } from "@/components/product/product-actions";
 import { StatusPill } from "@/components/shared/status-pill";
+import { T } from "@/components/t";
 
 import { Gallery } from "@/components/product/gallery";
 import {
@@ -147,6 +150,26 @@ export default async function ProductPage({ params }: PageProps) {
       />
 
       <div className="container">
+        {/* Breadcrumb trail above the full-width gallery (mirrors the JSON-LD
+            crumbs; static labels localize, dynamic category/title stay as authored). */}
+        <nav className="pdp-crumbs" aria-label="Breadcrumb">
+          <Link href="/">
+            <T path="nav.home" />
+          </Link>
+          <ChevronRight aria-hidden="true" />
+          <Link href={`/browse?mode=${listing.isRent ? "rent" : "sale"}`}>
+            <T path={listing.isRent ? "search.rent" : "search.buy"} />
+          </Link>
+          {listing.category && (
+            <>
+              <ChevronRight aria-hidden="true" />
+              <Link href="/browse">{listing.category}</Link>
+            </>
+          )}
+          <ChevronRight aria-hidden="true" />
+          <span className="cur">{listing.title}</span>
+        </nav>
+
         {/* Full-width gallery on top (PropertyGuru-style). */}
         <div className="pdp-gallery-wrap">
           {/* Mobile-only floating Back / Share / Save over the image. */}
