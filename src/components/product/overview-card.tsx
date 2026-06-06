@@ -90,7 +90,7 @@ function priceParts(
 export function ProductPrice({ listing }: { listing: Listing }) {
   const mode = listingMode(listing);
   const rows: {
-    kind: "sale" | "rent";
+    kind: "sale" | "rent" | "both";
     parts: { num: string; ccy: string } | null;
     unit: string;
   }[] = [];
@@ -119,12 +119,27 @@ export function ProductPrice({ listing }: { listing: Listing }) {
     });
   }
 
+  // Sale + rent where both prices are on enquiry → collapse the two identical
+  // segments into one "For sale & rent · Price on enquiry".
+  const display =
+    mode === "both" && rows.length === 2 && !rows[0].parts && !rows[1].parts
+      ? [{ kind: "both" as const, parts: null, unit: "" }]
+      : rows;
+
   return (
-    <div className={"pdp-price" + (rows.length > 1 ? " pdp-price--multi" : "")}>
-      {rows.map((r) => (
+    <div className={"pdp-price" + (display.length > 1 ? " pdp-price--multi" : "")}>
+      {display.map((r) => (
         <div className={`pseg pseg--${r.kind}`} key={r.kind}>
           <span className={`pseg-label pseg-label--${r.kind}`}>
-            <T path={r.kind === "sale" ? "product.forSale" : "product.forRent"} />
+            <T
+              path={
+                r.kind === "sale"
+                  ? "product.forSale"
+                  : r.kind === "rent"
+                    ? "product.forRent"
+                    : "product.forSaleAndRent"
+              }
+            />
           </span>
           {r.parts ? (
             <span className="pseg-amount">
