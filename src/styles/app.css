@@ -447,6 +447,11 @@ html, body {
   gap: 16px;
   align-items: start;
 }
+/* Phones: stack Theme + Language as full-width rows (the 2-up grid is cramped
+   on narrow screens). */
+@media (max-width: 640px) {
+  .mh-drawer-prefs { grid-template-columns: 1fr; gap: 12px; }
+}
 .mh-drawer-lang {
   padding: 4px 0 8px;
   display: flex;
