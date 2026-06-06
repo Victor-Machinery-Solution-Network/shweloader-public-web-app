@@ -3471,20 +3471,18 @@ html, body {
   flex-wrap: wrap;
 }
 
-/* Tablet — collapse to 2 columns (brand + first link col, then 2 link cols) */
+/* Tablet — collapse to 2 columns. Logo/brand leads as a full-width first row
+   (natural DOM order — no reordering), then the link columns follow below. */
 @media (max-width: 1024px) {
   .sl-footer-grid {
     grid-template-columns: 1fr 1fr;
     gap: 32px 24px;
     padding: 36px 24px 28px;
   }
-  .sl-footer-grid .sl-footer-col { order: 1; }
-  .sl-footer-brand { order: 2; }
-  .sl-footer-grid .sl-footer-follow { order: 3; }
-  .sl-footer-brand,
-  .sl-footer-grid .sl-footer-follow {
-    margin-top: 4px; padding-top: 32px;
-    border-top: 1px solid #2c2c28;
+  .sl-footer-brand {
+    grid-column: 1 / -1;
+    padding-bottom: 28px;
+    border-bottom: 1px solid #2c2c28;
   }
 }
 
@@ -3813,7 +3811,7 @@ html, body {
   color: #fff;
   transform: translateY(-1px);
 }
-.sl-footer-social-btn svg { flex: 0 0 auto; width: 28px; height: 28px; }
+.sl-footer-social-btn svg { flex: 0 0 auto; width: 26px; height: 26px; }
 
 /* ============================================================
    Announcement bar — style variants (toggled via Tweaks)

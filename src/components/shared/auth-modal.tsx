@@ -393,11 +393,21 @@ function SignUpStep1({
             "I agree to the",
             "အောက်ပါ စည်းကမ်းချက်များကို သဘောတူပါသည် —",
           )}{" "}
-          <a href="#" className="auth-inline-link">
+          <a
+            href="/legal#terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="auth-inline-link"
+          >
             {t("Terms", "စည်းမျဉ်း")}
           </a>{" "}
           {t("and", "နှင့်")}{" "}
-          <a href="#" className="auth-inline-link">
+          <a
+            href="/legal#privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="auth-inline-link"
+          >
             {t("Privacy Policy", "ကိုယ်ရေးကိုယ်တာ မူဝါဒ")}
           </a>
           .
