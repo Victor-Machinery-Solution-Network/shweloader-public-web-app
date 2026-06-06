@@ -30,7 +30,7 @@ export function BlogShare({ title }: { title: string }) {
   return (
     <button type="button" className="bp-share" onClick={share}>
       <Share2 className="icon-sm" strokeWidth={1.75} aria-hidden="true" />
-      {t("actions.share")}
+      <span className="bp-btn-label">{t("actions.share")}</span>
     </button>
   );
 }

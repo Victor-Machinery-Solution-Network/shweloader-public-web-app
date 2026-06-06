@@ -132,7 +132,9 @@ export default async function BlogPostPage({ params }: { params: Params }) {
               style={{ transform: "rotate(180deg)" }}
               aria-hidden="true"
             />
-            <T path="actions.backToBlog" />
+            <span className="bp-btn-label">
+              <T path="actions.backToBlog" />
+            </span>
           </Link>
           <BlogShare title={post.title} />
         </div>

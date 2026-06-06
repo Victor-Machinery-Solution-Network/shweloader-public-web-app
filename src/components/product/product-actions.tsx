@@ -84,12 +84,12 @@ export function ProductActions({
           style={{ transform: "rotate(180deg)" }}
           aria-hidden="true"
         />
-        {t("actions.backToResults")}
+        <span className="pdp-btn-label">{t("actions.backToResults")}</span>
       </button>
       <div style={{ display: "flex", gap: 10 }}>
         <button type="button" className="pdp-btn" onClick={share}>
           <Share2 className="icon-sm" strokeWidth={1.75} aria-hidden="true" />
-          {t("actions.share")}
+          <span className="pdp-btn-label">{t("actions.share")}</span>
         </button>
         <button
           type="button"
@@ -103,7 +103,9 @@ export function ProductActions({
             style={saved ? { fill: "currentColor" } : undefined}
             aria-hidden="true"
           />
-          {saved ? t("actions.saved") : t("actions.save")}
+          <span className="pdp-btn-label">
+            {saved ? t("actions.saved") : t("actions.save")}
+          </span>
         </button>
       </div>
     </div>

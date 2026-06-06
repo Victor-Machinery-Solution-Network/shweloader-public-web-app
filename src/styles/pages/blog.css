@@ -671,6 +671,18 @@
 }
 .bp-share:hover { background: var(--m-bg-2); border-color: var(--m-line-2); }
 .bp-share .icon-sm { width: 15px; height: 15px; }
+/* On phones, collapse Back + Share to icon-only so the top row doesn't cramp.
+   Labels stay in the a11y tree (visually hidden, not display:none). */
+@media (max-width: 640px) {
+  .bp-back, .bp-share { padding: 9px; }
+  .bp-btn-label {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
+  }
+}
 
 /* Hero image */
 .bp-hero {
