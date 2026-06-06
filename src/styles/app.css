@@ -354,7 +354,7 @@ html, body {
 .mh-drawer-nav {
   display: flex;
   flex-direction: column;
-  padding: 12px 24px 8px;
+  padding: 0 16px 8px;
 }
 .mh-drawer-link {
   display: flex;

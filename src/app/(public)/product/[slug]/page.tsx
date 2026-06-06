@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ProductActions } from "@/components/product/product-actions";
+import { StatusPill } from "@/components/shared/status-pill";
 
 import { Gallery } from "@/components/product/gallery";
 import {
@@ -154,6 +155,14 @@ export default async function ProductPage({ params }: PageProps) {
           {/* On mobile the grid reorders so the title sits below the (full-bleed)
               gallery; on desktop it spans the top as before. */}
           <div className="pdp-title">
+            {/* Mobile-only: the NEW badge moves here (above the category eyebrow)
+                so it doesn't collide with the overlaid Back button on the image.
+                Desktop/tablet keep it on the image. */}
+            {isNew && (
+              <div className="pdp-title-badge">
+                <StatusPill variant="new" />
+              </div>
+            )}
             {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
             <h1 className="t-h">{listing.title}</h1>
           </div>

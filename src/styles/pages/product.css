@@ -180,6 +180,9 @@
 .pdp-title {
   padding: 8px 0 0;
 }
+/* The NEW badge lives on the image (desktop/tablet); this title-level copy is
+   only shown on phones (see the ≤768 block) where the image badge is hidden. */
+.pdp-title-badge { display: none; }
 .pdp-title .t-eyebrow {
   display: flex; align-items: center; gap: 10px;
   font-size: 14px; color: var(--m-fg-2); font-weight: 500;
@@ -1157,6 +1160,14 @@
   /* No prev/next arrows on phones — the gallery is swipe-driven and the arrows
      clutter the immersive image. */
   .pdp-gallery .g-nav { display: none; }
+  /* Move the status badge off the image (it collided with the overlaid Back
+     button) — hide it here and show it above the category eyebrow instead.
+     Sold/rented still read via the big stamp overlay. */
+  .pdp-gallery .g-hero .feat-ribbon { display: none; }
+  .pdp-title-badge { display: block; margin-bottom: 10px; }
+  /* .feat-ribbon is absolute by default (overlays photos) — reset it to flow
+     normally above the eyebrow. */
+  .pdp-title-badge .feat-ribbon { position: static; }
 
   /* The labelled action row is replaced by the floating overlay. */
   .pdp-actions { display: none; }
