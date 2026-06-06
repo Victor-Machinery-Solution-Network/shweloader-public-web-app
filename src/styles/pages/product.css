@@ -293,6 +293,9 @@
     height: 100%;
   }
   .pdp-gallery:has(.g-collage) .g-strip { display: none; }
+  /* Counter is redundant in the grid view (thumbnails are visible); keep it on
+     mobile (swipe) and in the lightbox. */
+  .pdp-gallery:has(.g-collage) .g-stage .g-bar { display: none; }
 }
 
 /* ---------- Title header ---------- */
