@@ -474,6 +474,17 @@
   }
 }
 
+/* Large screens — the category rail fits without scrolling, so drop the side
+   inset + edge fade and let the chips sit flush with the page content. */
+@media (min-width: 1024px) {
+  .bx-cats { padding-left: 0; padding-right: 0; }
+  .bx-cats-rail {
+    margin: 0;
+    -webkit-mask-image: none;
+            mask-image: none;
+  }
+}
+
 /* ============================================================
    EMPTY STATE
    ============================================================ */
@@ -596,7 +607,7 @@
 
 .bp-article { padding: 24px 0 64px; }
 .bp-header {
-  max-width: 760px;
+  max-width: 1000px;
   margin: 0 auto;
   text-align: left;
 }
@@ -638,10 +649,28 @@
   color: var(--m-fg-2);
 }
 .bp-byline-author { white-space: nowrap; }
+/* Icon + label alignment (matches the blog card byline). */
+.bp-byline-author,
+.bp-byline-time { display: inline-flex; align-items: center; gap: 5px; }
 .bp-byline-name { color: var(--m-ink); font-weight: 600; }
 .bp-byline-role { color: var(--m-fg-2); font-weight: 400; }
 .bp-byline-sep  { color: var(--m-fg-3); opacity: 0.55; }
 .bp-byline-time { color: var(--m-fg-2); }
+/* Share button — sits opposite the Back link in the top row (like the product
+   page's Back · Share action row). */
+.bp-share {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  font-family: var(--font-sans);
+  font-size: 13px; font-weight: 600;
+  color: var(--m-ink);
+  background: var(--m-bg); border: 1px solid var(--m-line);
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.bp-share:hover { background: var(--m-bg-2); border-color: var(--m-line-2); }
+.bp-share .icon-sm { width: 15px; height: 15px; }
 
 /* Hero image */
 .bp-hero {
@@ -659,7 +688,7 @@
 
 /* Body */
 .bp-body {
-  max-width: 720px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 .bp-p {
@@ -707,6 +736,21 @@
   margin-top: 48px;
 }
 .bp-related-head { margin-bottom: 28px; }
+
+/* Related cards sit in a multi-column grid (3-up desktop → 2 → 1). Previously
+   they reused .bx-grid (the index's single-column story list), so each related
+   card stretched the full container width and looked oversized on desktop. */
+.bp-related-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px 24px;
+}
+@media (max-width: 900px) {
+  .bp-related-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .bp-related-grid { grid-template-columns: 1fr; }
+}
 
 /* Legacy aliases — BlogPost.jsx still uses .bx-card / .bx-card-img / etc. */
 .bx-card {

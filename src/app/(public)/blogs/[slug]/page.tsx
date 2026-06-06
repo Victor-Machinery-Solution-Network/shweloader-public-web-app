@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, User, Calendar, Clock } from "lucide-react";
 import DOMPurify from "isomorphic-dompurify";
 import type { Metadata } from "next";
 
@@ -21,6 +21,7 @@ import {
 import type { BlogPost } from "@/lib/api/types";
 
 import { markdownToHtml } from "@/components/blogs/markdown";
+import { BlogShare } from "@/components/blog/blog-share";
 
 type Params = Promise<{ slug: string }>;
 
@@ -132,6 +133,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
             />
             Back to blog
           </Link>
+          <BlogShare title={post.title} />
         </div>
       </section>
 
@@ -144,6 +146,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
             <div className="bp-byline">
               {post.author ? (
                 <span className="bp-byline-author">
+                  <User className="bx-byline-ico" aria-hidden="true" />
                   <span className="bp-byline-name">{post.author}</span>
                 </span>
               ) : null}
@@ -153,7 +156,10 @@ export default async function BlogPostPage({ params }: { params: Params }) {
                 </span>
               ) : null}
               {post.date ? (
-                <span className="bp-byline-time">{formatDate(post.date)}</span>
+                <span className="bp-byline-time">
+                  <Calendar className="bx-byline-ico" aria-hidden="true" />
+                  {formatDate(post.date)}
+                </span>
               ) : null}
               {post.date && post.readTime ? (
                 <span className="bp-byline-sep" aria-hidden="true">
@@ -162,6 +168,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
               ) : null}
               {post.readTime ? (
                 <span className="bp-byline-time">
+                  <Clock className="bx-byline-clock" aria-hidden="true" />
                   {post.readTime} min read
                 </span>
               ) : null}
@@ -204,7 +211,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
             <div className="bp-related-head">
               <span className="bx-section-label">More from the blog</span>
             </div>
-            <div className="bx-grid">
+            <div className="bp-related-grid">
               {related.map((p) => {
                 const pCover = assetUrl(p.cover.url);
                 return (
@@ -229,31 +236,42 @@ export default async function BlogPostPage({ params }: { params: Params }) {
                           }}
                         />
                       ) : null}
-                      {p.category ? (
-                        <span className="bx-card-badge">{p.category}</span>
-                      ) : null}
                     </div>
                     <div className="bx-card-body">
+                      {p.category ? (
+                        <span className="bx-story-eyebrow">{p.category}</span>
+                      ) : null}
                       <h3 className="bx-card-title">{p.title}</h3>
                       <p className="bx-card-excerpt">
                         {truncate(toPlainText(p.content), 120)}
                       </p>
                       <div className="bx-card-foot">
                         {p.author ? (
-                          <span className="bx-byline-name">{p.author}</span>
+                          <span className="bx-byline-name">
+                            <User className="bx-byline-ico" aria-hidden="true" />
+                            {p.author}
+                          </span>
                         ) : null}
                         {p.author && p.date ? (
                           <span className="bx-byline-sep" aria-hidden="true">
                             ·
                           </span>
                         ) : null}
-                        {p.date ? <span>{formatDate(p.date)}</span> : null}
+                        {p.date ? (
+                          <span className="bx-byline-time">
+                            <Calendar className="bx-byline-ico" aria-hidden="true" />
+                            {formatDate(p.date)}
+                          </span>
+                        ) : null}
                         {p.readTime ? (
                           <>
                             <span className="bx-byline-sep" aria-hidden="true">
                               ·
                             </span>
-                            <span>{p.readTime} min read</span>
+                            <span className="bx-byline-time">
+                              <Clock className="bx-byline-clock" aria-hidden="true" />
+                              {p.readTime} min read
+                            </span>
                           </>
                         ) : null}
                       </div>
