@@ -144,7 +144,20 @@ export function Gallery({
   return (
     <div className="pdp-gallery">
       <div className="g-stage">
-        <div className="g-hero">
+        <div
+          className="g-hero"
+          onClick={() => {
+            // Desktop grid view: clicking the primary image opens the lightbox
+            // (its in-place arrows are hidden there). Mobile keeps its swipe.
+            if (
+              useCollage &&
+              typeof window !== "undefined" &&
+              window.matchMedia("(min-width: 1025px)").matches
+            ) {
+              setLightbox(true);
+            }
+          }}
+        >
           {photos.map((p, i) => layer(p, i))}
 
           {isNew && !dimmed && (

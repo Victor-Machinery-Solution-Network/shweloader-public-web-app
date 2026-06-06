@@ -296,6 +296,10 @@
   /* Counter is redundant in the grid view (thumbnails are visible); keep it on
      mobile (swipe) and in the lightbox. */
   .pdp-gallery:has(.g-collage) .g-stage .g-bar { display: none; }
+  /* The primary image opens the lightbox on click, so the in-place prev/next
+     arrows aren't needed in the grid view (kept on mobile + in the lightbox). */
+  .pdp-gallery:has(.g-collage) .g-stage .g-nav { display: none; }
+  .pdp-gallery:has(.g-collage) .g-stage .g-hero { cursor: zoom-in; }
 }
 
 /* ---------- Title header ---------- */
