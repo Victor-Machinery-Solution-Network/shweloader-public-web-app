@@ -57,9 +57,14 @@ export function Gallery({
   const [active, setActive] = useState(0);
   const [showAll, setShowAll] = useState(false);
   const [lightbox, setLightbox] = useState(false);
+  // The lightbox tracks its own index, independent of the in-page hero — so
+  // clicking a thumbnail opens the viewer at that photo without ever switching
+  // the primary image behind it.
+  const [lbIndex, setLbIndex] = useState(0);
 
   const total = photos.length;
   const idx = Math.min(active, Math.max(total - 1, 0));
+  const lbIdx = Math.min(lbIndex, Math.max(total - 1, 0));
 
   // Lightbox: lock body scroll + wire Esc / arrow keys while open.
   useEffect(() => {
@@ -69,8 +74,8 @@ export function Gallery({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setLightbox(false);
       else if (e.key === "ArrowLeft")
-        setActive((a) => (a - 1 + total) % total);
-      else if (e.key === "ArrowRight") setActive((a) => (a + 1) % total);
+        setLbIndex((a) => (a - 1 + total) % total);
+      else if (e.key === "ArrowRight") setLbIndex((a) => (a + 1) % total);
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -93,6 +98,13 @@ export function Gallery({
 
   const dimmed = isSold || isRented;
   const go = (delta: number) => setActive((a) => (a + delta + total) % total);
+  // Lightbox navigation + opener — separate from the hero so the primary image
+  // never changes when a thumbnail is clicked.
+  const goLb = (delta: number) => setLbIndex((a) => (a + delta + total) % total);
+  const openLightbox = (i: number) => {
+    setLbIndex(i);
+    setLightbox(true);
+  };
 
   // All photos are rendered as persistent stacked layers; only the active one is
   // opaque. Swapping just transitions opacity between two already-decoded images
@@ -154,7 +166,7 @@ export function Gallery({
               typeof window !== "undefined" &&
               window.matchMedia("(min-width: 1025px)").matches
             ) {
-              setLightbox(true);
+              openLightbox(idx);
             }
           }}
         >
@@ -226,12 +238,8 @@ export function Gallery({
                 <button
                   key={i}
                   type="button"
-                  className={
-                    "g-tile" +
-                    (!isMore && i === idx ? " is-on" : "") +
-                    (isMore ? " g-tile-more" : "")
-                  }
-                  onClick={() => (isMore ? setLightbox(true) : setActive(i))}
+                  className={"g-tile" + (isMore ? " g-tile-more" : "")}
+                  onClick={() => openLightbox(i)}
                   aria-label={
                     isMore
                       ? t("product.showAllPhotos")
@@ -335,7 +343,7 @@ export function Gallery({
               <button
                 type="button"
                 className="g-nav g-prev"
-                onClick={() => go(-1)}
+                onClick={() => goLb(-1)}
                 aria-label={t("product.prevPhoto")}
               >
                 <svg viewBox="0 0 16 16" width="16" height="16" fill="none" aria-hidden="true">
@@ -344,18 +352,18 @@ export function Gallery({
               </button>
             )}
             <div className="g-lb-img">
-              {photos[idx]?.hero && (
+              {photos[lbIdx]?.hero && (
                 <Image
-                  key={idx}
-                  src={photos[idx].hero!}
-                  alt={`${title} — ${t("product.photo")} ${idx + 1}`}
+                  key={lbIdx}
+                  src={photos[lbIdx].hero!}
+                  alt={`${title} — ${t("product.photo")} ${lbIdx + 1}`}
                   fill
                   sizes="100vw"
                   style={{
                     objectFit: "contain",
                     objectPosition: focalPosition(
-                      photos[idx].focalX,
-                      photos[idx].focalY,
+                      photos[lbIdx].focalX,
+                      photos[lbIdx].focalY,
                     ),
                   }}
                 />
@@ -365,7 +373,7 @@ export function Gallery({
               <button
                 type="button"
                 className="g-nav g-next"
-                onClick={() => go(1)}
+                onClick={() => goLb(1)}
                 aria-label={t("product.nextPhoto")}
               >
                 <svg viewBox="0 0 16 16" width="16" height="16" fill="none" aria-hidden="true">
@@ -374,7 +382,7 @@ export function Gallery({
               </button>
             )}
             <span className="g-lb-counter tnum">
-              {String(idx + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+              {String(lbIdx + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
             </span>
           </div>
 
@@ -383,10 +391,10 @@ export function Gallery({
               <button
                 key={i}
                 type="button"
-                className={"g-lb-mini" + (i === idx ? " is-on" : "")}
-                onClick={() => setActive(i)}
+                className={"g-lb-mini" + (i === lbIdx ? " is-on" : "")}
+                onClick={() => setLbIndex(i)}
                 aria-label={`${t("product.photo")} ${i + 1}`}
-                aria-current={i === idx}
+                aria-current={i === lbIdx}
               >
                 {p.thumb && (
                   <Image
