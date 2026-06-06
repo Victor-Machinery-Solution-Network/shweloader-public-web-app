@@ -20,8 +20,11 @@ export function Similar({ listings, mode = "sale" }: SimilarProps) {
   const scrollBy = (dir: number) => {
     const grid = gridRef.current;
     if (!grid) return;
-    const amount = grid.clientWidth * 0.8 * dir;
-    grid.scrollBy({ left: amount, behavior: "smooth" });
+    // Scroll roughly one "page" of 4 cards (the grid is now full-bleed, so
+    // clientWidth is the whole viewport — don't page by that).
+    const card = grid.firstElementChild as HTMLElement | null;
+    const step = card ? (card.offsetWidth + 16) * 4 : grid.clientWidth * 0.6;
+    grid.scrollBy({ left: step * dir, behavior: "smooth" });
   };
 
   return (
@@ -33,35 +36,37 @@ export function Similar({ listings, mode = "sale" }: SimilarProps) {
               You may also like
             </h2>
           </div>
-          <div className="pdp-similar-nav">
-            <button
-              type="button"
-              className="nav-btn"
-              aria-label="Previous"
-              onClick={() => scrollBy(-1)}
-            >
-              <ArrowRight
-                className="icon-sm"
-                aria-hidden="true"
-                style={{ transform: "rotate(180deg)" }}
-              />
-            </button>
-            <button
-              type="button"
-              className="nav-btn"
-              aria-label="Next"
-              onClick={() => scrollBy(1)}
-            >
-              <ArrowRight className="icon-sm" aria-hidden="true" />
-            </button>
-          </div>
+          {listings.length > 4 && (
+            <div className="pdp-similar-nav">
+              <button
+                type="button"
+                className="nav-btn"
+                aria-label="Previous"
+                onClick={() => scrollBy(-1)}
+              >
+                <ArrowRight
+                  className="icon-sm"
+                  aria-hidden="true"
+                  style={{ transform: "rotate(180deg)" }}
+                />
+              </button>
+              <button
+                type="button"
+                className="nav-btn"
+                aria-label="Next"
+                onClick={() => scrollBy(1)}
+              >
+                <ArrowRight className="icon-sm" aria-hidden="true" />
+              </button>
+            </div>
+          )}
         </div>
+      </div>
 
-        <div className="pdp-similar-grid" ref={gridRef}>
-          {listings.map((l) => (
-            <ListingCard key={l.id} listing={l} mode={mode} />
-          ))}
-        </div>
+      <div className="pdp-similar-grid" ref={gridRef}>
+        {listings.map((l) => (
+          <ListingCard key={l.id} listing={l} mode={mode} />
+        ))}
       </div>
     </section>
   );

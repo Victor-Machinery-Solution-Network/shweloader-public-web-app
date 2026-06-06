@@ -10,7 +10,6 @@ import {
   priceFields,
   splitPrice,
 } from "@/components/product/overview-card";
-import { Specs } from "@/components/product/specs";
 import { Description } from "@/components/product/description";
 import { Similar } from "@/components/product/similar";
 import { MobileBar } from "@/components/product/mobile-bar";
@@ -30,6 +29,7 @@ import {
 import { formatListingPrice } from "@/lib/format";
 import { parseIdFromSlug, listingSlug } from "@/lib/slug";
 import { toPlainText, truncate } from "@/lib/utils";
+import { renderMarkdown } from "@/lib/markdown";
 import type { Listing } from "@/lib/api/types";
 
 import "@/styles/pages/product.css";
@@ -118,6 +118,7 @@ export default async function ProductPage({ params }: PageProps) {
   const seller =
     listing.seller && !listing.seller.hidden ? listing.seller : null;
   const pdfUrl = assetUrl(listing.pdfUrl);
+  const descriptionHtml = await renderMarkdown(listing.description);
   const isNew = (listing.condition ?? "").toLowerCase() === "new";
 
   const eyebrow =
@@ -168,8 +169,7 @@ export default async function ProductPage({ params }: PageProps) {
 
           <div className="pdp-col-l">
             <div className="pdp-body-l">
-              <Specs fields={listing.customFields} />
-              <Description text={listing.description} pdfUrl={pdfUrl} />
+              <Description html={descriptionHtml} pdfUrl={pdfUrl} />
             </div>
           </div>
         </div>

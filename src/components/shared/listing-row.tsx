@@ -61,7 +61,7 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
             alt={listing.title}
             fill
             sizes="(max-width: 768px) 220px, 280px"
-            style={{ objectFit: "contain", objectPosition: focalPosition(img.focalX, img.focalY) }}
+            style={{ objectFit: "cover", objectPosition: focalPosition(img.focalX, img.focalY) }}
           />
         ) : null}
         {isSold ? (

@@ -41,6 +41,22 @@
   display: flex; align-items: center; justify-content: center;
   aspect-ratio: 4 / 3;
   max-height: 460px;
+  /* Subtle off-white frame so a contain'd photo (and its letterbox) doesn't
+     blend into the white page. */
+  background: #f9f9f9;
+}
+[data-theme="dark"] .pdp-gallery .g-hero { background: #1a1b20; }
+/* All photos are stacked; only the active layer is opaque. Swapping cross-fades
+   opacity between two already-decoded images (smooth, no re-decode). Transitions
+   only run on change, so the initial active layer paints immediately (LCP). */
+.pdp-gallery .g-hero-img {
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.pdp-gallery .g-hero-img.is-active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .pdp-gallery .g-hero-img { transition: none; }
 }
 .pdp-gallery .g-tag {
   position: absolute; top: 14px; left: 14px;
@@ -70,7 +86,7 @@
 .pdp-gallery .g-bar {
   position: absolute;
   bottom: 14px; left: 14px; right: 14px;
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: flex-end; align-items: center;
   pointer-events: none;
 }
 .pdp-gallery .g-bar > * { pointer-events: auto; }
@@ -103,8 +119,8 @@
 /* Thumbnail strip */
 .pdp-gallery .g-strip {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
 }
 .pdp-gallery .g-mini {
   position: relative;
@@ -177,7 +193,7 @@
   align-items: start;
 }
 .pdp-gallery-wrap { grid-area: gallery; min-width: 0; }
-.pdp-col-l { grid-area: body; min-width: 0; display: flex; flex-direction: column; gap: 56px; margin-top: 56px; }
+.pdp-col-l { grid-area: body; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
 .pdp-col-r { grid-area: overview; position: sticky; top: 88px; }
 
 /* ---------- Hero 2-column (gallery + overview) ---------- */
@@ -350,17 +366,42 @@
 }
 
 /* ---------- Description ---------- */
+/* Collapsed by default: clamp by height (works with rich Markdown blocks, unlike
+   -webkit-line-clamp) + a bottom fade. `max-height` is animated by JS (it sets
+   the measured height, then `none`) so expand/collapse transitions smoothly —
+   CSS can't transition to/from `none`. */
 .pdp-desc {
   font-size: 16px; line-height: 1.7; color: var(--m-ink-2);
   max-width: 68ch;
-  display: -webkit-box;
-  -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  max-height: 8.5em;
   overflow: hidden;
+  transition: max-height .35s ease;
+  -webkit-mask-image: linear-gradient(#000 60%, transparent 100%);
+          mask-image: linear-gradient(#000 60%, transparent 100%);
 }
 .pdp-desc.is-open {
-  -webkit-line-clamp: unset;
-  display: block;
+  -webkit-mask-image: none;
+          mask-image: none;
 }
+@media (prefers-reduced-motion: reduce) {
+  .pdp-desc { transition: none; }
+}
+/* Rendered Markdown elements */
+.pdp-desc > :first-child { margin-top: 0; }
+.pdp-desc > :last-child { margin-bottom: 0; }
+.pdp-desc p { margin: 0 0 1em; }
+.pdp-desc h2 { font-size: 20px; font-weight: 700; color: var(--m-ink); line-height: 1.25; margin: 1.4em 0 .5em; }
+.pdp-desc h3 { font-size: 17px; font-weight: 600; color: var(--m-ink); line-height: 1.3; margin: 1.3em 0 .4em; }
+.pdp-desc ul, .pdp-desc ol { margin: 0 0 1em; padding-left: 1.4em; }
+.pdp-desc li { margin: 0 0 .35em; }
+.pdp-desc a { color: var(--m-gold-ink); text-decoration: underline; }
+.pdp-desc strong { font-weight: 700; color: var(--m-ink); }
+.pdp-desc blockquote { margin: 0 0 1em; padding: 2px 0 2px 14px; border-left: 3px solid var(--m-line); color: var(--m-fg-2); }
+.pdp-desc code { font-family: var(--font-mono, ui-monospace, monospace); font-size: .9em; background: var(--m-bg-2); padding: 1px 5px; border-radius: 4px; }
+.pdp-desc pre { margin: 0 0 1em; padding: 12px 14px; background: var(--m-bg-2); border-radius: 8px; overflow-x: auto; }
+.pdp-desc pre code { background: none; padding: 0; }
+.pdp-desc img { max-width: 100%; height: auto; border-radius: 8px; }
+.pdp-desc hr { border: 0; border-top: 1px solid var(--m-line); margin: 1.4em 0; }
 .pdp-show-more {
   background: transparent; border: 0; padding: 8px 0; margin-top: 6px;
   display: inline-flex; align-items: center; gap: 6px;
@@ -746,8 +787,34 @@
   transition: background .15s, border-color .15s;
 }
 .nav-btn:hover { background: var(--m-bg-2); border-color: var(--m-line-2); }
+/* Edge-to-edge carousel (full section width, like the mobile bleed). 4 cards fit
+   within the centered content rail; the first card aligns to the rail via the
+   side padding, and cards scroll off the viewport edges. */
 .pdp-similar-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-inline: 24px;
+  scroll-padding-inline: 24px; /* so snap rests at the rail, not the viewport edge */
+  /* Room for the card hover-lift (top) + shadow (bottom) — overflow-x:auto also
+     clips the y-axis, which was cropping them. */
+  padding-block: 6px 32px;
+}
+.pdp-similar-grid::-webkit-scrollbar { display: none; }
+.pdp-similar-grid > * {
+  flex: 0 0 calc((100% - 48px) / 4); /* 4 per view (3 × 16px gaps) of the rail */
+  scroll-snap-align: start;
+}
+/* ≥1280: pad to the centered 1280 rail so the first card lines up with the page
+   content while the strip bleeds into the side margins. */
+@media (min-width: 1280px) {
+  .pdp-similar-grid {
+    padding-inline: calc(50vw - 640px);
+    scroll-padding-inline: calc(50vw - 640px);
+  }
 }
 
 /* ---------- CTA banner ---------- */
@@ -801,6 +868,16 @@
 [data-density="compact"] .pdp-title .t-h { font-size: 30px; }
 [data-density="compact"] .pdp-gallery .g-hero { max-height: 380px; }
 [data-density="compact"] .pdp-gallery .g-mini { height: 64px; }
+/* "+N more" overlay on the last visible thumbnail (caps the strip at 2 rows). */
+.pdp-gallery .g-mini-more { opacity: 1; }
+.pdp-gallery .g-mini-more .g-more-badge {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 20, 26, 0.6);
+  color: #fff; font-weight: 700; font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.pdp-gallery .g-mini-more:hover .g-more-badge { background: rgba(20, 20, 26, 0.72); }
 [data-density="compact"] .pdp-hero { gap: 24px; grid-template-columns: 1fr 340px; }
 [data-density="compact"] .pdp-overview { padding: 18px 18px 14px; }
 
@@ -880,15 +957,9 @@
   /* Similar machines become a horizontal swipe carousel */
   .pdp-similar-nav { display: none; }
   .pdp-similar-grid {
-    display: flex;
-    grid-template-columns: none;
-    overflow-x: auto;
     gap: 12px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 -24px; padding: 0 24px 4px;
+    padding: 6px 24px 24px;
   }
-  .pdp-similar-grid::-webkit-scrollbar { display: none; }
   .pdp-similar-grid > * { flex: 0 0 80%; scroll-snap-align: center; }
 
   /* Make room for the fixed bar; lift footer above it */

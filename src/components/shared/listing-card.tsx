@@ -71,7 +71,15 @@ export function ListingCard({
             alt={listing.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            style={{ objectFit: "contain", objectPosition: focalPosition(listing.thumbnail.focalX, listing.thumbnail.focalY) }}
+            // Fill the card edge-to-edge (matches the mobile app); the focal
+            // point keeps the subject in frame when the photo is cropped.
+            style={{
+              objectFit: "cover",
+              objectPosition: focalPosition(
+                listing.thumbnail.focalX,
+                listing.thumbnail.focalY,
+              ),
+            }}
           />
         ) : null}
 

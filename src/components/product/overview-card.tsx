@@ -58,19 +58,6 @@ export const KIND_LABEL: Record<ProductMode, string> = {
   both: "For sale or rent",
 };
 
-/** Pull the first matching custom field value by case-insensitive label/key. */
-function findField(listing: Listing, ...names: string[]): string | null {
-  const wanted = names.map((n) => n.toLowerCase());
-  for (const f of listing.customFields) {
-    const label = (f.label || f.key || "").toLowerCase();
-    if (wanted.some((w) => label === w || label.includes(w))) {
-      const v = (f.value ?? "").trim();
-      if (v) return v;
-    }
-  }
-  return null;
-}
-
 /**
  * Sticky overview card: kind tag, price, product-overview spec list, seller
  * information (only when visible), and the enquiry form.
@@ -85,10 +72,6 @@ export function OverviewCard({ listing }: { listing: Listing }) {
   const rentSecondary =
     mode === "both" ? splitPrice(formatListingPrice(fields, "rent")) : null;
 
-  const year = findField(listing, "year");
-  const hours = findField(listing, "hours", "hour", "operating hours");
-  const weight = findField(listing, "operating weight", "op. weight", "weight");
-  const engine = findField(listing, "engine power", "engine", "power");
   const condition = listing.condition;
   const locationLabel =
     listing.location.township ||
@@ -96,13 +79,23 @@ export function OverviewCard({ listing }: { listing: Listing }) {
     listing.location.district ||
     null;
 
+  // All admin specs (customFields) live under Product overview alongside the
+  // listing-level Condition + Location highlights — they're all key-value pairs.
+  // Deduped by label.
   const rows: [string, string][] = [];
-  if (year) rows.push(["Year", year]);
-  if (hours) rows.push(["Hours", hours]);
-  if (weight) rows.push(["Op. weight", weight]);
-  if (engine) rows.push(["Engine", engine]);
-  if (condition) rows.push(["Condition", condition]);
-  if (locationLabel) rows.push(["Location", locationLabel]);
+  const seen = new Set<string>();
+  const addRow = (k: string, v: string) => {
+    const key = k.trim();
+    const val = v.trim();
+    if (!key || !val || seen.has(key.toLowerCase())) return;
+    seen.add(key.toLowerCase());
+    rows.push([key, val]);
+  };
+  if (condition) addRow("Condition", condition);
+  if (locationLabel) addRow("Location", locationLabel);
+  for (const f of listing.customFields) {
+    addRow(f.label || f.key || "", f.value ?? "");
+  }
 
   const seller =
     listing.seller && !listing.seller.hidden ? listing.seller : null;
