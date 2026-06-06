@@ -940,6 +940,10 @@
     gap: 28px;
   }
   .pdp-col-l { gap: 40px; margin-top: 0; }
+  /* When stacked, draw a divider above the Description so it reads as separate
+     from the Seller information that ends the overview card just above it.
+     Scoped to the section itself so a description-less listing shows no stray line. */
+  .pdp-col-l .pdp-section { border-top: 1px solid var(--m-line); padding-top: 28px; }
   .pdp-col-r { position: static; top: auto; }
   .pdp-hero { grid-template-columns: 1fr; gap: 24px; }
   .pdp-body:has(.pdp-body-r) { grid-template-columns: 1fr; }
