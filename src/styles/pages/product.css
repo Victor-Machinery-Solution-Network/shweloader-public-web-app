@@ -1,6 +1,11 @@
 /* product.css — ShweLoader product detail page.
    Clean modern, generous whitespace, restrained gold accent. */
 
+/* The product page's main rail is a touch narrower than the global 1280
+   container. Scoped to the direct child only, so the "You may also like"
+   section below keeps the global 1280 width + edge-bleed carousel. */
+.pdp-page > .container { max-width: 1176px; }
+
 /* ---------- Breadcrumbs ---------- */
 .pdp-crumbs {
   display: flex; align-items: center; gap: 8px;
@@ -37,7 +42,9 @@
   transition: background .15s, border-color .15s;
 }
 .pdp-btn:hover { background: var(--m-bg-2); border-color: var(--m-line-2); }
-.pdp-btn.is-on { color: var(--m-gold); border-color: var(--m-gold); }
+/* Saved state uses a "favourite" red (#e23d3d), not the brand gold. */
+.pdp-btn.is-on,
+.pdp-btn.is-on:hover { color: #e23d3d; border-color: #e23d3d; }
 /* On phones the 3-button row cramps — collapse to icon-only. The label stays
    in the a11y tree (visually hidden, not display:none) so it's still announced. */
 @media (max-width: 640px) {
@@ -71,9 +78,9 @@
   display: flex; align-items: center; justify-content: center;
   aspect-ratio: 4 / 3;
   max-height: 460px;
-  /* Subtle off-white frame so a contain'd photo (and its letterbox) doesn't
-     blend into the white page. */
-  background: #f9f9f9;
+  /* Subtle grey frame so a contain'd photo (and its letterbox) doesn't blend
+     into the white page; matches the collage tiles. */
+  background: #f1f1f1;
 }
 [data-theme="dark"] .pdp-gallery .g-hero { background: #1a1b20; }
 /* All photos are stacked; only the active layer is opaque. Swapping cross-fades
@@ -268,15 +275,16 @@
 .g-lb-mini:hover { opacity: 1; }
 .g-lb-mini.is-on { opacity: 1; border-color: var(--m-gold); }
 
-/* Desktop: split the stage into hero (left) + a 2×2 collage (right) and drop the
-   horizontal strip. Only when a collage is actually rendered (≥ 4 photos). */
-@media (min-width: 1025px) {
+/* Desktop + tablet (≥769px): split the stage into hero (left) + the side collage
+   and drop the horizontal strip. Below 769px the full-bleed mobile gallery takes
+   over, so these are the only two gallery versions. */
+@media (min-width: 769px) {
   .pdp-gallery:has(.g-collage) .g-stage {
     /* 4-column model: the hero spans 2 cols (left half) and the 2×2 thumbnail
        collage spans the other 2 (right half) — i.e. an even 50/50 split. */
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 4px;
     aspect-ratio: 3 / 1;
     align-items: stretch;
   }
@@ -284,22 +292,40 @@
     height: 100%;
     max-height: none;
     aspect-ratio: auto;
+    /* Only the gallery's outer corners are rounded (Airbnb-style): the hero
+       rounds its left two corners; its right edge (facing the collage) is square. */
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
   }
   .pdp-gallery:has(.g-collage) .g-collage {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 8px;
+    gap: 4px;
     height: 100%;
   }
+  /* Adapt the side grid to how many thumbnails there are (1–4) so a 2- or
+     3-photo listing still fills the right column cleanly. */
+  .g-collage--1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+  .g-collage--2 { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .g-collage--3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .g-collage--3 .g-tile:first-child { grid-column: 1 / -1; } /* wide tile on top */
+  .g-collage--4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
   .pdp-gallery:has(.g-collage) .g-strip { display: none; }
+  /* Only the gallery's outer corners are rounded — which collage tile owns the
+     top-right / bottom-right corner depends on the layout. */
+  .pdp-gallery:has(.g-collage) .g-tile { border-radius: 0; }
+  .g-collage--1 .g-tile { border-top-right-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }
+  .g-collage--2 .g-tile:first-child { border-top-right-radius: var(--radius-md); }
+  .g-collage--2 .g-tile:last-child { border-bottom-right-radius: var(--radius-md); }
+  .g-collage--3 .g-tile:first-child { border-top-right-radius: var(--radius-md); }
+  .g-collage--3 .g-tile:last-child { border-bottom-right-radius: var(--radius-md); }
+  .g-collage--4 .g-tile:nth-child(2) { border-top-right-radius: var(--radius-md); }
+  .g-collage--4 .g-tile:nth-child(4) { border-bottom-right-radius: var(--radius-md); }
   /* Counter is redundant in the grid view (thumbnails are visible); keep it on
      mobile (swipe) and in the lightbox. */
   .pdp-gallery:has(.g-collage) .g-stage .g-bar { display: none; }
   /* The primary image opens the lightbox on click, so the in-place prev/next
      arrows aren't needed in the grid view (kept on mobile + in the lightbox). */
   .pdp-gallery:has(.g-collage) .g-stage .g-nav { display: none; }
-  .pdp-gallery:has(.g-collage) .g-stage .g-hero { cursor: zoom-in; }
+  .pdp-gallery:has(.g-collage) .g-stage .g-hero { cursor: pointer; }
 }
 
 /* ---------- Title header ---------- */
@@ -312,6 +338,7 @@
 .pdp-title .t-eyebrow {
   display: flex; align-items: center; gap: 10px;
   font-size: 14px; color: var(--m-fg-2); font-weight: 500;
+  margin-top: 8px;
 }
 .pdp-title .t-kind-tag {
   display: inline-flex; align-items: center;
@@ -322,7 +349,7 @@
 }
 .pdp-title .t-h {
   font-size: 36px; font-weight: 600; letter-spacing: -0.02em;
-  line-height: 1.1; color: var(--m-ink); margin-top: 10px;
+  line-height: 1.1; color: var(--m-ink); margin-top: 0;
 }
 .pdp-title .t-loc {
   display: flex; align-items: center; gap: 8px;
@@ -349,9 +376,10 @@
 /* Compact the actions row inside the narrow side column (no top padding, smaller
    buttons) so Back / Share / Save stay on one line. */
 .pdp-side .pdp-actions { padding: 0; gap: 8px; }
-.pdp-side .pdp-actions .pdp-btn { padding: 8px 12px; font-size: 13px; white-space: nowrap; }
+/* Save (left) + Share (right) split the row evenly. */
+.pdp-side .pdp-actions .pdp-btn { flex: 1; justify-content: center; gap: 9px; padding: 11px 12px; font-size: 15px; white-space: nowrap; }
 .pdp-side .pdp-actions .pdp-btn-label { white-space: nowrap; }
-.pdp-side .pdp-actions .pdp-btn .icon-sm { width: 15px; height: 15px; }
+.pdp-side .pdp-actions .pdp-btn .icon-sm { width: 18px; height: 18px; }
 /* Floating Back/Share/Save over the gallery image — mobile only (shown in the
    ≤768 block); hidden on desktop where the labelled .pdp-actions row is used. */
 .pdp-gallery-actions { display: none; }
@@ -418,16 +446,16 @@
 
 .ov-list {
   display: flex; flex-direction: column;
-  margin: 0; padding: 16px 0 14px;
+  margin: 0; padding: 0 0 14px;
 }
 .ov-list-eyebrow {
   display: flex; align-items: center; gap: 6px;
   white-space: nowrap;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--m-fg-3);
-  margin-bottom: 8px;
+  font-size: 16px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--m-fg-2);
+  margin-bottom: 12px;
 }
-.ov-eyebrow-i { width: 14px; height: 14px; color: var(--m-fg-3); flex: 0 0 auto; }
+.ov-eyebrow-i { width: 16px; height: 16px; color: var(--m-fg-2); flex: 0 0 auto; }
 .ov-seller {
   border-top: 1px solid var(--m-line);
   padding: 16px 0 4px;
@@ -436,8 +464,8 @@
 .ov-seller-eyebrow {
   display: flex; align-items: center; gap: 6px;
   white-space: nowrap;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--m-fg-3);
+  font-size: 14px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--m-fg-2);
   margin-bottom: 8px;
 }
 .ov-seller-rows {
@@ -453,6 +481,9 @@
   padding: 8px 0;
   font-size: 14px;
 }
+/* Product overview rows use a proportional label column; the seller rows keep
+   the fixed 130px above. */
+.ov-list .ov-row { grid-template-columns: 25% 1fr; }
 .ov-row dt {
   color: var(--m-fg-2); font-weight: 400;
 }
@@ -462,7 +493,7 @@
 }
 
 .ov-cta {
-  display: flex; flex-direction: column; gap: 8px;  padding-top: 14px;
+  display: flex; flex-direction: column; gap: 8px;  padding-top: 16px;
   border-top: 1px solid var(--m-line);
 }
 .ov-btn {
@@ -520,6 +551,9 @@
   font-size: clamp(20px, 3.4vw, 24px); font-weight: 600; letter-spacing: -0.015em;
   color: var(--m-ink); margin-bottom: 16px;
 }
+/* Description heading reuses the Product Overview eyebrow style; reset the h2's
+   default top margin so it sits flush at the section top. */
+.pdp-desc-title { margin-top: 0; }
 .pdp-sub {
   font-size: 15px; color: var(--m-fg-2);
   line-height: 1.55; margin: 0 0 20px;
@@ -758,6 +792,32 @@
   padding: 24px;
   display: flex; flex-direction: column; gap: 20px;
 }
+/* ---------- Price ----------
+   Uses the app's own eyebrow + number type (Poppins, weight 600, restrained
+   grays — same as the PRODUCT OVERVIEW / SELLER INFORMATION labels and the
+   title). Sale+rent listings show two segments side-by-side, split by a
+   hairline — distinct, but quiet and on-brand. */
+.pdp-price { display: flex; flex-direction: column; gap: 6px; }
+/* Sale+rent: the two segments stack in the narrow card, separated by spacing
+   (no pills, no dividers). */
+.pdp-price--multi { gap: 16px; }
+.pseg { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+/* Sits at the top of the contact card; the divider below it is the seller
+   section's border-top (same construction as the "Message" divider). */
+.pdp-contact .pdp-price { margin-bottom: 0; }
+.pseg-label {
+  font-size: 14px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--m-fg-2);
+}
+.pseg-amount { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.pseg-num {
+  font-size: 30px; font-weight: 600; color: var(--m-ink);
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.pseg-num--req { font-size: 18px; letter-spacing: -0.01em; }
+.pseg-ccy { font-size: 18px; font-weight: 600; color: var(--m-fg-2); }
+.pseg-unit { font-size: 14px; color: var(--m-fg-2); }
+
 .cc-price {
   display: inline-flex; align-items: baseline; gap: 8px;
 }
@@ -823,8 +883,8 @@
 }
 /* Divider before the spec list (price block has no bottom border now) */
 .ov-list {
-  border-top: 1px solid var(--m-line);
-  margin-top: 14px;
+  border-bottom: 1px solid var(--m-line);
+  padding-bottom: 28px;
 }
 
 .cc-dealer {
@@ -866,8 +926,10 @@
 }
 .cc-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .cc-field > span {
-  font-size: 12px; color: var(--m-fg-2); font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; color: var(--m-fg-2); font-weight: 500;
 }
+.ov-msg-i { width: 16px; height: 16px; color: var(--m-fg-2); flex: 0 0 auto; }
 .cc-field input,
 .cc-field textarea {
   font-family: var(--font-sans); font-size: 15px; color: var(--m-ink);
@@ -1316,7 +1378,7 @@
     cursor: pointer;
   }
   .pdp-gact .icon-sm { width: 18px; height: 18px; }
-  .pdp-gact.is-on { color: var(--m-gold); }
+  .pdp-gact.is-on { color: #e23d3d; }
   [data-theme="dark"] .pdp-gact {
     background: rgba(26, 27, 32, 0.82); border-color: rgba(255, 255, 255, 0.12);
     color: #fff;

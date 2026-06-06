@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, Phone, Send } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/use-auth";
 import { useAuthUI } from "@/components/providers/auth-ui";
@@ -78,7 +78,10 @@ export function EnquiryForm({
   return (
     <>
       <label className="cc-field ov-msg-field">
-        <span>{t("product.messageLabel")}</span>
+        <span>
+          <Send className="ov-msg-i" aria-hidden="true" />
+          {t("product.messageLabel")}
+        </span>
         <textarea
           ref={ref}
           rows={3}

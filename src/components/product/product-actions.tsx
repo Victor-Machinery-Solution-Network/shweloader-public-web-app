@@ -126,37 +126,26 @@ export function ProductActions({
 
   return (
     <div className="pdp-actions">
-      <button type="button" className="pdp-btn" onClick={goBack}>
-        <ArrowRight
+      <button
+        type="button"
+        className={"pdp-btn" + (saved ? " is-on" : "")}
+        onClick={toggleSave}
+        aria-pressed={saved}
+      >
+        <Heart
           className="icon-sm"
           strokeWidth={1.75}
-          style={{ transform: "rotate(180deg)" }}
+          style={saved ? { fill: "currentColor" } : undefined}
           aria-hidden="true"
         />
-        <span className="pdp-btn-label">{t("actions.backToResults")}</span>
+        <span className="pdp-btn-label">
+          {saved ? t("actions.saved") : t("actions.save")}
+        </span>
       </button>
-      <div style={{ display: "flex", gap: 10 }}>
-        <button type="button" className="pdp-btn" onClick={share}>
-          <ShareIcon className="icon-sm" aria-hidden="true" />
-          <span className="pdp-btn-label">{t("actions.share")}</span>
-        </button>
-        <button
-          type="button"
-          className={"pdp-btn" + (saved ? " is-on" : "")}
-          onClick={toggleSave}
-          aria-pressed={saved}
-        >
-          <Heart
-            className="icon-sm"
-            strokeWidth={1.75}
-            style={saved ? { fill: "currentColor" } : undefined}
-            aria-hidden="true"
-          />
-          <span className="pdp-btn-label">
-            {saved ? t("actions.saved") : t("actions.save")}
-          </span>
-        </button>
-      </div>
+      <button type="button" className="pdp-btn" onClick={share}>
+        <ShareIcon className="icon-sm" aria-hidden="true" />
+        <span className="pdp-btn-label">{t("actions.share")}</span>
+      </button>
     </div>
   );
 }

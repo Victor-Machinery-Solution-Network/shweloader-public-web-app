@@ -3,8 +3,8 @@ import { Package, User } from "lucide-react";
 import { EnquiryForm } from "@/components/product/enquiry-form";
 import { T } from "@/components/t";
 import {
-  formatListingPrice,
-  PRICE_ON_REQUEST,
+  formatInt,
+  rentalUnitLabel,
   type ListingPriceFields,
 } from "@/lib/format";
 import type { Listing } from "@/lib/api/types";
@@ -67,70 +67,80 @@ export const KIND_KEY: Record<ProductMode, string> = {
   both: "product.forBoth",
 };
 
-/** One price "section": a kind pill (green for sale, gold for rent) above the
- *  stacked price. A sale+rent listing shows two of these stacked; otherwise one. */
-function priceBlock(
-  variant: "sale" | "rent",
-  labelKey: string,
-  p: ReturnType<typeof splitPrice>,
-  onRequest: boolean,
-) {
-  return (
-    <div className="cc-price-block">
-      <div className="cc-kind-top">
-        <span className={`t-kind-tag t-kind-tag--${variant}`}>
-          <T path={labelKey} />
-        </span>
-      </div>
-      <div className="cc-price">
-        {onRequest ? (
-          <span className="cc-num cc-num--request">
-            <T path="product.priceOnRequest" />
-          </span>
-        ) : (
-          <>
-            {p.units && <span className="cc-units">{p.units}</span>}
-            <span className="cc-num tnum">{p.num}</span>
-            {p.suffix && <span className="cc-suf">{p.suffix}</span>}
-          </>
-        )}
-      </div>
-    </div>
-  );
+/** Resolve the displayed amount + currency code for one mode, honoring the
+ *  listing's preferred display currency. Returns null when the price is hidden
+ *  or absent (→ shown as "price on enquiry"). */
+function priceParts(
+  mmk: number | null | undefined,
+  usd: number | null | undefined,
+  displayCurrency: string | null | undefined,
+  hide: boolean,
+): { num: string; ccy: string } | null {
+  if (hide) return null;
+  if (displayCurrency === "USD" && usd != null)
+    return { num: formatInt(usd), ccy: "USD" };
+  if (mmk != null) return { num: formatInt(mmk), ccy: "MMK" };
+  if (usd != null) return { num: formatInt(usd), ccy: "USD" };
+  return null;
 }
 
-/** Price section(s) — sits in the left main column. */
+/** Price line(s) in the left main column. Inline format — "12,000 USD for sale"
+ *  — with the sale line followed by the rent line for sale+rent listings
+ *  (no kind pills, no stacked blocks). */
 export function ProductPrice({ listing }: { listing: Listing }) {
   const mode = listingMode(listing);
-  const fields = priceFields(listing);
-  const primaryRaw = formatListingPrice(fields, mode === "rent" ? "rent" : "sale");
-  const primary = splitPrice(primaryRaw);
-  const primaryOnRequest = primaryRaw === PRICE_ON_REQUEST;
-  const rentSecondaryRaw =
-    mode === "both" ? formatListingPrice(fields, "rent") : null;
-  const rentSecondary = rentSecondaryRaw ? splitPrice(rentSecondaryRaw) : null;
-  const rentSecondaryOnRequest = rentSecondaryRaw === PRICE_ON_REQUEST;
+  const rows: {
+    kind: "sale" | "rent";
+    parts: { num: string; ccy: string } | null;
+    unit: string;
+  }[] = [];
+  if (mode === "sale" || mode === "both") {
+    rows.push({
+      kind: "sale",
+      parts: priceParts(
+        listing.sale?.mmk,
+        listing.sale?.usd,
+        listing.sale?.currency,
+        !!listing.sale?.hide,
+      ),
+      unit: "",
+    });
+  }
+  if (mode === "rent" || mode === "both") {
+    rows.push({
+      kind: "rent",
+      parts: priceParts(
+        listing.rent?.mmk,
+        listing.rent?.usd,
+        listing.rent?.currency,
+        !!listing.rent?.hide,
+      ),
+      unit: rentalUnitLabel(listing.rent?.unit),
+    });
+  }
 
   return (
-    <div className="pdp-price">
-      {mode === "both" && rentSecondary ? (
-        <div className="cc-price-stack">
-          {priceBlock("sale", "product.forSale", primary, primaryOnRequest)}
-          {priceBlock(
-            "rent",
-            "product.forRent",
-            rentSecondary,
-            rentSecondaryOnRequest,
+    <div className={"pdp-price" + (rows.length > 1 ? " pdp-price--multi" : "")}>
+      {rows.map((r) => (
+        <div className={`pseg pseg--${r.kind}`} key={r.kind}>
+          <span className={`pseg-label pseg-label--${r.kind}`}>
+            <T path={r.kind === "sale" ? "product.forSale" : "product.forRent"} />
+          </span>
+          {r.parts ? (
+            <span className="pseg-amount">
+              <span className="pseg-num tnum">{r.parts.num}</span>
+              <span className="pseg-ccy">{r.parts.ccy}</span>
+              {r.unit && <span className="pseg-unit">/ {r.unit}</span>}
+            </span>
+          ) : (
+            <span className="pseg-amount">
+              <span className="pseg-num pseg-num--req">
+                <T path="product.priceOnRequest" />
+              </span>
+            </span>
           )}
         </div>
-      ) : (
-        priceBlock(
-          mode === "rent" ? "rent" : "sale",
-          KIND_KEY[mode],
-          primary,
-          primaryOnRequest,
-        )
-      )}
+      ))}
     </div>
   );
 }
@@ -189,6 +199,7 @@ export function ContactCard({ listing }: { listing: Listing }) {
 
   return (
     <div className="pdp-contact">
+      <ProductPrice listing={listing} />
       {seller && (
         <div className="ov-seller">
           <div className="ov-seller-eyebrow">

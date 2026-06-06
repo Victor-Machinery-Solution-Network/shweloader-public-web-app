@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ChevronDown, Download } from "lucide-react";
+import { ChevronDown, Download, FileText } from "lucide-react";
 
 import { useI18n } from "@/components/providers/language-provider";
 
@@ -59,7 +59,10 @@ export function Description({ html, pdfUrl }: DescriptionProps) {
 
   return (
     <section className="pdp-section" data-screen-label="Description">
-      <h2 className="pdp-h2">{t("product.description")}</h2>
+      <h2 className="ov-list-eyebrow pdp-desc-title">
+        <FileText className="ov-eyebrow-i" aria-hidden="true" />
+        {t("product.description")}
+      </h2>
 
       {hasText && (
         <>

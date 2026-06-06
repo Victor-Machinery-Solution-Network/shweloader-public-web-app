@@ -7,7 +7,6 @@ import { T } from "@/components/t";
 
 import { Gallery } from "@/components/product/gallery";
 import {
-  ProductPrice,
   ProductOverviewList,
   ContactCard,
   listingMode,
@@ -143,7 +142,7 @@ export default async function ProductPage({ params }: PageProps) {
   ];
 
   return (
-    <>
+    <div className="pdp-page">
       <JsonLd
         data={[productSchema(listing), breadcrumbSchema(crumbs)]}
       />
@@ -197,11 +196,10 @@ export default async function ProductPage({ params }: PageProps) {
                   <StatusPill variant="new" />
                 </div>
               )}
-              {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
               <h1 className="t-h">{listing.title}</h1>
+              {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
             </div>
 
-            <ProductPrice listing={listing} />
             <ProductOverviewList listing={listing} />
             <Description html={descriptionHtml} pdfUrl={pdfUrl} />
           </div>
@@ -230,6 +228,6 @@ export default async function ProductPage({ params }: PageProps) {
         kind={mode}
         phone={seller?.phone ?? null}
       />
-    </>
+    </div>
   );
 }

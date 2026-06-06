@@ -143,10 +143,13 @@ export function Gallery({
       </div>
     ) : null;
 
-  // Desktop collage: hero + a 2×2 grid of the first four photos. When there are
-  // more than four, the last tile becomes a "+N / Show all" lightbox trigger.
-  const useCollage = total >= COLLAGE_TILES;
-  const collageHidden = total - COLLAGE_TILES; // >0 only when over the 4 tiles
+  // Desktop collage: the hero plus up to 4 *other* photos as a side grid that
+  // adapts to 1–4 thumbnails (so a 2- or 3-photo listing still looks intentional,
+  // not a giant letterbox + tiny strip). When more photos exist than fit, the
+  // last tile becomes a "+N / Show all" lightbox trigger.
+  const sideThumbs = photos.slice(1, 1 + COLLAGE_TILES); // photos after the hero
+  const useCollage = sideThumbs.length >= 1; // total >= 2
+  const collageHidden = total - 1 - sideThumbs.length; // photos beyond hero + shown
 
   // Cap the strip (smaller screens); last visible slot becomes a "+N" expander.
   const overflow = !showAll && total > MAX_VISIBLE_THUMBS;
@@ -159,12 +162,12 @@ export function Gallery({
         <div
           className="g-hero"
           onClick={() => {
-            // Desktop grid view: clicking the primary image opens the lightbox
+            // Grid view (≥769px): clicking the primary image opens the lightbox
             // (its in-place arrows are hidden there). Mobile keeps its swipe.
             if (
               useCollage &&
               typeof window !== "undefined" &&
-              window.matchMedia("(min-width: 1025px)").matches
+              window.matchMedia("(min-width: 769px)").matches
             ) {
               openLightbox(idx);
             }
@@ -229,21 +232,25 @@ export function Gallery({
           </div>
         </div>
 
-        {/* Desktop-only 2×2 collage (hidden < 1025px and when too few photos). */}
+        {/* Desktop-only side collage (hidden < 1025px). Adapts to 1–4 thumbs. */}
         {useCollage && (
-          <div className="g-collage" aria-hidden="true">
-            {photos.slice(0, COLLAGE_TILES).map((p, i) => {
-              const isMore = collageHidden > 0 && i === COLLAGE_TILES - 1;
+          <div
+            className={`g-collage g-collage--${sideThumbs.length}`}
+            aria-hidden="true"
+          >
+            {sideThumbs.map((p, i) => {
+              const photoIndex = i + 1; // sideThumbs[0] is photos[1]
+              const isMore = collageHidden > 0 && i === sideThumbs.length - 1;
               return (
                 <button
-                  key={i}
+                  key={photoIndex}
                   type="button"
                   className={"g-tile" + (isMore ? " g-tile-more" : "")}
-                  onClick={() => openLightbox(i)}
+                  onClick={() => openLightbox(photoIndex)}
                   aria-label={
                     isMore
                       ? t("product.showAllPhotos")
-                      : `${t("product.photo")} ${i + 1}`
+                      : `${t("product.photo")} ${photoIndex + 1}`
                   }
                 >
                   {p.thumb && (
@@ -251,9 +258,9 @@ export function Gallery({
                       src={p.thumb}
                       alt=""
                       fill
-                      sizes="(min-width: 1025px) 240px, 1px"
+                      sizes="(min-width: 769px) 300px, 1px"
                       style={{
-                        objectFit: "cover",
+                        objectFit: "contain",
                         objectPosition: focalPosition(p.focalX, p.focalY),
                       }}
                     />
