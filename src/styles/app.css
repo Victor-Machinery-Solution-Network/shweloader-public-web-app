@@ -353,7 +353,11 @@ html, body {
   max-height: 0;
   overflow: hidden;
   contain: layout;
-  transition: max-height .3s cubic-bezier(.2,.7,.2,1);
+  /* Gentle "standard" ease (slow start → decelerate) + longer duration so the
+     reveal isn't rushed. The old .2,.7,.2,1 curve front-loaded the motion, which
+     — with the 80vh cap sitting well above the real content height — made the
+     drawer look "full" in the first ~50ms. */
+  transition: max-height .4s cubic-bezier(.4, 0, .2, 1);
 }
 .mh-drawer.is-open { max-height: 80vh; overflow-y: auto; }
 .mh-drawer-nav {
