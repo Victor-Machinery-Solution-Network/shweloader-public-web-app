@@ -1151,6 +1151,9 @@
   /* Gallery breaks out of the container gutter to sit edge-to-edge. */
   .pdp-gallery-wrap { margin-inline: -24px; }
   .pdp-gallery .g-hero { border-radius: 0; max-height: 78vw; }
+  /* Hero is full-bleed, but re-pad the thumbnail strip so the minis don't run
+     to the screen edge (align them back with the page gutter). */
+  .pdp-gallery .g-strip { padding-inline: 24px; scroll-padding-inline: 24px; }
   /* No prev/next arrows on phones — the gallery is swipe-driven and the arrows
      clutter the immersive image. */
   .pdp-gallery .g-nav { display: none; }
@@ -1189,6 +1192,7 @@
   }
 }
 @media (max-width: 640px) {
-  /* Container gutter is 16px here, so match the full-bleed break-out. */
+  /* Container gutter is 16px here, so match the full-bleed break-out + strip pad. */
   .pdp-gallery-wrap { margin-inline: -16px; }
+  .pdp-gallery .g-strip { padding-inline: 16px; scroll-padding-inline: 16px; }
 }
