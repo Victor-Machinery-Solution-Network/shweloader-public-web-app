@@ -101,7 +101,10 @@
   margin-top: 10px;
   font-size: 14px; color: var(--m-fg-2);
 }
-.pf-id-meta .icon-sm { width: 15px; height: 15px; color: var(--m-fg-3); margin-right: 4px; vertical-align: -2px; }
+/* Each labelled item is its own inline-flex so the icon + text stay on one
+   centered line (don't rely on inline-svg vertical-align, which breaks). */
+.pf-id-meta > span { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.pf-id-meta .icon-sm { width: 15px; height: 15px; color: var(--m-fg-3); flex: 0 0 auto; }
 .pf-id-dot { width: 3px; height: 3px; border-radius: 9999px; background: var(--m-line-2); }
 
 /* ---------- Layout: sticky nav + content ---------- */
