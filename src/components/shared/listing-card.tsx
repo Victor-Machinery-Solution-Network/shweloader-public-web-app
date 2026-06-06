@@ -7,6 +7,7 @@ import { SaveButton } from "@/components/shared/save-button";
 import { StatusPill } from "@/components/shared/status-pill";
 import { useI18n } from "@/components/providers/language-provider";
 import { assetUrl, focalPosition } from "@/lib/assets";
+import { preloadHeroImage } from "@/lib/hero-image";
 import {
   formatListingPrice,
   PRICE_ON_REQUEST,
@@ -57,6 +58,12 @@ export function ListingCard({
 
   const href = `/product/${listingSlug(listing)}`;
   const photo = assetUrl(listing.thumbnail.thumbUrl ?? listing.thumbnail.url);
+  // Warm the product hero (full-size thumbnail source) on navigation intent so
+  // the detail page paints it instantly instead of flashing blank.
+  const warmHero = () =>
+    preloadHeroImage(
+      assetUrl(listing.thumbnail.url ?? listing.thumbnail.thumbUrl),
+    );
   const rawPrice = formatListingPrice(priceFields(listing), mode);
   const isOnRequest = rawPrice === PRICE_ON_REQUEST;
   const price = isOnRequest ? t("product.priceOnRequest") : rawPrice;
@@ -66,6 +73,8 @@ export function ListingCard({
   return (
     <Link
       href={href}
+      onMouseEnter={warmHero}
+      onPointerDown={warmHero}
       className={cn(
         "feat-card",
         isRent ? "kind-rent" : "kind-sale",

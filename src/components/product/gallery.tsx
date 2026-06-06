@@ -6,6 +6,7 @@ import Image from "next/image";
 import { StatusPill } from "@/components/shared/status-pill";
 import { useI18n } from "@/components/providers/language-provider";
 import { assetUrl, focalPosition } from "@/lib/assets";
+import { HERO_IMAGE_SIZES, HERO_BLUR_DATA_URL } from "@/lib/hero-image";
 import type { ListingImage } from "@/lib/api/types";
 
 /** Thumbnail strip caps at 2 rows on desktop (7 cols × 2); extra photos collapse
@@ -90,7 +91,12 @@ export function Gallery({
           // weren't preloading, which made the fade janky).
           priority={i === 0}
           loading={i === 0 ? undefined : "eager"}
-          sizes="(max-width: 1024px) 100vw, 60vw"
+          sizes={HERO_IMAGE_SIZES}
+          // Neutral warm-panel placeholder so a cold load never shows a blank
+          // frame; the full image fades in over it (and is usually pre-warmed by
+          // the listing's intent-preload, so this rarely shows for long).
+          placeholder="blur"
+          blurDataURL={HERO_BLUR_DATA_URL}
           style={{
             objectFit: "contain",
             objectPosition: focalPosition(p.focalX, p.focalY),

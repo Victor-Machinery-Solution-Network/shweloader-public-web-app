@@ -7,6 +7,7 @@ import { MapPin, ArrowRight } from "lucide-react";
 import { SaveButton } from "@/components/shared/save-button";
 import { useI18n } from "@/components/providers/language-provider";
 import { assetUrl, focalPosition } from "@/lib/assets";
+import { preloadHeroImage } from "@/lib/hero-image";
 import { formatMoney, rentalUnitLabel } from "@/lib/format";
 import { listingSlug } from "@/lib/slug";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,12 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
   const isSold = isRent ? listing.isRented : listing.isSoldOut;
 
   const href = `/product/${listingSlug(listing)}`;
+  // Warm the product hero on navigation intent so the detail page paints it
+  // instantly instead of flashing blank.
+  const warmHero = () =>
+    preloadHeroImage(
+      assetUrl(listing.thumbnail.url ?? listing.thumbnail.thumbUrl),
+    );
 
   // Title format is "<brand> <model>"; derive the model by stripping the brand.
   const model =
@@ -53,7 +60,11 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
   const photo = assetUrl(img.thumbUrl ?? img.url);
 
   return (
-    <article className={cn("lrow", isSold && "is-sold")}>
+    <article
+      className={cn("lrow", isSold && "is-sold")}
+      onMouseEnter={warmHero}
+      onPointerDown={warmHero}
+    >
       <SaveButton id={listing.id} className="lrow-fav" />
 
       <div className="lrow-img">
