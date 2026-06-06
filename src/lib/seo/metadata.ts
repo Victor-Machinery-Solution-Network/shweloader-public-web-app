@@ -77,13 +77,13 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
   const canonical = path || undefined;
   const resolvedDescription = description ?? DEFAULT_DESCRIPTION;
   // Always emit an og:image. Per-page metadata replaces (doesn't deep-merge) the
-  // root's openGraph, which drops the file-convention opengraph-image — so default
-  // to the generated /opengraph-image route when a page passes no explicit images.
+  // root's openGraph, so default every page that passes no explicit images to the
+  // static branded share banner (public/brand/og-banner.png, 1800×753).
   const ogImages = images ?? [
     {
-      url: absoluteUrl("/opengraph-image"),
-      width: 1200,
-      height: 630,
+      url: absoluteUrl("/brand/og-banner.png"),
+      width: 1800,
+      height: 753,
       alt: title ?? DEFAULT_TITLE,
     },
   ];

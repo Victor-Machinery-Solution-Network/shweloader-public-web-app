@@ -4,6 +4,7 @@ import { EnquiryForm } from "@/components/product/enquiry-form";
 import { T } from "@/components/t";
 import {
   formatListingPrice,
+  PRICE_ON_REQUEST,
   type ListingPriceFields,
 } from "@/lib/format";
 import type { Listing } from "@/lib/api/types";
@@ -74,11 +75,13 @@ export function OverviewCard({ listing }: { listing: Listing }) {
   const mode = listingMode(listing);
 
   const fields = priceFields(listing);
-  const primary = splitPrice(
-    formatListingPrice(fields, mode === "rent" ? "rent" : "sale"),
-  );
-  const rentSecondary =
-    mode === "both" ? splitPrice(formatListingPrice(fields, "rent")) : null;
+  const primaryRaw = formatListingPrice(fields, mode === "rent" ? "rent" : "sale");
+  const primary = splitPrice(primaryRaw);
+  const primaryOnRequest = primaryRaw === PRICE_ON_REQUEST;
+  const rentSecondaryRaw =
+    mode === "both" ? formatListingPrice(fields, "rent") : null;
+  const rentSecondary = rentSecondaryRaw ? splitPrice(rentSecondaryRaw) : null;
+  const rentSecondaryOnRequest = rentSecondaryRaw === PRICE_ON_REQUEST;
 
   const condition = listing.condition;
   const locationLabel =
@@ -110,30 +113,55 @@ export function OverviewCard({ listing }: { listing: Listing }) {
   const seller =
     listing.seller && !listing.seller.hidden ? listing.seller : null;
 
-  return (
-    <aside className="pdp-overview">
+  // One price "section": a kind pill (green for sale, gold for rent) above the
+  // stacked price. A sale+rent listing shows two of these stacked; otherwise one.
+  const priceBlock = (
+    variant: "sale" | "rent",
+    labelKey: string,
+    p: ReturnType<typeof splitPrice>,
+    onRequest: boolean,
+  ) => (
+    <div className="cc-price-block">
       <div className="cc-kind-top">
-        <span className={`t-kind-tag t-kind-tag--${mode}`}>
-          <T path={KIND_KEY[mode]} />
+        <span className={`t-kind-tag t-kind-tag--${variant}`}>
+          <T path={labelKey} />
         </span>
       </div>
       <div className="cc-price">
-        {primary.units && <span className="cc-units">{primary.units}</span>}
-        <span className="cc-num tnum">{primary.num}</span>
-        {primary.suffix && <span className="cc-suf">{primary.suffix}</span>}
-      </div>
-      {rentSecondary && (
-        <div className="cc-rentline">
-          <span className="cc-rent-lbl"><T path="product.forRent" /></span>
-          <span className="cc-rent-val tnum">
-            {[rentSecondary.units, rentSecondary.num]
-              .filter(Boolean)
-              .join(" ")}
+        {onRequest ? (
+          <span className="cc-num tnum">
+            <T path="product.priceOnRequest" />
           </span>
-          {rentSecondary.suffix && (
-            <span className="cc-rent-suf">{rentSecondary.suffix}</span>
+        ) : (
+          <>
+            {p.units && <span className="cc-units">{p.units}</span>}
+            <span className="cc-num tnum">{p.num}</span>
+            {p.suffix && <span className="cc-suf">{p.suffix}</span>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <aside className="pdp-overview">
+      {mode === "both" && rentSecondary ? (
+        <div className="cc-price-stack">
+          {priceBlock("sale", "product.forSale", primary, primaryOnRequest)}
+          {priceBlock(
+            "rent",
+            "product.forRent",
+            rentSecondary,
+            rentSecondaryOnRequest,
           )}
         </div>
+      ) : (
+        priceBlock(
+          mode === "rent" ? "rent" : "sale",
+          KIND_KEY[mode],
+          primary,
+          primaryOnRequest,
+        )
       )}
 
       {rows.length > 0 && (

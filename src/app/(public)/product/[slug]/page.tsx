@@ -25,7 +25,7 @@ import {
   productSchema,
   breadcrumbSchema,
 } from "@/lib/seo/jsonld";
-import { formatListingPrice } from "@/lib/format";
+import { formatListingPrice, PRICE_ON_REQUEST } from "@/lib/format";
 import { parseIdFromSlug, listingSlug } from "@/lib/slug";
 import { toPlainText, truncate } from "@/lib/utils";
 import { renderMarkdown } from "@/lib/markdown";
@@ -110,9 +110,9 @@ export default async function ProductPage({ params }: PageProps) {
 
   const mode = listingMode(listing);
   const fields = priceFields(listing);
-  const primary = splitPrice(
-    formatListingPrice(fields, mode === "rent" ? "rent" : "sale"),
-  );
+  const primaryRaw = formatListingPrice(fields, mode === "rent" ? "rent" : "sale");
+  const primary = splitPrice(primaryRaw);
+  const priceOnRequest = primaryRaw === PRICE_ON_REQUEST;
 
   const seller =
     listing.seller && !listing.seller.hidden ? listing.seller : null;
@@ -182,6 +182,7 @@ export default async function ProductPage({ params }: PageProps) {
         priceUnits={primary.units}
         priceNum={primary.num}
         priceSuffix={primary.suffix}
+        priceOnRequest={priceOnRequest}
         kind={mode}
         phone={seller?.phone ?? null}
       />

@@ -54,6 +54,7 @@ export const en = {
   },
   search: {
     keywordPlaceholder: "Search excavators, loaders, cranes…",
+    lookingFor: "What are you looking for?",
     category: "Category",
     allCategories: "All categories",
     location: "Location",
@@ -252,6 +253,7 @@ export const my: Dictionary = {
   },
   search: {
     keywordPlaceholder: "တူးစက်၊ ဘီးတပ်ထမ်းစက်၊ ကရိန်း…",
+    lookingFor: "ဘာများရှာချင်ပါသလဲ",
     category: "အမျိုးအစား",
     allCategories: "အမျိုးအစားအားလုံး",
     location: "တည်နေရာ",
@@ -328,7 +330,7 @@ export const my: Dictionary = {
     forSale: "ရောင်းရန်",
     forRent: "ငှားရန်",
     forBoth: "ရောင်းရန် သို့မဟုတ် ငှားရန်",
-    priceOnRequest: "ဈေးနှုန်းစုံစမ်းရန်",
+    priceOnRequest: "စျေးနှုန်းအတွက် ဆက်သွယ်ပေးပါ",
     prevPhoto: "ယခင်ဓာတ်ပုံ",
     nextPhoto: "နောက်ဓာတ်ပုံ",
     thumbnails: "ဓာတ်ပုံများ",

@@ -170,6 +170,7 @@ function CategoryPicker({
   onChange: (v: string) => void;
   label: string;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [hoverId, setHoverId] = useState(tree[0]?.id ?? "all");
   const [isModal, setIsModal] = useState(false);
@@ -354,7 +355,7 @@ function CategoryPicker({
             <header className="cat-modal-head">
               <div>
                 <div className="cat-modal-eyebrow">Choose category</div>
-                <h3 className="cat-modal-title">What are you looking for?</h3>
+                <h3 className="cat-modal-title">{t("search.lookingFor")}</h3>
               </div>
               <button
                 type="button"
@@ -863,7 +864,7 @@ export function SearchCard({
       <SearchKeywordInput
         value={q}
         onChange={setQ}
-        label="What are you looking for?"
+        label={t("search.lookingFor")}
       />
       <CategoryPicker
         tree={tree}

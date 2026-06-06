@@ -2013,27 +2013,41 @@ html, body {
   pointer-events: none;
   border-radius: inherit;
   transition: background-position .65s ease;
+  animation: lcGlassReflectSync 3s infinite;
 }
-.lc-fab:hover::after { background-position: -50% 0; }
+.lc-fab.is-open::after { animation: none; }
+.lc-fab:hover::after { background-position: -50% 0; animation: none; }
+@keyframes lcGlassReflectSync {
+  0%, 25% { background-position: 100% 0; animation-timing-function: ease-out; }
+  50%, 100% { background-position: -50% 0; }
+}
 .lc-fab:hover {
   transform: translateY(-2px);
   box-shadow: 0 16px 36px rgba(0,0,0,.22), 0 4px 10px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,0.4) inset;
 }
 .lc-fab:active { transform: translateY(0); }
 .lc-fab::before {
-  /* gold pulse ring when closed — transform-based (GPU composited) */
+  /* Ambient glowing light pulse when closed */
   content: ''; position: absolute; inset: 0; border-radius: inherit;
-  box-shadow: 0 0 0 2px var(--m-gold);
-  opacity: 0;
-  animation: lcPulse 2.4s cubic-bezier(.2,.7,.2,1) infinite;
+  background: inherit;
+  animation: lcAmbientPulse 3s ease-in-out infinite;
   pointer-events: none;
-  will-change: transform, opacity;
+  z-index: -1;
+  /* Animating box-shadow directly avoids the hollow scaling gap */
+  will-change: box-shadow;
 }
-.lc-fab.is-open::before { animation: none; }
-@keyframes lcPulse {
-  0%   { opacity: 0.5; transform: scale(1); }
-  70%  { opacity: 0;   transform: scale(1.55); }
-  100% { opacity: 0;   transform: scale(1.55); }
+.lc-fab.is-open::before { animation: none; box-shadow: none; }
+@keyframes lcAmbientPulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 14px 0px rgba(251, 184, 17, 0.4),
+      0 0 24px 0px rgba(251, 184, 17, 0.15);
+  }
+  50% {
+    box-shadow: 
+      0 0 24px 0px rgba(251, 184, 17, 0.65),
+      0 0 48px 0px rgba(251, 184, 17, 0.3);
+  }
 }
 /* Messenger-style preview that springs out of the chat bubble on a new
    incoming message. Origin is the bubble side, with an elastic overshoot

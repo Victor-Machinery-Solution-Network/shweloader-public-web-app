@@ -5,8 +5,13 @@ import Link from "next/link";
 
 import { SaveButton } from "@/components/shared/save-button";
 import { StatusPill } from "@/components/shared/status-pill";
+import { useI18n } from "@/components/providers/language-provider";
 import { assetUrl, focalPosition } from "@/lib/assets";
-import { formatListingPrice, type ListingPriceFields } from "@/lib/format";
+import {
+  formatListingPrice,
+  PRICE_ON_REQUEST,
+  type ListingPriceFields,
+} from "@/lib/format";
 import { listingSlug } from "@/lib/slug";
 import type { Listing } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -45,13 +50,16 @@ export function ListingCard({
   listing: Listing;
   mode?: Mode;
 }) {
+  const { t } = useI18n();
   const isRent = mode === "rent";
   const isNew = (listing.condition ?? "").toLowerCase() === "new";
   const isSold = listing.isSoldOut;
 
   const href = `/product/${listingSlug(listing)}`;
   const photo = assetUrl(listing.thumbnail.thumbUrl ?? listing.thumbnail.url);
-  const price = formatListingPrice(priceFields(listing), mode);
+  const rawPrice = formatListingPrice(priceFields(listing), mode);
+  const price =
+    rawPrice === PRICE_ON_REQUEST ? t("product.priceOnRequest") : rawPrice;
   const location = locationLabel(listing);
   const eyebrow = listing.category ?? listing.brand ?? null;
 

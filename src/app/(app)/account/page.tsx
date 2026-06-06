@@ -4,6 +4,11 @@ import { apiFetch } from "@/lib/api/client";
 import { noindexMetadata } from "@/lib/seo/metadata";
 import { ProfileView, type MeLike } from "@/components/account/profile-view";
 import { SignedOutPrompt } from "@/components/account/signed-out-prompt";
+// The profile form reuses the auth form's field styles (.auth-form / .auth-field
+// and the input rules live in auth.css), which is otherwise only loaded lazily
+// with the sign-in modal — import it here so the account form is always styled.
+// auth.css first so profile.css keeps its intended overrides.
+import "@/styles/pages/auth.css";
 import "@/styles/pages/profile.css";
 
 export const metadata = noindexMetadata;

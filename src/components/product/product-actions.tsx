@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Heart, Share2 } from "lucide-react";
+import { ArrowRight, Heart } from "lucide-react";
 import { toast } from "sonner";
 
 import { useI18n } from "@/components/providers/language-provider";
+import { ShareIcon } from "@/components/shared/icons/share-icon";
 
 const SAVED_KEY = "shweloader.saved";
 const SAVED_EVENT = "saved-changed";
@@ -88,7 +89,7 @@ export function ProductActions({
       </button>
       <div style={{ display: "flex", gap: 10 }}>
         <button type="button" className="pdp-btn" onClick={share}>
-          <Share2 className="icon-sm" strokeWidth={1.75} aria-hidden="true" />
+          <ShareIcon className="icon-sm" aria-hidden="true" />
           <span className="pdp-btn-label">{t("actions.share")}</span>
         </button>
         <button

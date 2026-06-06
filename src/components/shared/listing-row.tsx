@@ -7,7 +7,7 @@ import { MapPin, ArrowRight } from "lucide-react";
 import { SaveButton } from "@/components/shared/save-button";
 import { useI18n } from "@/components/providers/language-provider";
 import { assetUrl, focalPosition } from "@/lib/assets";
-import { formatMoney, rentalUnitLabel, PRICE_ON_REQUEST } from "@/lib/format";
+import { formatMoney, rentalUnitLabel } from "@/lib/format";
 import { listingSlug } from "@/lib/slug";
 import { cn } from "@/lib/utils";
 import type { Listing } from "@/lib/api/types";
@@ -39,13 +39,15 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
 
   const price = isRent ? listing.rent : listing.sale;
   const priceHidden = price?.hide ?? false;
-  const priceLabel = priceHidden
-    ? PRICE_ON_REQUEST
-    : formatMoney(price?.mmk, price?.usd, price?.currency) || PRICE_ON_REQUEST;
+  const formattedPrice = priceHidden
+    ? ""
+    : formatMoney(price?.mmk, price?.usd, price?.currency);
+  // Hidden price, or no price data at all, falls back to the localized
+  // "price on request" label.
+  const isOnRequest = !formattedPrice;
+  const priceLabel = isOnRequest ? t("product.priceOnRequest") : formattedPrice;
   const perUnit =
-    isRent && !priceHidden && priceLabel !== PRICE_ON_REQUEST
-      ? rentalUnitLabel(listing.rent?.unit)
-      : "";
+    isRent && !isOnRequest ? rentalUnitLabel(listing.rent?.unit) : "";
 
   const img = listing.thumbnail;
   const photo = assetUrl(img.thumbUrl ?? img.url);

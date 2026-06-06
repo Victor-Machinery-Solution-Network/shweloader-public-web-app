@@ -20,6 +20,8 @@ export interface MobileBarProps {
   priceUnits: string;
   priceNum: string;
   priceSuffix: string;
+  /** When true, the amount slot shows the localized "price on request" label. */
+  priceOnRequest: boolean;
   kind: "sale" | "rent" | "both";
   /** Visible dealer phone (masking honoured by caller), or null. */
   phone: string | null;
@@ -35,6 +37,7 @@ export function MobileBar({
   priceUnits,
   priceNum,
   priceSuffix,
+  priceOnRequest,
   kind,
   phone,
 }: MobileBarProps) {
@@ -62,9 +65,21 @@ export function MobileBar({
             {t(KIND_KEY[kind])}
           </span>
           <span className="pdp-mbar-amount">
-            {priceUnits && <span className="pdp-mbar-units">{priceUnits}</span>}
-            <span className="pdp-mbar-num tnum">{priceNum}</span>
-            {priceSuffix && <span className="pdp-mbar-suf">{priceSuffix}</span>}
+            {priceOnRequest ? (
+              <span className="pdp-mbar-num tnum">
+                {t("product.priceOnRequest")}
+              </span>
+            ) : (
+              <>
+                {priceUnits && (
+                  <span className="pdp-mbar-units">{priceUnits}</span>
+                )}
+                <span className="pdp-mbar-num tnum">{priceNum}</span>
+                {priceSuffix && (
+                  <span className="pdp-mbar-suf">{priceSuffix}</span>
+                )}
+              </>
+            )}
           </span>
         </div>
         <div className="pdp-mbar-actions">

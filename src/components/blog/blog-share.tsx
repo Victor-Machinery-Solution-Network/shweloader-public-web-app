@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { Share2 } from "lucide-react";
 import { toast } from "sonner";
+
+import { ShareIcon } from "@/components/shared/icons/share-icon";
 
 import { useI18n } from "@/components/providers/language-provider";
 
@@ -29,7 +30,7 @@ export function BlogShare({ title }: { title: string }) {
 
   return (
     <button type="button" className="bp-share" onClick={share}>
-      <Share2 className="icon-sm" strokeWidth={1.75} aria-hidden="true" />
+      <ShareIcon className="icon-sm" aria-hidden="true" />
       <span className="bp-btn-label">{t("actions.share")}</span>
     </button>
   );

@@ -629,6 +629,14 @@
 /* Price block reused inside the overview aside — give it a bottom border to
    separate from the trust list, matching the old ov-price treatment. */
 .pdp-overview .cc-price { padding: 0 0 4px; }
+/* Sale+rent listings: two stacked price sections (pill + price), the second
+   divided from the first by a hairline. */
+.cc-price-stack { display: flex; flex-direction: column; }
+.cc-price-stack .cc-price-block + .cc-price-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--m-line);
+}
 .cc-rentline {
   display: flex; align-items: baseline; gap: 8px;
   margin: 8px 0 14px; padding-top: 10px;
@@ -730,7 +738,7 @@
 .cc-field textarea::placeholder { color: var(--m-fg-3); }
 
 /* Overview aside — message field sits above the Send enquiry CTA */
-.ov-msg-field { margin-bottom: 4px; }
+.ov-msg-field { margin-bottom: 4px; gap: 10px; }
 .ov-msg-field textarea {
   resize: vertical; min-height: 80px;
 }
@@ -1035,6 +1043,7 @@
   .pdp-overview .ov-cta { display: none; }
   /* Price + kind tag are shown in the sticky bottom bar — hide the duplicate up top */
   .pdp-overview .cc-kind-top,
+  .pdp-overview .cc-price-stack,
   .pdp-overview .cc-price { display: none; }
 
   /* Overview card loses its chrome on mobile — specs & seller read as
