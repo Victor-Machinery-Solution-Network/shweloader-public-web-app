@@ -638,7 +638,7 @@
 .cc-price-stack .cc-price-block + .cc-price-block {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid var(--m-line);
+  border-top: 1px dashed var(--m-line);
 }
 .cc-rentline {
   display: flex; align-items: baseline; gap: 8px;
