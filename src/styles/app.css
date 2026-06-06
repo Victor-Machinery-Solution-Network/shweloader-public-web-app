@@ -349,25 +349,12 @@ html, body {
   background: var(--m-bg);
   border-bottom: 1px solid var(--m-line);
   box-shadow: 0 16px 40px -16px rgba(20,18,12,0.18);
-  max-height: 80vh;
-  overflow-y: auto;
-  /* Composited reveal (transform + opacity) instead of animating max-height —
-     max-height forced a layout/reflow of the whole drawer every frame, which
-     janked on mobile. transform/opacity are GPU-composited → smooth. */
-  opacity: 0;
-  transform: translateY(-8px);
-  visibility: hidden;
-  transition: opacity .25s ease, transform .25s cubic-bezier(.2,.7,.2,1),
-    visibility 0s linear .25s;
-  will-change: transform, opacity;
+  /* Height "drop"/unfold reveal — animates max-height open. */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s cubic-bezier(.2,.7,.2,1);
 }
-.mh-drawer.is-open {
-  opacity: 1;
-  transform: translateY(0);
-  visibility: visible;
-  transition: opacity .25s ease, transform .25s cubic-bezier(.2,.7,.2,1),
-    visibility 0s;
-}
+.mh-drawer.is-open { max-height: 80vh; overflow-y: auto; }
 .mh-drawer-nav {
   display: flex;
   flex-direction: column;
