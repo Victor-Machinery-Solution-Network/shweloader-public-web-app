@@ -275,7 +275,7 @@
     display: grid;
     grid-template-columns: 1.7fr 1fr;
     gap: 10px;
-    aspect-ratio: 21 / 9;
+    aspect-ratio: 8 / 3;
     align-items: stretch;
   }
   .pdp-gallery:has(.g-collage) .g-stage .g-hero {
