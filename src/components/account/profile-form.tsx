@@ -1,134 +1,33 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import type { BusinessType, StateRegion } from "@/lib/api/types";
+import { TownshipCombobox } from "@/components/account/township-combobox";
+import { PhoneChange } from "@/components/account/phone-change";
 
-// Township source — mirrors the homepage Browse location table (same data).
-const PF_LOCATIONS: { id: string; label: string; townships: string[] }[] = [
-  {
-    id: "yangon",
-    label: "Yangon Region",
-    townships: [
-      "thingangyun:Thingangyun",
-      "south-okkalapa:South Okkalapa",
-      "tamwe:Tamwe",
-      "mingaladon:Mingaladon",
-      "dawbon:Dawbon",
-      "pabedan:Pabedan",
-      "lanmadaw:Lanmadaw",
-      "latha:Latha",
-      "kyauktada:Kyauktada",
-      "insein:Insein",
-      "mayangone:Mayangone",
-      "hlaing:Hlaing",
-      "kamayut:Kamayut",
-      "thanlyin:Thanlyin",
-      "kyauktan:Kyauktan",
-      "thongwa:Thongwa",
-    ],
-  },
-  {
-    id: "mandalay",
-    label: "Mandalay Region",
-    townships: [
-      "aungmyethazan:Aung Myay Thar Zan",
-      "chanayethazan:Chan Aye Thar Zan",
-      "maharaungmye:Maha Aung Myay",
-      "chanmyathazi:Chanmyathazi",
-      "pyinoolwin:Pyin Oo Lwin",
-      "mogok:Mogok",
-    ],
-  },
-  {
-    id: "naypyidaw",
-    label: "Naypyidaw Union Territory",
-    townships: [
-      "pyinmana:Pyinmana",
-      "lewe:Lewe",
-      "tatkon:Tatkon",
-      "zabuthiri:Zabuthiri",
-      "zeyathiri:Zeyathiri",
-      "pobbathiri:Pobbathiri",
-    ],
-  },
-  {
-    id: "bago",
-    label: "Bago Region",
-    townships: [
-      "bago-tw:Bago",
-      "thanatpin:Thanatpin",
-      "kawa:Kawa",
-      "taungoo-tw:Taungoo",
-      "oktwin:Oktwin",
-    ],
-  },
-  {
-    id: "magway",
-    label: "Magway Region",
-    townships: ["magway-tw:Magway", "yenangyaung:Yenangyaung"],
-  },
-  {
-    id: "mon",
-    label: "Mon State",
-    townships: ["mawlamyine:Mawlamyine", "mudon:Mudon", "kyaikmaraw:Kyaikmaraw"],
-  },
-  {
-    id: "kayin",
-    label: "Kayin State",
-    townships: ["hpa-an:Hpa-An", "thandaung:Thandaung"],
-  },
-  {
-    id: "shan",
-    label: "Shan State",
-    townships: ["taunggyi:Taunggyi", "kalaw:Kalaw", "nyaungshwe:Nyaungshwe"],
-  },
-  {
-    id: "ayeyarwady",
-    label: "Ayeyarwady Region",
-    townships: ["pathein:Pathein", "ngwesaung:Ngwesaung", "chaungtha:Chaungthar"],
-  },
-  {
-    id: "sagaing",
-    label: "Sagaing Region",
-    townships: ["sagaing-tw:Sagaing", "monywa:Monywa"],
-  },
-];
+/** Sentinel businessTypeId meaning "Other" → submit as custom_business_type. */
+const OTHER = -1;
 
-const BUSINESS_OPTIONS: [string, string][] = [
-  ["individual", "Individual buyer"],
-  ["contractor", "Contractor"],
-  ["dealer", "Dealer / reseller"],
-  ["agent", "Agent"],
-  ["fleet", "Fleet owner"],
-  ["rental", "Rental company"],
-  ["other", "Other"],
-];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Local form state. Business type and township are the worker's numeric ids
+ * (the worker rejects slug strings); `customBusinessType` carries a free-text
+ * "Other" value (businessTypeId === OTHER).
+ */
 export interface ProfileDraft {
   fullName: string;
   username: string;
   email: string;
-  phone: string;
-  businessType: string;
   company: string;
   street: string;
-  township: string;
+  businessTypeId: number | null;
+  customBusinessType: string;
+  townshipId: number | null;
 }
-
-// Maps a camelCase draft key to the worker's expected (snake_case) field.
-// TODO: verify against live worker.
-const FIELD_TO_API: Record<keyof ProfileDraft, string> = {
-  fullName: "full_name",
-  username: "username",
-  email: "email",
-  phone: "phone",
-  businessType: "business_type",
-  company: "company_name",
-  street: "street",
-  township: "township",
-};
 
 function GroupLabel({ children }: { children: React.ReactNode }) {
   return <div className="pf-group-label">{children}</div>;
@@ -141,6 +40,7 @@ function Field({
   type = "text",
   full,
   inputMode,
+  error,
 }: {
   label: string;
   value: string;
@@ -148,78 +48,184 @@ function Field({
   type?: string;
   full?: boolean;
   inputMode?: "numeric" | "text" | "email" | "tel";
+  error?: string;
 }) {
   return (
-    <label className={"auth-field auth-float" + (full ? " full" : "")}>
+    <label
+      className={
+        "auth-field auth-float" +
+        (full ? " full" : "") +
+        (error ? " has-error" : "")
+      }
+    >
       <input
         type={type}
         value={value}
         placeholder=" "
         inputMode={inputMode}
+        aria-invalid={!!error}
         onChange={(e) => onChange(e.target.value)}
       />
       <span className="auth-label">{label}</span>
+      {error && <span className="pf-field-error">{error}</span>}
     </label>
   );
 }
 
 /**
  * Editable account + business details. Tracks a local draft seeded from the
- * server-rendered values, PATCHes only the changed fields to /api/account, then
- * toasts + refreshes the route so the server re-reads /me.
+ * server-rendered values, PUTs only the changed fields to /api/account (worker
+ * PUT /me), maps the worker's 409/400 errors to fields, then toasts + refreshes
+ * the route so the server re-reads /me. Phone is OTP-gated and handled by
+ * <PhoneChange/>; it is not part of this payload.
  */
-export function ProfileForm({ initial }: { initial: ProfileDraft }) {
+export function ProfileForm({
+  initial,
+  initialBusinessTypeName,
+  businessTypes,
+  locations,
+  phone,
+  townshipSeedLabel,
+}: {
+  initial: ProfileDraft;
+  initialBusinessTypeName?: string | null;
+  businessTypes: BusinessType[];
+  locations: StateRegion[];
+  phone: string;
+  townshipSeedLabel?: string;
+}) {
   const router = useRouter();
-  const [draft, setDraft] = useState<ProfileDraft>(initial);
+
+  // Resolve the effective starting state: if /me's business_type_id isn't in the
+  // public catalog (a custom/unlisted type), start on "Other" with the name
+  // prefilled — mirroring the mobile client.
+  const base = useMemo<ProfileDraft>(() => {
+    const inCatalog =
+      initial.businessTypeId != null &&
+      businessTypes.some((b) => b.id === initial.businessTypeId);
+    if (
+      !inCatalog &&
+      (initial.businessTypeId != null || !!initialBusinessTypeName)
+    ) {
+      return {
+        ...initial,
+        businessTypeId: OTHER,
+        customBusinessType: initialBusinessTypeName ?? "",
+      };
+    }
+    return initial;
+  }, [initial, initialBusinessTypeName, businessTypes]);
+
+  const [draft, setDraft] = useState<ProfileDraft>(base);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Resync if the server values change (after a successful save + refresh).
-  const initialKey = JSON.stringify(initial);
-  useEffect(() => {
-    setDraft(initial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialKey]);
+  // "Adjust state during render" pattern — re-seed the draft when the
+  // server-provided base changes, without an effect.
+  const baseKey = JSON.stringify(base);
+  const [seenKey, setSeenKey] = useState(baseKey);
+  if (baseKey !== seenKey) {
+    setSeenKey(baseKey);
+    setDraft(base);
+  }
 
-  const set = <K extends keyof ProfileDraft>(k: K, v: string) =>
+  const set = <K extends keyof ProfileDraft>(k: K, v: ProfileDraft[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
 
+  // Only changed fields, mapped to the worker's snake_case contract.
   const changed = useMemo(() => {
-    const diff: Record<string, string> = {};
-    (Object.keys(draft) as (keyof ProfileDraft)[]).forEach((k) => {
-      if (draft[k] !== initial[k]) diff[FIELD_TO_API[k]] = draft[k];
-    });
-    return diff;
-  }, [draft, initial]);
+    const p: Record<string, unknown> = {};
+    const tr = (v: string) => v.trim();
+    if (tr(draft.fullName) !== tr(base.fullName))
+      p.full_name = tr(draft.fullName);
+    if (tr(draft.username) !== tr(base.username))
+      p.username = tr(draft.username);
+    if (tr(draft.email) !== tr(base.email)) p.email = tr(draft.email) || null;
+    if (tr(draft.company) !== tr(base.company))
+      p.company_name = tr(draft.company) || null;
+    if (tr(draft.street) !== tr(base.street))
+      p.address = tr(draft.street) || null;
+    if (draft.townshipId !== base.townshipId)
+      p.township_id = draft.townshipId;
+
+    if (draft.businessTypeId === OTHER) {
+      const ct = tr(draft.customBusinessType);
+      const baseCt =
+        base.businessTypeId === OTHER ? tr(base.customBusinessType) : "";
+      if (ct && ct !== baseCt) p.custom_business_type = ct;
+    } else if (
+      draft.businessTypeId != null &&
+      draft.businessTypeId !== base.businessTypeId
+    ) {
+      p.business_type_id = draft.businessTypeId;
+    }
+    return p;
+  }, [draft, base]);
 
   const dirty = Object.keys(changed).length > 0;
 
   async function save() {
     if (!dirty || saving) return;
+
+    // Client-side guards that mirror the worker's validation.
+    const errs: Record<string, string> = {};
+    if (changed.full_name !== undefined && !String(changed.full_name).trim())
+      errs.fullName = "Full name is required";
+    if (changed.username !== undefined && !String(changed.username).trim())
+      errs.username = "Username is required";
+    if (
+      changed.email !== undefined &&
+      changed.email &&
+      !EMAIL_RE.test(String(changed.email))
+    )
+      errs.email = "Enter a valid email address";
+    if (draft.businessTypeId === OTHER && !draft.customBusinessType.trim())
+      errs.businessType = "Please specify your business type";
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+    setErrors({});
+
     setSaving(true);
     try {
       const res = await fetch("/api/account", {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(changed),
       });
-      const data = (await res.json().catch(() => ({}))) as {
-        error?: string;
-      };
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        toast.error(data.error || "Could not save your changes");
+        const msg = (data.error || "").toLowerCase();
+        if (res.status === 409 && msg.includes("username")) {
+          setErrors({ username: "That username is already taken" });
+        } else if (res.status === 409 && msg.includes("email")) {
+          setErrors({ email: "That email is already taken" });
+        } else if (res.status === 400 && msg.includes("email")) {
+          setErrors({ email: "Enter a valid email address" });
+        } else if (res.status === 400 && msg.includes("township")) {
+          setErrors({ township: "Please choose a valid township" });
+        } else {
+          toast.error(data.error || "Could not save your changes");
+        }
         return;
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);
       toast.success("Profile updated");
       router.refresh();
+      window.dispatchEvent(new Event("auth-changed"));
     } catch {
       toast.error("Could not reach the server");
     } finally {
       setSaving(false);
     }
   }
+
+  const btSelectValue =
+    draft.businessTypeId == null ? "" : String(draft.businessTypeId);
 
   return (
     <form
@@ -235,11 +241,13 @@ export function ProfileForm({ initial }: { initial: ProfileDraft }) {
           label="Full name"
           value={draft.fullName}
           onChange={(v) => set("fullName", v)}
+          error={errors.fullName}
         />
         <Field
           label="Username"
           value={draft.username}
           onChange={(v) => set("username", v)}
+          error={errors.username}
         />
         <Field
           label="Email"
@@ -247,34 +255,53 @@ export function ProfileForm({ initial }: { initial: ProfileDraft }) {
           inputMode="email"
           value={draft.email}
           onChange={(v) => set("email", v)}
-        />
-        <Field
-          label="Phone number"
-          type="tel"
-          inputMode="numeric"
-          value={draft.phone}
-          onChange={(v) => set("phone", v)}
+          error={errors.email}
         />
       </div>
 
+      {/* Phone is OTP-gated — its own verify flow, not part of the save. */}
+      <PhoneChange phone={phone} />
+
       <GroupLabel>Business</GroupLabel>
       <div className="pf-fields">
-        <label className="auth-field auth-float auth-float--select">
+        <label
+          className={
+            "auth-field auth-float auth-float--select" +
+            (errors.businessType ? " has-error" : "")
+          }
+        >
           <select
             className="pf-select"
-            value={draft.businessType}
-            onChange={(e) => set("businessType", e.target.value)}
+            value={btSelectValue}
+            aria-invalid={!!errors.businessType}
+            onChange={(e) => {
+              const v = e.target.value;
+              set("businessTypeId", v === "" ? null : Number(v));
+              setErrors((er) => ({ ...er, businessType: "" }));
+            }}
           >
             <option value="">Select a type</option>
-            {BUSINESS_OPTIONS.map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
+            {businessTypes.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
               </option>
             ))}
+            <option value={OTHER}>Other</option>
           </select>
           <ChevronDown className="pf-select-chev" strokeWidth={1.75} />
           <span className="auth-label">Business type</span>
+          {errors.businessType && (
+            <span className="pf-field-error">{errors.businessType}</span>
+          )}
         </label>
+
+        {draft.businessTypeId === OTHER && (
+          <Field
+            label="Specify your business type"
+            value={draft.customBusinessType}
+            onChange={(v) => set("customBusinessType", v)}
+          />
+        )}
 
         <Field
           label="Company name"
@@ -288,37 +315,25 @@ export function ProfileForm({ initial }: { initial: ProfileDraft }) {
           onChange={(v) => set("street", v)}
         />
 
-        <label className="auth-field auth-float auth-float--select full">
-          <select
-            className="pf-select"
-            value={draft.township}
-            onChange={(e) => set("township", e.target.value)}
-          >
-            <option value="">Select a township</option>
-            {PF_LOCATIONS.map((r) => (
-              <optgroup key={r.id} label={r.label}>
-                {r.townships.map((t) => {
-                  const [id, label] = t.split(":");
-                  return (
-                    <option key={id} value={id}>
-                      {label}
-                    </option>
-                  );
-                })}
-              </optgroup>
-            ))}
-          </select>
-          <ChevronDown className="pf-select-chev" strokeWidth={1.75} />
-          <span className="auth-label">Office township</span>
-        </label>
+        <TownshipCombobox
+          label="Office township"
+          locations={locations}
+          value={draft.townshipId}
+          seedLabel={townshipSeedLabel}
+          onChange={(id) => {
+            set("townshipId", id);
+            setErrors((er) => ({ ...er, township: "" }));
+          }}
+        />
+        {errors.township && (
+          <span className="pf-field-error pf-field-error--block">
+            {errors.township}
+          </span>
+        )}
       </div>
 
       <div className="pf-actions">
-        <button
-          type="submit"
-          className="pf-save"
-          disabled={!dirty || saving}
-        >
+        <button type="submit" className="pf-save" disabled={!dirty || saving}>
           {saving ? "Saving…" : "Save changes"}
           <Check className="icon-sm" strokeWidth={1.75} />
         </button>

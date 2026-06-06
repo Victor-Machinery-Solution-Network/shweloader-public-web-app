@@ -7,6 +7,7 @@ export const CACHE_TAGS = {
   categories: "categories",
   brands: "brands",
   locations: "locations",
+  businessTypes: "business-types",
   carousel: "carousel",
   announcements: "announcements",
 } as const;

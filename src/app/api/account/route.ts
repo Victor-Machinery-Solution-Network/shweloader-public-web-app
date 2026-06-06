@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/env";
-import { getToken } from "@/lib/auth/session";
+import { getToken, refreshUserCookie } from "@/lib/auth/session";
 
 /**
  * Account profile update. Server-side proxy so the worker is never called from
  * the browser (no CORS dependency, token stays in the httpOnly cookie).
  *
- * PATCH /api/account → PATCH {API}/me with the session bearer token.
- * The /me endpoint shape is UNVERIFIED — we forward the client's changed fields
- * verbatim and pass through the worker's status/error.
- * TODO: verify against live worker.
+ * PUT /api/account → PUT {API}/me with the session bearer token.
+ * The worker only implements PUT /me (not PATCH) and accepts the snake_case
+ * fields full_name, email, company_name, address, business_type_id |
+ * custom_business_type, township_id, username. We forward the client's changed
+ * fields verbatim and pass through the worker's status/error.
  */
-export async function PATCH(req: Request) {
+export async function PUT(req: Request) {
   const token = await getToken();
   if (!token) {
     return NextResponse.json(
@@ -31,7 +32,7 @@ export async function PATCH(req: Request) {
   let res: Response;
   try {
     res = await fetch(`${API_BASE_URL}/me`, {
-      method: "PATCH",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -53,6 +54,9 @@ export async function PATCH(req: Request) {
       { status: res.status },
     );
   }
+
+  // Keep the header display cookie in sync with the saved profile.
+  await refreshUserCookie(token);
 
   return NextResponse.json({ ok: true, ...data });
 }

@@ -1,52 +1,10 @@
-import {
-  Briefcase,
-  Calendar,
-  ChevronRight,
-  MapPin,
-  ShieldCheck,
-} from "lucide-react";
+import { Briefcase, ChevronRight, MapPin, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/shared/user-menu";
 import { ProfileForm } from "@/components/account/profile-form";
+import type { BusinessType, Profile, StateRegion } from "@/lib/api/types";
 
-/**
- * Loosely-typed view of the worker `/me` response. Every field is optional and
- * we accept both snake_case (worker) and camelCase (web display cookie) keys.
- * TODO: verify against live worker.
- */
-export interface MeLike {
-  id?: number | string;
-  app_user_id?: number | string;
-  full_name?: string;
-  fullName?: string;
-  username?: string;
-  email?: string;
-  phone?: string;
-  business_type?: string;
-  businessType?: string;
-  company_name?: string;
-  company?: string;
-  street?: string;
-  address?: string;
-  township?: string;
-  is_approved_partner?: boolean;
-  is_verified?: boolean;
-  partner?: boolean;
-  created_at?: string;
-  memberSince?: string;
-}
-
-const BUSINESS_LABELS: Record<string, string> = {
-  individual: "Individual buyer",
-  contractor: "Contractor",
-  dealer: "Dealer / reseller",
-  agent: "Agent",
-  fleet: "Fleet owner",
-  rental: "Rental company",
-  other: "Other",
-};
-
-function pick(...vals: (string | undefined)[]): string {
+function pick(...vals: (string | null | undefined)[]): string {
   for (const v of vals) {
     if (typeof v === "string" && v.trim()) return v.trim();
   }
@@ -61,34 +19,35 @@ function initials(name: string): string {
   return (first + last).toUpperCase();
 }
 
-function memberSinceLabel(raw?: string): string {
-  if (!raw) return "—";
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return raw;
-  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-}
-
 /**
  * Profile page body. Server Component — renders the identity header from a
- * (possibly null/partial) `/me` payload, then mounts the interactive edit form.
+ * (possibly null) `/me` payload, then mounts the interactive edit form seeded
+ * with the worker's numeric ids and the business-type / location catalogs.
  */
-export function ProfileView({ me }: { me: MeLike | null }) {
-  const data = me ?? {};
+export function ProfileView({
+  profile,
+  businessTypes,
+  locations,
+}: {
+  profile: Profile | null;
+  businessTypes: BusinessType[];
+  locations: StateRegion[];
+}) {
+  const p = profile;
 
-  const fullName = pick(data.full_name, data.fullName);
+  const fullName = pick(p?.full_name);
   const displayName = fullName || "Your account";
-  const username = pick(data.username);
-  const email = pick(data.email);
-  const phone = pick(data.phone);
-  const businessType = pick(data.business_type, data.businessType);
-  const company = pick(data.company_name, data.company);
-  const street = pick(data.street, data.address);
-  const township = pick(data.township);
-  const isPartner = !!(data.is_approved_partner ?? data.partner);
+  const businessType = pick(p?.business_type);
+  const company = pick(p?.company_name);
+  const partnerStatus = pick(p?.partner_status);
+  const isPartner = partnerStatus === "Approved";
+  const isPending = partnerStatus === "Pending";
 
-  const bizLabel = businessType
-    ? (BUSINESS_LABELS[businessType] ?? businessType)
-    : "Member";
+  const townshipLabel = [p?.township_name, p?.district_name, p?.state_region_name]
+    .filter((s): s is string => !!s && s.trim().length > 0)
+    .join(", ");
+
+  const bizLabel = businessType || "Member";
   const inits = initials(fullName);
 
   return (
@@ -105,12 +64,7 @@ export function ProfileView({ me }: { me: MeLike | null }) {
           {inits ? (
             <span
               className="sl-avatar"
-              style={{
-                width: 72,
-                height: 72,
-                fontSize: 26,
-                fontWeight: 700,
-              }}
+              style={{ width: 72, height: 72, fontSize: 26, fontWeight: 700 }}
               aria-hidden="true"
             >
               {inits}
@@ -123,8 +77,14 @@ export function ProfileView({ me }: { me: MeLike | null }) {
               {displayName}
               {isPartner && (
                 <span className="pf-id-badge">
-                  <ShieldCheck className="icon-sm" strokeWidth={1.75} />{" "}
-                  Verified Partner
+                  <ShieldCheck className="icon-sm" strokeWidth={1.75} /> Verified
+                  Partner
+                </span>
+              )}
+              {isPending && (
+                <span className="pf-id-badge pf-id-badge--muted">
+                  <ShieldCheck className="icon-sm" strokeWidth={1.75} /> Partner
+                  pending
                 </span>
               )}
             </div>
@@ -133,20 +93,21 @@ export function ProfileView({ me }: { me: MeLike | null }) {
                 <Briefcase className="icon-sm" strokeWidth={1.75} />
                 {bizLabel}
               </span>
-              {(company || township) && <span className="pf-id-dot" />}
               {company && (
-                <span>
-                  <MapPin className="icon-sm" strokeWidth={1.75} />
-                  {company}
-                </span>
+                <>
+                  <span className="pf-id-dot" />
+                  <span>{company}</span>
+                </>
               )}
-              <span className="pf-id-dot" />
-              <span>
-                <Calendar className="icon-sm" strokeWidth={1.75} />
-                Member since {memberSinceLabel(
-                  pick(data.created_at, data.memberSince) || undefined,
-                )}
-              </span>
+              {townshipLabel && (
+                <>
+                  <span className="pf-id-dot" />
+                  <span>
+                    <MapPin className="icon-sm" strokeWidth={1.75} />
+                    {townshipLabel}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </header>
@@ -155,14 +116,19 @@ export function ProfileView({ me }: { me: MeLike | null }) {
           <ProfileForm
             initial={{
               fullName,
-              username,
-              email,
-              phone,
-              businessType,
+              username: pick(p?.username),
+              email: pick(p?.email),
               company,
-              street,
-              township,
+              street: pick(p?.address),
+              businessTypeId: p?.business_type_id ?? null,
+              customBusinessType: "",
+              townshipId: p?.township_id ?? null,
             }}
+            initialBusinessTypeName={p?.business_type ?? null}
+            businessTypes={businessTypes}
+            locations={locations}
+            phone={pick(p?.phone)}
+            townshipSeedLabel={townshipLabel}
           />
         </div>
       </div>

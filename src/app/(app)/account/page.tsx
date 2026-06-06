@@ -1,8 +1,11 @@
 import { Suspense } from "react";
 import { getToken } from "@/lib/auth/session";
 import { apiFetch } from "@/lib/api/client";
+import { getBusinessTypes } from "@/lib/api/business-types";
+import { getLocations } from "@/lib/api/locations";
 import { noindexMetadata } from "@/lib/seo/metadata";
-import { ProfileView, type MeLike } from "@/components/account/profile-view";
+import type { Profile } from "@/lib/api/types";
+import { ProfileView } from "@/components/account/profile-view";
 import { SignedOutPrompt } from "@/components/account/signed-out-prompt";
 // The profile form reuses the auth form's field styles (.auth-form / .auth-field
 // and the input rules live in auth.css), which is otherwise only loaded lazily
@@ -34,11 +37,22 @@ async function AccountContent() {
     );
   }
 
-  // /me shape is UNVERIFIED — fetch defensively and never crash on failure.
-  // TODO: verify against live worker.
-  const me = await apiFetch<MeLike>("/me", { token }).catch(() => null);
+  // Fetch the profile (dynamic, authed) alongside the cached public catalogs.
+  // /me is fetched defensively so a transient API failure renders an empty
+  // shell instead of crashing the route.
+  const [profile, businessTypes, locations] = await Promise.all([
+    apiFetch<Profile>("/me", { token }).catch(() => null),
+    getBusinessTypes().catch(() => []),
+    getLocations().catch(() => []),
+  ]);
 
-  return <ProfileView me={me} />;
+  return (
+    <ProfileView
+      profile={profile}
+      businessTypes={businessTypes}
+      locations={locations}
+    />
+  );
 }
 
 function AccountLoading() {
