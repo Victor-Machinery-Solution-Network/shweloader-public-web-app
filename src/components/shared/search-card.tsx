@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -175,7 +176,21 @@ function CategoryPicker({
   const [hoverId, setHoverId] = useState(tree[0]?.id ?? "all");
   const [isModal, setIsModal] = useState(false);
   const [q, setQ] = useState("");
+  // Measured width of the Category cell, so the dropdown's left rail can match
+  // it exactly (and stay put when the right rail appears). Updated on resize.
+  const [cellW, setCellW] = useState<number | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Track the Category cell's width and expose it to the menu as --cat-cell-w.
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const measure = () => setCellW(el.clientWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Under lg (1024px) switch to a popup modal like the location picker.
   useEffect(() => {
@@ -260,6 +275,11 @@ function CategoryPicker({
         hovered.subs.length === 0 && "is-single",
         isModal && "is-modal-body",
       )}
+      style={
+        cellW != null
+          ? ({ "--cat-cell-w": `${cellW}px` } as CSSProperties)
+          : undefined
+      }
       role="menu"
     >
       <ul className="cat-col cat-col-l">

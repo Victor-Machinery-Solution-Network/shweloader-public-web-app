@@ -2966,18 +2966,27 @@ html, body {
 }
 
 /* Category picker: single-column mode when the hovered row has no subs.
-   Takes the full search-card width (matches the Category cell width) */
+   Left rail keeps the same box (--cat-cell-w) as the two-column state so it
+   doesn't shift when the right rail appears; the menu just hugs that column. */
 .cat-menu.is-single {
   grid-template-columns: 1fr !important;
   min-width: 0 !important;
-  width: 100% !important;
 }
 .cat-menu.is-single .cat-col-l {
-  border-right: 0;
-  width: auto !important;
-  min-width: 0 !important;
+  /* Keep the left rail the exact same box (--cat-cell-w, same border geometry)
+     as the two-column state so it doesn't shrink when the right rail appears.
+     The border stays 1px but transparent — it hides the divider in single-column
+     mode while keeping the content width identical to the multi-column state. */
+  border-right: 1px solid transparent;
+  width: var(--cat-cell-w, 220px) !important;
+  min-width: var(--cat-cell-w, 220px) !important;
 }
-.cat-menu:not(.is-single) .cat-col-l { width: 220px; min-width: 220px; }
+/* Left rail tracks the measured Category cell width (--cat-cell-w, set by the
+   component); falls back to 220px before measurement / if the var is unset. */
+.cat-menu:not(.is-single) .cat-col-l {
+  width: var(--cat-cell-w, 220px);
+  min-width: var(--cat-cell-w, 220px);
+}
 /* Right column slides + fades in when it appears */
 .cat-menu .cat-col-r {
   animation: catColRSlide .25s cubic-bezier(.2,.7,.2,1);
