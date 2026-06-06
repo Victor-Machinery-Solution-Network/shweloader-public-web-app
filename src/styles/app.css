@@ -2181,7 +2181,7 @@ html, body {
 }
 
 .lc-fab-status {
-  position: absolute; right: 0px; bottom: 0px;
+  position: absolute; right: 0px; bottom: 5px;
   width: 13px; height: 13px; border-radius: 9999px;
   background: #2eaa6b;
 }
