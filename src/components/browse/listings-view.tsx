@@ -50,8 +50,19 @@ export function ListingsView({
 }) {
   const { t } = useI18n();
   const filters = useBrowseFilters();
-  const filtersKey = JSON.stringify(filters);
-  const defaultKey = useRef(JSON.stringify(initialFilters));
+  // Key the fetch on the actual API request (mode + resolved query), NOT the raw
+  // filters: presentational-only params like `view` (grid/list) aren't part of
+  // `toListingQuery`, so flipping them must not trigger a refetch / skeleton.
+  const queryKey = JSON.stringify({
+    mode: filters.mode,
+    query: toListingQuery(filters, catalogs),
+  });
+  const defaultKey = useRef(
+    JSON.stringify({
+      mode: initialFilters.mode,
+      query: toListingQuery(initialFilters, catalogs),
+    }),
+  );
 
   const [listings, setListings] = useState<Listing[]>(initialListings);
   const [loading, setLoading] = useState(false);
@@ -60,8 +71,8 @@ export function ListingsView({
   useEffect(() => {
     setErrored(false);
 
-    // Default view → reuse the prerendered listings, no network.
-    if (filtersKey === defaultKey.current) {
+    // Default query → reuse the prerendered listings, no network.
+    if (queryKey === defaultKey.current) {
       setListings(initialListings);
       setLoading(false);
       return;
@@ -81,10 +92,10 @@ export function ListingsView({
       });
 
     return () => controller.abort();
-    // `filters`/catalogs/initialListings are all captured via `filtersKey`;
+    // `filters`/catalogs/initialListings are all captured via `queryKey`;
     // catalogs + initialListings are render-stable props from the server page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtersKey]);
+  }, [queryKey]);
 
   if (loading) return <ResultsSkeleton />;
   if (errored) {
