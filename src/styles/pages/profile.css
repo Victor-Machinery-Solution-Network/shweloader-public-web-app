@@ -94,6 +94,7 @@
   background: var(--m-green-soft); color: var(--m-green);
   font-size: 12px; font-weight: 500; letter-spacing: 0.01em;
 }
+.pf-id-badge--muted { background: var(--m-bg-2); color: var(--m-fg-2); }
 .pf-id-badge .icon-sm { width: 14px; height: 14px; }
 .pf-id-meta {
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px;
@@ -188,43 +189,80 @@
   pointer-events: none; color: var(--m-fg-2); width: 18px; height: 18px;
 }
 
-/* Phone with +95 prefix */
-.pf-phone {
-  display: flex; align-items: stretch;
-  border: 1px solid var(--m-line-2);
-  border-radius: 12px; overflow: hidden;
-  background: var(--m-bg);
-  transition: border-color .15s, box-shadow .15s;
+/* ---------- Field-level validation ---------- */
+.pf-card.auth-form .auth-field.has-error > input,
+.pf-card.auth-form .auth-field.has-error .pf-select,
+.pf-card.auth-form .auth-field.has-error .pf-combo-trigger {
+  border-color: #e5484d;
 }
-.pf-phone:focus-within { border-color: var(--m-ink); box-shadow: 0 0 0 3px rgba(20,18,12,0.06); }
-[data-theme="dark"] .pf-phone:focus-within { box-shadow: 0 0 0 3px rgba(255,255,255,0.08); }
-.pf-phone-cc {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 0 14px;
-  background: var(--m-bg-2);
-  border-right: 1px solid var(--m-line);
-  font-size: 14px; font-weight: 600; color: var(--m-ink-2);
-  white-space: nowrap;
+.pf-field-error {
+  display: block; margin-top: 5px;
+  font-size: 12.5px; color: #e5484d;
 }
-.pf-phone input {
-  flex: 1; min-width: 0;
-  border: 0; background: transparent;
-  padding: 12px 14px;
+.pf-field-error--block { grid-column: 1 / -1; margin-top: -6px; }
+
+/* ---------- Searchable township combobox ---------- */
+.pf-combo { position: relative; }
+.pf-card.auth-form .pf-combo-trigger {
+  text-align: left;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pf-combo-pop {
+  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--m-bg); border: 1px solid var(--m-line-2);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.14);
+  overflow: hidden;
+}
+.pf-combo-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-bottom: 1px solid var(--m-line);
+}
+.pf-combo-search .icon-sm { width: 16px; height: 16px; color: var(--m-fg-3); flex: 0 0 auto; }
+.pf-combo-search input {
+  flex: 1; min-width: 0; border: 0; background: transparent; outline: none;
   font-family: var(--font-sans); font-size: 15px; color: var(--m-ink);
 }
-.pf-phone input:focus { outline: none; }
-
-/* Password field with show/hide */
-.pf-pass { position: relative; }
-.pf-pass .pf-input { padding-right: 44px; }
-.pf-eye {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  width: 30px; height: 30px;
-  border: 0; background: transparent; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-  color: var(--m-fg-2); border-radius: 8px;
+.pf-combo-list { list-style: none; margin: 0; padding: 6px; max-height: 280px; overflow-y: auto; }
+.pf-combo-opt {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 9px 12px; border-radius: 8px; cursor: pointer;
 }
-.pf-eye:hover { background: var(--m-bg-2); color: var(--m-ink); }
+.pf-combo-opt.is-active,
+.pf-combo-opt.is-selected { background: var(--m-bg-2); }
+.pf-combo-opt.is-selected .pf-combo-opt-main { color: var(--m-gold-ink); font-weight: 600; }
+.pf-combo-opt-main { font-size: 15px; color: var(--m-ink); }
+.pf-combo-opt-sub { font-size: 12.5px; color: var(--m-fg-2); }
+.pf-combo-empty { padding: 14px 12px; font-size: 14px; color: var(--m-fg-2); text-align: center; }
+
+/* ---------- Phone (OTP-gated change) ---------- */
+.pf-phone {
+  border: 1px solid var(--m-line-2); border-radius: 12px;
+  padding: 14px 16px; background: var(--m-bg);
+}
+.pf-phone-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pf-phone-current { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pf-phone-label { font-size: 12.5px; color: var(--m-fg-2); }
+.pf-phone-value { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 600; color: var(--m-ink); }
+.pf-phone-value .icon-sm { width: 15px; height: 15px; color: var(--m-fg-3); }
+.pf-phone-change-btn {
+  flex: 0 0 auto;
+  border: 1px solid var(--m-line-2); background: var(--m-bg);
+  border-radius: 9px; padding: 8px 14px;
+  font-family: var(--font-sans); font-size: 13.5px; font-weight: 600; color: var(--m-ink);
+  cursor: pointer; transition: background .14s;
+}
+.pf-phone-change-btn:hover { background: var(--m-bg-2); }
+.pf-phone-cancel {
+  flex: 0 0 auto; border: 0; background: transparent; cursor: pointer;
+  width: 32px; height: 32px; border-radius: 8px; color: var(--m-fg-2);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.pf-phone-cancel:hover { background: var(--m-bg-2); color: var(--m-ink); }
+.pf-phone-panel { margin-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+.pf-phone-sub { font-size: 13.5px; color: var(--m-fg-2); margin: 0; }
+.pf-phone-error { font-size: 13px; color: #e5484d; margin: 0; }
+.pf-phone-otp-actions { display: flex; align-items: center; gap: 16px; }
+.pf-phone-resend-wait { font-size: 13px; color: var(--m-fg-2); }
 
 /* ---------- Save row ---------- */
 .pf-actions {

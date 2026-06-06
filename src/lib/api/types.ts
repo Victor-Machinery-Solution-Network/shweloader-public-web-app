@@ -296,6 +296,37 @@ export interface StateRegion {
   districts: District[];
 }
 
+/** Business-type catalog entry (GET /business-types). */
+export interface BusinessType {
+  id: number;
+  name: string;
+}
+
+/**
+ * Current-user profile — the worker's GET /me response shape.
+ * Verified against the live worker + the mobile app's ApiProfile (2026-06-06).
+ * Note: there is no `created_at` field.
+ */
+export interface Profile {
+  id: number;
+  username: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string;
+  company_name: string | null;
+  address: string | null;
+  is_verified: number;
+  business_type_id: number | null;
+  business_type: string | null;
+  township_id: number | null;
+  township_name: string | null;
+  district_name: string | null;
+  state_region_name: string | null;
+  partner_id: number | null;
+  partner_type: string | null;
+  partner_status: string | null;
+}
+
 /** Listing browse/query params accepted by /listings/sale|rent. */
 export interface ConditionType {
   id: number;
