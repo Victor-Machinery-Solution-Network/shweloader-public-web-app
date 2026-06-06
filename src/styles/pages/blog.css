@@ -476,7 +476,7 @@
 
 /* Large screens — the category rail fits without scrolling, so drop the side
    inset + edge fade and let the chips sit flush with the page content. */
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
   .bx-cats { padding-left: 0; padding-right: 0; }
   .bx-cats-rail {
     margin: 0;
@@ -764,10 +764,10 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 28px 24px;
 }
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .bp-related-grid { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .bp-related-grid { grid-template-columns: 1fr; }
 }
 
