@@ -10,6 +10,7 @@ import "@/styles/pages/blog.css";
 import { getBlog, getRelatedBlogs, getBlogs } from "@/lib/api/blogs";
 import { blogSlug, parseIdFromSlug } from "@/lib/slug";
 import { assetUrl, focalPosition } from "@/lib/assets";
+import { absoluteUrl } from "@/lib/env";
 import { formatDate } from "@/lib/format";
 import { toPlainText, truncate } from "@/lib/utils";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -136,7 +137,10 @@ export default async function BlogPostPage({ params }: { params: Params }) {
               <T path="actions.backToBlog" />
             </span>
           </Link>
-          <BlogShare title={post.title} />
+          <BlogShare
+            title={post.title}
+            url={absoluteUrl(`/blogs/${canonical}`)}
+          />
         </div>
       </section>
 

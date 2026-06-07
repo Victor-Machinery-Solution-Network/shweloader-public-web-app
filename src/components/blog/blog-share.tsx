@@ -12,21 +12,23 @@ import { useI18n } from "@/components/providers/language-provider";
  * mobile), falling back to copying the link to the clipboard on desktop. Mirrors
  * the product page's share action.
  */
-export function BlogShare({ title }: { title: string }) {
+export function BlogShare({ title, url }: { title: string; url?: string }) {
   const { t } = useI18n();
   const share = useCallback(async () => {
-    const url = window.location.href;
+    // Prefer the server-supplied canonical URL so shared links never carry the
+    // visitor's tracking query/hash; fall back to the live URL if absent.
+    const shareUrl = url ?? window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title, url });
+        await navigator.share({ title, url: shareUrl });
       } else {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(shareUrl);
         toast.success(t("common.linkCopied"));
       }
     } catch {
       /* user dismissed the share sheet */
     }
-  }, [title]);
+  }, [title, url, t]);
 
   return (
     <button type="button" className="bp-share" onClick={share}>

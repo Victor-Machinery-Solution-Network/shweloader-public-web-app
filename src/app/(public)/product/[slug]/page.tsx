@@ -23,6 +23,7 @@ import {
   getAllListingsForSitemap,
 } from "@/lib/api/listings";
 import { assetUrl } from "@/lib/assets";
+import { absoluteUrl } from "@/lib/env";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
   JsonLd,
@@ -110,6 +111,10 @@ export default async function ProductPage({ params }: PageProps) {
     redirect(`/product/${canonicalSlug}`);
   }
 
+  // Canonical absolute URL for the Share action — matches og:url, no tracking
+  // query/hash carried over from however the visitor arrived.
+  const shareUrl = absoluteUrl(`/product/${canonicalSlug}`);
+
   const related = await getRelatedListings(listing);
 
   const mode = listingMode(listing);
@@ -175,6 +180,7 @@ export default async function ProductPage({ params }: PageProps) {
             variant="overlay"
             listingId={listing.id}
             title={listing.title}
+            shareUrl={shareUrl}
           />
           <Gallery
             images={[listing.thumbnail, ...listing.images]}
@@ -210,6 +216,7 @@ export default async function ProductPage({ params }: PageProps) {
               variant="row"
               listingId={listing.id}
               title={listing.title}
+              shareUrl={shareUrl}
             />
             <ContactCard listing={listing} />
           </aside>
