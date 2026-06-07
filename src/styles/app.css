@@ -3368,6 +3368,23 @@ html, body {
   position: absolute; inset: 0;
   transition: opacity .9s cubic-bezier(.4,0,.2,1);
   overflow: hidden;
+  /* Instant placeholder painted UNDER the photo: the slide's decoded blurhash
+     (set as --hero-blur by Hero), positioned on the same focal point as the
+     image. While the real (separate, CDN-hosted) photo is still downloading the
+     <img> is transparent, so this soft blur shows through instead of a blank or
+     black frame. Falls back to a warm panel for slides with no blurhash. */
+  background-color: var(--m-bg-2);
+  background-image: var(--hero-blur, none);
+  background-size: cover;
+  background-position: var(--hero-pos, 50% 50%);
+  background-repeat: no-repeat;
+}
+@media (max-width: 640px) {
+  /* Phones show the dedicated 16:9 image — use its blurhash + focal point. */
+  .hero-slide {
+    background-image: var(--hero-blur-m, var(--hero-blur, none));
+    background-position: var(--hero-pos-m, 50% 50%);
+  }
 }
 .hero-slide-img {
   position: absolute;

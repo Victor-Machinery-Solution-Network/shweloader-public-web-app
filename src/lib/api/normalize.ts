@@ -185,9 +185,13 @@ export function normalizeSlide(r: ApiCarousel): Slide {
     href: r.link_url ?? null,
     image: assetUrl(r.image_url),
     blurhash: r.blurhash ?? null,
+    // Decoded server-side (sharp) in getCarousel — kept null here so this stays
+    // a pure, sync normalizer.
+    blurDataUrl: null,
     focalX: typeof r.focal_x === "number" ? r.focal_x : 0.5,
     focalY: typeof r.focal_y === "number" ? r.focal_y : 0.5,
     mobileImage: assetUrl(r.mobile_image_url),
+    mobileBlurDataUrl: null,
     mobileFocalX: typeof r.mobile_focal_x === "number" ? r.mobile_focal_x : 0.5,
     mobileFocalY: typeof r.mobile_focal_y === "number" ? r.mobile_focal_y : 0.5,
   };

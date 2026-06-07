@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
 /** Cross-fade autoplay interval (ms) — matches the design's hero cadence. */
 const DURATION = 6500;
 
+/** A decoded-blurhash data URI as a CSS `background-image` value, or `none`. */
+const blurCss = (url: string | null) => (url ? `url("${url}")` : "none");
+
 /**
  * Homepage hero — admin-uploaded promo image(s) at 21:9, with NO text overlay
  * (per product rules). Ports the design's `Hero` (`.hero-frame` / `.hero-slide`
@@ -60,8 +63,40 @@ export function Hero({ slides }: { slides: Slide[] }) {
 
   if (count === 0) return null;
 
+  const first = slides[0];
+
   return (
     <section className="hero-frame" aria-roledescription="carousel" aria-label="Promotions">
+      {/* Preload the first (LCP) slide so the browser starts the image fetch from
+          the document <head>, before the body is parsed. Art-directed to match
+          the <picture> source actually used at each breakpoint (React 19 hoists
+          these <link>s into <head>). */}
+      {first?.image &&
+        (first.mobileImage ? (
+          <>
+            <link
+              rel="preload"
+              as="image"
+              href={first.image}
+              fetchPriority="high"
+              media="(min-width: 641px)"
+            />
+            <link
+              rel="preload"
+              as="image"
+              href={first.mobileImage}
+              fetchPriority="high"
+              media="(max-width: 640px)"
+            />
+          </>
+        ) : (
+          <link
+            rel="preload"
+            as="image"
+            href={first.image}
+            fetchPriority="high"
+          />
+        ))}
       {slides.map((s, i) => {
         const isActive = i === idx;
         const isPrev = i === prevIdx && i !== idx;
@@ -81,19 +116,19 @@ export function Hero({ slides }: { slides: Slide[] }) {
                     srcSet={s.mobileImage}
                   />
                 )}
+                {/* All slides load eagerly (they're above the fold and shown
+                    within seconds); only the first gets high priority so it
+                    wins the LCP race, the rest trickle in at low priority so
+                    they're decoded before autoplay reaches them — without
+                    starving the first. Focal point + blur ride on CSS vars set
+                    on the parent .hero-slide (see app.css). */}
                 <img
                   src={src}
                   alt=""
-                  loading={i === 0 ? "eager" : "lazy"}
-                  fetchPriority={i === 0 ? "high" : undefined}
+                  loading="eager"
+                  fetchPriority={i === 0 ? "high" : "low"}
                   decoding="async"
                   className={cn("hero-slide-img", isActive && "is-active")}
-                  style={
-                    {
-                      "--hero-pos": focalPosition(s.focalX, s.focalY),
-                      "--hero-pos-m": focalPosition(s.mobileFocalX, s.mobileFocalY),
-                    } as CSSProperties
-                  }
                 />
               </picture>
             )}
@@ -105,11 +140,19 @@ export function Hero({ slides }: { slides: Slide[] }) {
           isActive && "is-active",
           isPrev && "is-prev",
         );
+        // The decoded blurhash (or a neutral panel when a slide has none) is
+        // painted *under* the photo as the slide background, so a not-yet-loaded
+        // slide shows a soft blur of its image instead of a blank/black frame.
+        // CSS consumes these vars (.hero-slide in app.css); they also inherit to
+        // the child <img> for its object-position focal point.
         const style = {
-          background: "#000",
+          "--hero-blur": blurCss(s.blurDataUrl),
+          "--hero-blur-m": blurCss(s.mobileBlurDataUrl ?? s.blurDataUrl),
+          "--hero-pos": focalPosition(s.focalX, s.focalY),
+          "--hero-pos-m": focalPosition(s.mobileFocalX, s.mobileFocalY),
           opacity: isActive ? 1 : 0,
           zIndex: isActive ? 2 : isPrev ? 1 : 0,
-        } as const;
+        } as CSSProperties;
 
         return s.href ? (
           <Link

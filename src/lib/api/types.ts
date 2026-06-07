@@ -265,10 +265,15 @@ export interface Slide {
   /** Desktop 21:9 image (absolute URL). */
   image: string | null;
   blurhash: string | null;
+  /** Desktop blurhash decoded to a base64 PNG `data:` URI — an instant,
+   *  in-HTML placeholder shown under the photo while it loads (null if none). */
+  blurDataUrl: string | null;
   focalX: number;
   focalY: number;
   /** Mobile 16:9 image (absolute URL). */
   mobileImage: string | null;
+  /** Mobile blurhash decoded to a base64 PNG `data:` URI (null if none). */
+  mobileBlurDataUrl: string | null;
   mobileFocalX: number;
   mobileFocalY: number;
 }
