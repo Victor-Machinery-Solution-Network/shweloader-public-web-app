@@ -833,14 +833,18 @@ export function AuthModal() {
                   src="/brand/logo_dark.svg"
                   className="sl-logo-light"
                   alt="ShweLoader"
-                  style={{ height: 28 }}
+                  width={975}
+                  height={192}
+                  style={{ height: 28, width: "auto" }}
                 />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/brand/logo_white_with_slogan.svg"
                   className="sl-logo-dark"
                   alt="ShweLoader"
-                  style={{ height: 28, display: "none" }}
+                  width={975}
+                  height={192}
+                  style={{ height: 28, width: "auto", display: "none" }}
                 />
               </span>
 
