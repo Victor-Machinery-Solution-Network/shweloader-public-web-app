@@ -980,11 +980,10 @@ html, body {
   border: 0; border-radius: 9999px;
   background: transparent; cursor: pointer;
   font-family: var(--font-sans); font-size: 12px; font-weight: 600;
-  color: var(--m-fg-3);
+  color: var(--m-ink-2);
   opacity: 0.55;
   transition: color .25s, opacity .25s;
 }
-.mh-lang-opt:hover { opacity: 0.85; color: var(--m-ink-2); }
 .mh-lang-opt.is-on {
   color: var(--m-ink);
   opacity: 1;
