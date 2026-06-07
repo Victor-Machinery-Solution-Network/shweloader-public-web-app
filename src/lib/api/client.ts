@@ -1,5 +1,11 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { API_BASE_URL } from "@/lib/env";
+
+// Carries the D1 read-replication bookmark for read-your-writes on authed
+// (dynamic) requests. Only touched when a Bearer token is present — public reads
+// run inside `"use cache"`, where cookies() is disallowed, so we never call it there.
+const BOOKMARK_COOKIE = "d1_bookmark";
 
 /**
  * App REST API fetch client. Server-only — public reads run on the server so
@@ -49,6 +55,17 @@ export async function apiFetch<T>(
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
 
+  // Read-your-writes: echo our last D1 bookmark on authed (dynamic) requests so
+  // the worker serves a replica at least as fresh as our last write.
+  if (opts.token) {
+    try {
+      const bm = (await cookies()).get(BOOKMARK_COOKIE)?.value;
+      if (bm) headers["x-d1-bookmark"] = bm;
+    } catch {
+      /* not in a request scope — skip */
+    }
+  }
+
   let res: Response;
   try {
     res = await fetch(buildUrl(path, opts.query), {
@@ -73,6 +90,26 @@ export async function apiFetch<T>(
       /* non-JSON error body */
     }
     throw new ApiError(message, res.status);
+  }
+
+  // Advance the bookmark cookie from authed WRITE responses. Server actions /
+  // route handlers can set cookies; RSC render cannot — hence the guard. Reads
+  // only send the cookie above; they don't need to advance it.
+  if (opts.token && opts.method && opts.method !== "GET") {
+    const newBm = res.headers.get("x-d1-bookmark");
+    if (newBm) {
+      try {
+        (await cookies()).set(BOOKMARK_COOKIE, newBm, {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: true,
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+        });
+      } catch {
+        /* RSC render context can't set cookies — only actions/handlers can */
+      }
+    }
   }
 
   if (res.status === 204) return undefined as T;
