@@ -26,9 +26,12 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   images: {
-    // R2 asset domains (staging today, prod later) all live under shweloader.com.mm.
+    // Explicit R2 asset hosts only (prod + staging) — NOT a `**` wildcard, which
+    // would let the image optimizer proxy-fetch from the authenticated API
+    // subdomains (api./app-api.) too — an SSRF surface.
     remotePatterns: [
-      { protocol: "https", hostname: "**.shweloader.com.mm" },
+      { protocol: "https", hostname: "asset.shweloader.com.mm" },
+      { protocol: "https", hostname: "asset-staging.shweloader.com.mm" },
     ],
     formats: ["image/avif", "image/webp"],
     // Keep optimized images (incl. the hero LCP) warm in Vercel's cache for a year
