@@ -28,10 +28,14 @@ function readSaved(): number[] {
 export function ProductActions({
   listingId,
   title,
+  shareUrl,
   variant = "row",
 }: {
   listingId: number;
   title: string;
+  /** Server-supplied canonical absolute URL to share. Keeps shared links free
+   *  of the visitor's tracking query/hash; falls back to the live URL. */
+  shareUrl?: string;
   /** "row" = the labelled action bar (desktop). "overlay" = floating circular
    *  icon buttons over the gallery image (mobile). */
   variant?: "row" | "overlay";
@@ -67,7 +71,7 @@ export function ProductActions({
   }, [router]);
 
   const share = useCallback(async () => {
-    const url = window.location.href;
+    const url = shareUrl ?? window.location.href;
     try {
       if (navigator.share) {
         await navigator.share({ title, url });
@@ -78,7 +82,7 @@ export function ProductActions({
     } catch {
       /* user dismissed the share sheet */
     }
-  }, [title]);
+  }, [title, shareUrl, t]);
 
   if (variant === "overlay") {
     return (
