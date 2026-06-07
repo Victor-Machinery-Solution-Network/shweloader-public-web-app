@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { SITE_URL, absoluteUrl } from "@/lib/env";
 
 export const SITE_NAME = "ShweLoader";
+/** X / Twitter handle for card attribution. Re-stated in every twitter block
+ *  because per-segment metadata replaces (doesn't deep-merge) the root's. */
+export const TWITTER_HANDLE = "@shweloader";
 export const DEFAULT_TITLE =
   "ShweLoader — Myanmar's Heavy Equipment Marketplace";
 export const DEFAULT_DESCRIPTION =
@@ -40,7 +43,8 @@ export const baseMetadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@shweloader",
+    site: TWITTER_HANDLE,
+    creator: TWITTER_HANDLE,
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
   },
@@ -126,6 +130,11 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
     },
     twitter: {
       card: "summary_large_image",
+      // Per-segment metadata replaces (doesn't deep-merge) the root's twitter
+      // block, so re-state site/creator here or product/blog cards lose the
+      // @shweloader attribution the homepage has.
+      site: TWITTER_HANDLE,
+      creator: TWITTER_HANDLE,
       title: title ?? DEFAULT_TITLE,
       description: description ?? DEFAULT_DESCRIPTION,
       images: ogImages.map((i) => i.url),
