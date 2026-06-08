@@ -7,6 +7,8 @@ import { toast } from "sonner";
 
 import { useI18n } from "@/components/providers/language-provider";
 import { ShareIcon } from "@/components/shared/icons/share-icon";
+import { IconButton } from "@/components/shared/icon-button";
+import { SaveButton } from "@/components/shared/save-button";
 
 const SAVED_KEY = "shweloader.saved";
 const SAVED_EVENT = "saved-changed";
@@ -87,42 +89,25 @@ export function ProductActions({
   if (variant === "overlay") {
     return (
       <div className="pdp-gallery-actions">
-        <button
-          type="button"
-          className="pdp-gact"
-          onClick={goBack}
-          aria-label={t("actions.backToResults")}
-        >
-          <ArrowRight
-            className="icon-sm"
-            strokeWidth={2}
-            style={{ transform: "rotate(180deg)" }}
-            aria-hidden="true"
-          />
-        </button>
-        <div className="pdp-gact-right">
-          <button
-            type="button"
-            className="pdp-gact"
-            onClick={share}
-            aria-label={t("actions.share")}
-          >
-            <ShareIcon className="icon-sm" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className={"pdp-gact" + (saved ? " is-on" : "")}
-            onClick={toggleSave}
-            aria-pressed={saved}
-            aria-label={saved ? t("actions.saved") : t("actions.save")}
-          >
-            <Heart
+        <IconButton
+          icon={
+            <ArrowRight
               className="icon-sm"
               strokeWidth={2}
-              style={saved ? { fill: "currentColor" } : undefined}
+              style={{ transform: "rotate(180deg)" }}
               aria-hidden="true"
             />
-          </button>
+          }
+          onClick={goBack}
+          aria-label={t("actions.backToResults")}
+        />
+        <div className="pdp-gact-right">
+          <IconButton
+            icon={<ShareIcon className="icon-sm" aria-hidden="true" />}
+            onClick={share}
+            aria-label={t("actions.share")}
+          />
+          <SaveButton id={listingId} />
         </div>
       </div>
     );

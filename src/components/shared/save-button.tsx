@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Heart } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { IconButton } from "@/components/shared/icon-button";
 
 const SAVED_KEY = "shweloader.saved";
 const SAVED_EVENT = "saved-changed";
@@ -68,14 +68,13 @@ export function SaveButton({ id, className }: SaveButtonProps) {
   );
 
   return (
-    <button
-      type="button"
-      className={cn("lcard-fav", saved && "is-on", className)}
+    <IconButton
+      icon={<Heart className="icon-sm" aria-hidden="true" />}
+      active={saved}
       onClick={toggle}
       aria-pressed={saved}
       aria-label={saved ? "Remove from saved" : "Save to favorites"}
-    >
-      <Heart className="icon-sm" aria-hidden="true" />
-    </button>
+      className={className}
+    />
   );
 }
