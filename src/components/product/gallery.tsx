@@ -262,7 +262,20 @@ export function Gallery({
                       style={{
                         objectFit: "contain",
                         objectPosition: focalPosition(p.focalX, p.focalY),
+                        opacity: dimmed ? 0.6 : 1,
+                        filter: dimmed ? "saturate(0.7)" : undefined,
                       }}
+                    />
+                  )}
+                  {/* Sold/rented stamp on every collage tile too (the "+N more"
+                      tile keeps its own overlay instead). */}
+                  {dimmed && !isMore && (
+                    <Image
+                      className="feat-stamp-sold"
+                      src="/brand/sold-out-stamp.png"
+                      alt=""
+                      width={240}
+                      height={240}
                     />
                   )}
                   {isMore && (
