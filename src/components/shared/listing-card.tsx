@@ -100,12 +100,11 @@ export function ListingCard({
           />
         ) : null}
 
-        {(isNew || isSold) && (
+        {isNew && (
           <div className="lcard-badges">
-            {/* Design uses NEW / SOLD pills only; rent is conveyed by the
-                kind-rent treatment + "/ day" price suffix. */}
-            {isNew && <StatusPill variant="new" />}
-            {isSold && <StatusPill variant="sold" />}
+            {/* NEW pill only — "sold out" is conveyed by the stamp overlay below,
+                rent by the kind-rent treatment + "/ day" price suffix. */}
+            <StatusPill variant="new" />
           </div>
         )}
 
