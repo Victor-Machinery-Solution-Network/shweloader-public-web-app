@@ -217,6 +217,10 @@
 [data-theme="dark"] .pdp-gallery .g-tile { background: #1a1b20; }
 .pdp-gallery .g-tile:hover { opacity: 0.92; }
 .pdp-gallery .g-tile.is-on { outline: 2px solid var(--m-gold); outline-offset: -2px; }
+/* The side tiles are short/landscape, so the hero's 60%-width square stamp is taller
+   than the tile and gets clipped. Size the tile stamp by height so it always fits
+   with margin (the hero keeps the base 60% width). */
+.pdp-gallery .g-tile .feat-stamp-sold { width: auto; height: 58%; max-width: 80%; }
 .pdp-gallery .g-tile-overlay {
   position: absolute; inset: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
