@@ -1373,8 +1373,10 @@
   }
   .pdp-gact-right { display: flex; gap: 10px; }
   /* Buttons are the shared .sl-iconbtn (icon-button.tsx); re-enable pointer events
-     since the container disables them so the gaps don't block image swipes. */
-  .pdp-gallery-actions .sl-iconbtn { pointer-events: auto; }
+     (the container disables them so the gaps don't block image swipes) and size them
+     up — this overlay is mobile-only, so a bigger touch target reads better. */
+  .pdp-gallery-actions .sl-iconbtn { pointer-events: auto; width: 44px; height: 44px; }
+  .pdp-gallery-actions .sl-iconbtn svg { width: 20px; height: 20px; }
 }
 @media (max-width: 640px) {
   /* Container gutter is 16px here, so match the full-bleed break-out + strip pad. */
