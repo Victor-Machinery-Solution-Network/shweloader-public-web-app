@@ -460,7 +460,7 @@
   text-transform: uppercase; color: var(--m-ink);
   margin-bottom: 12px;
 }
-.ov-eyebrow-i { width: 16px; height: 16px; color: var(--m-fg-2); flex: 0 0 auto; }
+.ov-eyebrow-i { width: 18px; height: 18px; color: var(--m-ink); flex: 0 0 auto; }
 .ov-seller {
   border-top: 1px solid var(--m-line);
   padding: 16px 0 4px;
@@ -1278,7 +1278,7 @@
   /* ov-list-eyebrow takes its color from the base rule (--m-ink) — no media-query
      color shift. Keep the seller eyebrow's previous mobile color. */
   .ov-seller-eyebrow { color: var(--m-ink); }
-  .ov-eyebrow-i { width: 19px; height: 19px; color: var(--m-fg-2); }
+  .ov-eyebrow-i { width: 19px; height: 19px; }
 
   /* Bottom sheet */
   .pdp-sheet-root {
