@@ -337,6 +337,9 @@
 .pdp-title {
   padding: 8px 0 0;
 }
+/* Save/Share beside the title — only shown on tablet (769–1024px); desktop uses
+   the side-column row and phones use the floating gallery overlay. */
+.pdp-title-actions { display: none; }
 /* The NEW badge lives on the image (desktop/tablet); this title-level copy is
    only shown on phones (see the ≤768 block) where the image badge is hidden. */
 .pdp-title-badge { display: none; }
@@ -1328,6 +1331,28 @@
   .pdp-sheet-body { display: flex; flex-direction: column; gap: 12px; }
 }
 [data-theme="dark"] .pdp-mbar-cta { background: linear-gradient(135deg, #fdd968 0%, var(--m-gold) 100%); color: var(--m-on-gold); }
+
+/* ── Tablet (769–1024px): the layout is single-column here, so the desktop
+   side-column Save/Share row sits far down the page. Surface it in the title
+   row instead (the empty space to the right of the title). Phones keep the
+   floating gallery overlay. Placed after the ≤1024 block so it wins. ── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pdp-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .pdp-title-main { min-width: 0; }
+  .pdp-title-actions { display: block; flex: 0 0 auto; }
+  .pdp-title-actions .pdp-actions {
+    padding: 0;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  /* Save/Share now live by the title — drop the duplicate in the side column. */
+  .pdp-side .pdp-actions { display: none; }
+}
 
 @media (max-width: 480px) {
   .pdp-title .t-h { font-size: 24px; }

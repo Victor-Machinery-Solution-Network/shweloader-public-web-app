@@ -195,15 +195,27 @@ export default async function ProductPage({ params }: PageProps) {
         <div className="pdp-layout">
           <div className="pdp-main">
             <div className="pdp-title">
-              {/* Mobile-only: NEW badge above the eyebrow (off the image, where it
-                  collides with the overlaid Back button). Desktop keeps it on the image. */}
-              {isNew && (
-                <div className="pdp-title-badge">
-                  <StatusPill variant="new" />
-                </div>
-              )}
-              <h1 className="t-h">{listing.title}</h1>
-              {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
+              <div className="pdp-title-main">
+                {/* Mobile-only: NEW badge above the eyebrow (off the image, where it
+                    collides with the overlaid Back button). Desktop keeps it on the image. */}
+                {isNew && (
+                  <div className="pdp-title-badge">
+                    <StatusPill variant="new" />
+                  </div>
+                )}
+                <h1 className="t-h">{listing.title}</h1>
+                {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
+              </div>
+              {/* Tablet-only Save/Share (desktop uses the side-column row; phones
+                  use the floating gallery overlay). */}
+              <div className="pdp-title-actions">
+                <ProductActions
+                  variant="row"
+                  listingId={listing.id}
+                  title={listing.title}
+                  shareUrl={shareUrl}
+                />
+              </div>
             </div>
 
             <ProductOverviewList listing={listing} />
