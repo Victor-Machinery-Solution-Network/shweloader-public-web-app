@@ -457,7 +457,7 @@
   display: flex; align-items: center; gap: 6px;
   white-space: nowrap;
   font-size: 16px; font-weight: 600; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--m-fg-2);
+  text-transform: uppercase; color: var(--m-ink);
   margin-bottom: 12px;
 }
 .ov-eyebrow-i { width: 16px; height: 16px; color: var(--m-fg-2); flex: 0 0 auto; }
@@ -1272,9 +1272,12 @@
   .ov-seller-eyebrow {
     font-size: clamp(20px, 3.4vw, 24px);
     font-weight: 600; letter-spacing: -0.015em;
-    text-transform: none; color: var(--m-ink);
+    text-transform: none;
     margin-bottom: 16px; gap: 8px;
   }
+  /* ov-list-eyebrow takes its color from the base rule (--m-ink) — no media-query
+     color shift. Keep the seller eyebrow's previous mobile color. */
+  .ov-seller-eyebrow { color: var(--m-ink); }
   .ov-eyebrow-i { width: 19px; height: 19px; color: var(--m-fg-2); }
 
   /* Bottom sheet */
