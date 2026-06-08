@@ -494,6 +494,7 @@ function LocationPicker({
     locations[0]?.districts[0]?.id ?? null,
   );
   const [level, setLevel] = useState<LocLevel>("states");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll-lock + Escape to close.
   useEffect(() => {
@@ -508,6 +509,14 @@ function LocationPicker({
       document.body.style.overflow = prev;
       document.removeEventListener("keydown", onKey);
     };
+  }, [open]);
+
+  // Autofocus the search on desktop only — on mobile/tablet this pops the soft
+  // keyboard the moment the modal opens, hiding the results behind it.
+  useEffect(() => {
+    if (!open) return;
+    if (window.matchMedia("(max-width: 1024px)").matches) return;
+    searchInputRef.current?.focus();
   }, [open]);
 
   const close = useCallback(() => {
@@ -620,12 +629,12 @@ function LocationPicker({
             <div className="loc-modal-search">
               <Search className="loc-modal-search-icon" aria-hidden="true" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search state, district, or township"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 aria-label="Search state, district, or township"
-                autoFocus
               />
               {q && (
                 <button
