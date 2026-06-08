@@ -19,10 +19,13 @@ export function Results({
   listings,
   filters,
   onNavigate,
+  basePath,
 }: {
   listings: Listing[];
   filters: BrowseFilters;
   onNavigate?: (page: number) => void;
+  /** Route the pagination links target — defaults to /browse; Saved passes /saved. */
+  basePath?: string;
 }) {
   const mode = filters.mode;
 
@@ -58,7 +61,7 @@ export function Results({
         page={filters.page}
         hasPrev={hasPrev}
         hasNext={hasNext}
-        hrefForPage={(p) => buildBrowseHref({ ...filters, page: p })}
+        hrefForPage={(p) => buildBrowseHref({ ...filters, page: p }, basePath)}
         onNavigate={onNavigate}
       />
     </>

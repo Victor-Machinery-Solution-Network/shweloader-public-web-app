@@ -2,6 +2,7 @@ import type {
   Brand,
   Category,
   ConditionType,
+  Listing,
   ListingQuery,
   StateRegion,
 } from "@/lib/api/types";
@@ -111,8 +112,19 @@ export function parseFilters(sp: RawSearchParams): BrowseFilters {
   };
 }
 
-/** Serialize a filter state back to a `/browse?…` query string. */
-export function buildBrowseHref(f: Partial<BrowseFilters>): string {
+/**
+ * Serialize a filter state to a `<basePath>?…` query string. `basePath` defaults
+ * to the current route on the client (so the same Browse chrome serves both
+ * `/browse` and `/saved`), with a `/browse` SSR fallback. Render-time callers
+ * (pagination links) pass `basePath` explicitly to stay hydration-safe; click
+ * handlers can rely on the inferred current route.
+ */
+export function buildBrowseHref(
+  f: Partial<BrowseFilters>,
+  basePath?: string,
+): string {
+  const base =
+    basePath ?? (typeof window !== "undefined" ? window.location.pathname : "/browse");
   const p = new URLSearchParams();
   if (f.q) p.set("q", f.q);
   if (f.type) p.set("type", f.type);
@@ -130,7 +142,7 @@ export function buildBrowseHref(f: Partial<BrowseFilters>): string {
   if (f.view && f.view !== "grid") p.set("view", f.view);
   if (f.page && f.page > 1) p.set("page", String(f.page));
   const qs = p.toString();
-  return qs ? `/browse?${qs}` : "/browse";
+  return qs ? `${base}?${qs}` : base;
 }
 
 /** Resolve a category name to its id across equipment + attachment catalogs. */
@@ -286,4 +298,101 @@ export function toListingQuery(
   if (loc) Object.assign(query, loc);
 
   return query;
+}
+
+/**
+ * Client-side mirror of `toListingQuery` for the Saved page. Saved holds a FIXED
+ * set of hydrated `Listing`s (from localStorage), so it filters + sorts in memory
+ * instead of hitting the API. Semantics track Browse's server filters as closely
+ * as the normalized `Listing` allows (names for category/brand/condition/location,
+ * model by id). Returns the full filtered + sorted list (the caller paginates).
+ */
+export function filterAndSortSaved(
+  listings: Listing[],
+  f: BrowseFilters,
+): Listing[] {
+  const lc = (s: string | null | undefined) => (s ?? "").toLowerCase();
+  const usd = f.currency === "USD";
+  // Visible price for the active mode, or null if absent/hidden. Hidden price is
+  // excluded from range filtering and sorted last — mirrors the worker.
+  const priceOf = (l: Listing): number | null => {
+    const src = f.mode === "rent" ? l.rent : l.sale;
+    if (!src || src.hide) return null;
+    return (usd ? src.usd : src.mmk) ?? null;
+  };
+
+  const min = f.priceMin ? parseFloat(f.priceMin) : null;
+  const max = f.priceMax ? parseFloat(f.priceMax) : null;
+  const q = f.q.trim().toLowerCase();
+
+  const filtered = listings.filter((l) => {
+    if (f.mode === "sale" && !l.isSale) return false;
+    if (f.mode === "rent" && !l.isRent) return false;
+    if (f.type && l.type !== f.type) return false;
+
+    if (f.sub) {
+      if (lc(l.subCategory) !== f.sub.toLowerCase()) return false;
+    } else if (f.category) {
+      if (lc(l.category) !== f.category.toLowerCase()) return false;
+    }
+
+    // Brand + model are one facet, combined with OR (same as the worker).
+    if (f.brands.length || f.models.length) {
+      const brandHit = f.brands.some((b) => lc(l.brand) === b.toLowerCase());
+      const modelHit = l.modelId != null && f.models.includes(String(l.modelId));
+      if (!brandHit && !modelHit) return false;
+    }
+
+    if (
+      f.conditions.length &&
+      !f.conditions.some((c) => lc(l.condition) === c.toLowerCase())
+    )
+      return false;
+
+    if (f.location) {
+      const target = f.location.toLowerCase();
+      const { township, district, state } = l.location;
+      if (lc(township) !== target && lc(district) !== target && lc(state) !== target)
+        return false;
+    }
+
+    if (min != null || max != null) {
+      const p = priceOf(l);
+      if (p == null) return false; // hidden/absent price → excluded from a range
+      if (min != null && p < min) return false;
+      if (max != null && p > max) return false;
+    }
+
+    if (q) {
+      if (
+        !(
+          lc(l.title).includes(q) ||
+          lc(l.brand).includes(q) ||
+          lc(l.description).includes(q)
+        )
+      )
+        return false;
+    }
+    return true;
+  });
+
+  const out = filtered.slice();
+  if (f.sort === "price-asc" || f.sort === "price-desc") {
+    const dir = f.sort === "price-asc" ? 1 : -1;
+    out.sort((a, b) => {
+      const pa = priceOf(a);
+      const pb = priceOf(b);
+      if (pa == null && pb == null) return 0;
+      if (pa == null) return 1; // null/hidden price last
+      if (pb == null) return -1;
+      return (pa - pb) * dir;
+    });
+  } else {
+    // "newest" (the default) — by createdAt desc.
+    out.sort(
+      (a, b) =>
+        (Date.parse(b.createdAt ?? "") || 0) - (Date.parse(a.createdAt ?? "") || 0),
+    );
+  }
+  return out;
 }

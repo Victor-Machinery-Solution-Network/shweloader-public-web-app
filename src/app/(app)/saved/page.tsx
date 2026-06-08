@@ -1,36 +1,48 @@
-import Link from "next/link";
-
 import "@/styles/pages/browse.css";
 
+import {
+  getAttachmentCategories,
+  getBrands,
+  getConditionTypes,
+  getEquipmentCategories,
+} from "@/lib/api/taxonomy";
+import { getLocations } from "@/lib/api/locations";
 import { noindexMetadata } from "@/lib/seo/metadata";
-import { SavedGrid } from "@/components/saved/saved-grid";
+import { BrowseShell } from "@/components/browse/browse-shell";
+import { SavedView } from "@/components/browse/saved-view";
 
 export const metadata = noindexMetadata;
 
 /**
- * Saved page — visually identical to Browse, but the source list is the user's
- * saved (favourited) listings from localStorage (key `shweloader.saved`).
- *
- * This page is localStorage-only and works fully signed-out, so no token /
- * Suspense gate is needed. The static `.brz` shell (breadcrumbs + page title)
- * is server-rendered to match Browse; the hydration of cards from saved ids
- * happens client-side in <SavedGrid>.
+ * Saved page — the SAME Browse chrome (filter sidebar + toolbar + grid/list + sort
+ * + Buy/Rent toggle), but the listing set is the user's localStorage favourites
+ * (key `shweloader.saved`), filtered + sorted + paginated CLIENT-SIDE in
+ * <SavedView> (no API call per filter). The sidebar taxonomy is fetched here — the
+ * same cached category/brand/location/condition calls Browse uses. Works fully
+ * signed-out; noindex.
  */
-export default function SavedPage() {
-  return (
-    <div className="brz" data-screen-label="Saved">
-      <div className="container brz-pagehead">
-        <div className="brz-pagehead-l">
-          <nav className="brz-crumbs" aria-label="Breadcrumb">
-            <Link href="/">Home</Link>
-            <span className="brz-crumbs-sep">/</span>
-            <span>Saved</span>
-          </nav>
-          <h1 className="brz-h1">Saved items</h1>
-        </div>
-      </div>
+export default async function SavedPage() {
+  const [categories, attachmentCategories, brands, locations, conditionTypes] =
+    await Promise.all([
+      getEquipmentCategories(),
+      getAttachmentCategories(),
+      getBrands(),
+      getLocations(),
+      getConditionTypes(),
+    ]);
 
-      <SavedGrid />
-    </div>
+  return (
+    <BrowseShell
+      categories={categories}
+      attachmentCategories={attachmentCategories}
+      brands={brands}
+      locations={locations}
+      conditionTypes={conditionTypes}
+      headingKey="saved.title"
+      crumbKey="nav.saved"
+      screenLabel="Saved"
+    >
+      <SavedView />
+    </BrowseShell>
   );
 }

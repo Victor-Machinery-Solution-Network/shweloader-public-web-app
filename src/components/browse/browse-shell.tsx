@@ -29,6 +29,9 @@ export function BrowseShell({
   locations,
   conditionTypes,
   children,
+  headingKey = "browse.heading",
+  crumbKey = "nav.browse",
+  screenLabel = "Browse",
 }: {
   categories: Category[];
   attachmentCategories: Category[];
@@ -36,21 +39,26 @@ export function BrowseShell({
   locations: StateRegion[];
   conditionTypes: ConditionType[];
   children: ReactNode;
+  /** i18n keys for the <h1> + breadcrumb leaf, plus the data-screen-label. Default
+   *  to Browse; the Saved page overrides them so the same chrome serves both. */
+  headingKey?: string;
+  crumbKey?: string;
+  screenLabel?: string;
 }) {
   const { t } = useI18n();
   const filters = useBrowseFilters();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   return (
-    <div className="brz" data-screen-label="Browse">
+    <div className="brz" data-screen-label={screenLabel}>
       <div className="container brz-pagehead">
         <div className="brz-pagehead-l">
           <nav className="brz-crumbs" aria-label={t("a11y.breadcrumb")}>
             <Link href="/">{t("nav.home")}</Link>
             <span className="brz-crumbs-sep">/</span>
-            <span>{t("nav.browse")}</span>
+            <span>{t(crumbKey)}</span>
           </nav>
-          <h1 className="brz-h1">{t("browse.heading")}</h1>
+          <h1 className="brz-h1">{t(headingKey)}</h1>
         </div>
         <div className="brz-pagehead-r">
           <BuyRentToggle filters={filters} />

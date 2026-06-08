@@ -31,10 +31,12 @@ export interface ApiListing {
   sub_category_name?: string | null;
 
   // equipment / attachment variants (sale, rent, detail)
+  equipment_model_id?: number | string | null;
   equipment_model_name?: string | null;
   equipment_category_name?: string | null;
   equipment_sub_category_name?: string | null;
   equipment_pdf_url?: string | null;
+  attachment_model_id?: number | string | null;
   attachment_model_name?: string | null;
   attachment_category_name?: string | null;
   attachment_pdf_url?: string | null;
@@ -193,6 +195,9 @@ export interface Listing {
   id: number;
   title: string;
   brand: string | null;
+  /** Model id (equipment or attachment) — needed for client-side model filtering
+   *  on the Saved page (Browse filters by model server-side). */
+  modelId: number | null;
   category: string | null;
   subCategory: string | null;
   condition: string | null;

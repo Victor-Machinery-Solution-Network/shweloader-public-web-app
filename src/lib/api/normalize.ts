@@ -91,10 +91,17 @@ export function normalizeListing(r: ApiListing): Listing {
         }
       : null;
 
+  // Model id (equipment or attachment) — the /listings response already includes
+  // it; the normalizer just dropped it. Kept so the Saved page can filter by model
+  // client-side (Browse filters by model server-side).
+  const rawModelId = r.equipment_model_id ?? r.attachment_model_id;
+  const modelId = rawModelId == null ? null : Number(rawModelId) || null;
+
   return {
     id: r.id,
     title,
     brand: r.brand_name ?? null,
+    modelId,
     category,
     subCategory,
     condition: r.condition_name ?? null,
