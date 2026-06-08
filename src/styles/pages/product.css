@@ -7,10 +7,15 @@
 .pdp-page > .container { max-width: 1180px; }
 
 /* ---------- Breadcrumbs ---------- */
+/* Typography mirrors the browse breadcrumb (.brz-crumbs) so the trail looks the
+   same across listing pages: small, uppercase, semibold, letter-spaced. Layout
+   stays product-specific — generous padding above the gallery + title ellipsis. */
 .pdp-crumbs {
   display: flex; align-items: center; gap: 8px;
   padding: 32px 0 24px;
-  font-size: 14px; color: var(--m-fg-2);
+  font-family: var(--font-sans); font-size: 12px; font-weight: 600;
+  color: var(--m-fg-2);
+  text-transform: uppercase; letter-spacing: 0.06em;
   min-width: 0; overflow: hidden;
 }
 .pdp-crumbs a {
@@ -21,12 +26,12 @@
 /* The current page (listing title) takes the remaining space and ellipsises so
    a long title never pushes the row wider than the page. */
 .pdp-crumbs .cur {
-  color: var(--m-ink); font-weight: 500;
+  color: var(--m-ink); font-weight: 600;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
 /* Slash separator — matches the browse/blog breadcrumbs for consistency. */
 .pdp-crumbs-sep { color: var(--m-fg-3); flex: none; }
-@media (max-width: 640px) { .pdp-crumbs { font-size: 13px; padding: 22px 0 18px; } }
+@media (max-width: 640px) { .pdp-crumbs { padding: 22px 0 18px; } }
 
 /* ---------- Action row ---------- */
 .pdp-actions {
