@@ -1163,6 +1163,14 @@
   .pdp-layout { grid-template-columns: 1fr; gap: 28px; }
   .pdp-main { gap: 28px; }
   .pdp-side { position: static; top: auto; }
+  /* Seller card above the Description on tablet + phone: flatten both columns into
+     the single-column grid so every section is a direct item, then reorder them
+     (title → overview → seller → description). Desktop 2-column is unchanged. */
+  .pdp-main, .pdp-side { display: contents; }
+  .pdp-layout .pdp-title   { order: 1; }
+  .pdp-layout .ov-list     { order: 2; }
+  .pdp-layout .pdp-contact { order: 3; }
+  .pdp-layout .pdp-section { order: 4; }
   /* The labelled actions row is replaced by the floating overlay on phones; the
      enquiry form is replaced by the sticky bottom bar — so the side column only
      carries the seller card on mobile. */
@@ -1276,7 +1284,7 @@
   }
   .ov-seller {
     border-top: 0;
-    padding: 24px 0 4px;
+    padding: 0 0 4px;
   }
   .ov-list-eyebrow,
   .ov-seller-eyebrow {
@@ -1387,15 +1395,6 @@
   /* The labelled action row is replaced by the floating overlay. */
   .pdp-actions { display: none; }
   .pdp-title { padding-top: 0; }
-
-  /* Seller card above the Description on phones: flatten the two columns so every
-     section becomes a direct item of the single-column grid, then reorder them
-     (title → overview → seller → description). */
-  .pdp-main, .pdp-side { display: contents; }
-  .pdp-layout .pdp-title   { order: 1; }
-  .pdp-layout .ov-list     { order: 2; }
-  .pdp-layout .pdp-contact { order: 3; }
-  .pdp-layout .pdp-section { order: 4; }
 
   /* Floating Back (left) + Share/Save (right) over the image. */
   .pdp-gallery-actions {
