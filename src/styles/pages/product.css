@@ -1388,6 +1388,15 @@
   .pdp-actions { display: none; }
   .pdp-title { padding-top: 0; }
 
+  /* Seller card above the Description on phones: flatten the two columns so every
+     section becomes a direct item of the single-column grid, then reorder them
+     (title → overview → seller → description). */
+  .pdp-main, .pdp-side { display: contents; }
+  .pdp-layout .pdp-title   { order: 1; }
+  .pdp-layout .ov-list     { order: 2; }
+  .pdp-layout .pdp-contact { order: 3; }
+  .pdp-layout .pdp-section { order: 4; }
+
   /* Floating Back (left) + Share/Save (right) over the image. */
   .pdp-gallery-actions {
     display: flex;
