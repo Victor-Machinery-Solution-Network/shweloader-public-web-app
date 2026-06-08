@@ -491,14 +491,11 @@
 }
 .ov-seller-phone:hover { text-decoration: underline; }
 .ov-row {
-  display: grid; grid-template-columns: 130px 1fr;
+  display: grid; grid-template-columns: 35% 1fr;
   gap: 14px;
   padding: 8px 0;
   font-size: 14px;
 }
-/* Product overview rows use a proportional label column; the seller rows keep
-   the fixed 130px above. */
-.ov-list .ov-row { grid-template-columns: 25% 1fr; }
 .ov-row dt {
   color: var(--m-fg-2); font-weight: 400;
 }
