@@ -1504,6 +1504,8 @@ html, body {
   border: 1px solid var(--m-line);
   border-radius: 22px;
   padding: 18px clamp(10px, 1.5vw, 18px);
+  max-width: 1000px;
+  margin: auto;
   box-shadow:
     0 2px 4px rgba(20,18,12,0.05),
     0 12px 28px -12px rgba(20,18,12,0.16);
