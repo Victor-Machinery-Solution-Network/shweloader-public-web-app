@@ -1525,7 +1525,6 @@ html, body {
 .cat-v2-group-head {
   display: flex; align-items: center; justify-content: center;
   gap: 12px;
-  margin-bottom: 10px;
 }
 .cat-v2-group-title {
   font-family: var(--font-sans);
