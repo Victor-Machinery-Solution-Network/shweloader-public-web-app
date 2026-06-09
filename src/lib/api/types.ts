@@ -312,6 +312,12 @@ export interface BusinessType {
   name: string;
 }
 
+/** Partner-type catalog entry (GET /partner-types) — onboarding "become a partner". */
+export interface PartnerType {
+  id: number;
+  name: string;
+}
+
 /**
  * Current-user profile — the worker's GET /me response shape.
  * Verified against the live worker + the mobile app's ApiProfile (2026-06-06).

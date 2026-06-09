@@ -15,6 +15,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Check,
+  ChevronDown,
   Eye,
   EyeOff,
   Phone,
@@ -27,13 +28,21 @@ import { Flag } from "@/components/shared/flag";
 import { useI18n } from "@/components/providers/language-provider";
 import { useAuthUI } from "@/components/providers/auth-ui";
 import { useAuth } from "@/lib/auth/use-auth";
-import type { Locale } from "@/lib/i18n";
+import { TownshipCombobox } from "@/components/account/township-combobox";
+import type { BusinessType, PartnerType, StateRegion } from "@/lib/api/types";
 import "@/styles/pages/auth.css";
+// Reuse the profile form's select/combobox styling (pf-select, pf-combo,
+// auth-float--select) for the onboarding step's pickers.
+import "@/styles/pages/profile.css";
 
 /** Bilingual picker bound to the global locale — mirrors the design's `t(en,my)`. */
 type Tr = (en: string, my: string) => string;
 
 type Tab = "signin" | "signup";
+
+/** "Other" sentinel for the business-type picker — mirrors the mobile app and
+ *  routes through the worker's `custom_business_type` path. */
+const OTHER_BUSINESS = -1;
 
 interface SignUpData {
   name: string;
@@ -42,9 +51,14 @@ interface SignUpData {
   phone: string;
   password: string;
   agree: boolean;
-  businessType: string;
-  address: string;
-  partner: string;
+  // Business details (step 3 — mirrors the mobile onboarding screen).
+  businessTypeId: number | null; // OTHER_BUSINESS (-1) → use customBusinessType
+  customBusinessType: string;
+  companyName: string;
+  address: string; // office building / street (optional)
+  townshipId: number | null; // office township (required)
+  partner: string; // "yes" | "no"
+  partnerType: number | null; // required when partner === "yes"
 }
 
 const EMPTY_SIGNUP: SignUpData = {
@@ -54,19 +68,14 @@ const EMPTY_SIGNUP: SignUpData = {
   phone: "",
   password: "",
   agree: false,
-  businessType: "",
+  businessTypeId: null,
+  customBusinessType: "",
+  companyName: "",
   address: "",
+  townshipId: null,
   partner: "",
+  partnerType: null,
 };
-
-const BUSINESS_TYPES = [
-  { id: "individual", en: "Individual buyer", my: "တစ်ဦးချင်းဝယ်ယူသူ" },
-  { id: "contractor", en: "Contractor", my: "ကန်ထရိုက်တာ" },
-  { id: "dealer", en: "Dealer / reseller", my: "ကိုယ်စားလှယ်" },
-  { id: "fleet", en: "Fleet owner", my: "စက်ယန္တရားပိုင်ရှင်" },
-  { id: "rental", en: "Rental company", my: "ငှားရမ်းကုမ္ပဏီ" },
-  { id: "other", en: "Other", my: "အခြား" },
-] as const;
 
 async function readError(res: Response, fallback: string): Promise<string> {
   try {
@@ -165,25 +174,6 @@ function FloatingPassword({
           <Eye className="icon-sm" strokeWidth={1.75} />
         )}
       </button>
-    </label>
-  );
-}
-
-function FloatingTextarea({
-  label,
-  value,
-  onChange,
-  rows = 3,
-}: {
-  label: string;
-  value: string;
-  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
-  rows?: number;
-}) {
-  return (
-    <label className="auth-field auth-float">
-      <textarea placeholder=" " rows={rows} value={value} onChange={onChange} />
-      <span className="auth-label">{label}</span>
     </label>
   );
 }
@@ -579,33 +569,109 @@ function SignUpStep2({
 // Register — step 3: profile
 // ---------------------------------------------------------------------------
 
+/**
+ * Step 3 — business details. Mirrors the mobile onboarding screen: business type
+ * (+ "Other" → custom), company name, office street + township, and a partner
+ * question (+ partner type when "Yes"). Runs AFTER OTP, so the session cookie is
+ * set — it submits via the authenticated `PUT /api/account` (→ worker PUT /me),
+ * the same payload the mobile app sends.
+ */
 function SignUpStep3({
   t,
-  lang,
   data,
   setData,
   onSubmit,
   onBack,
 }: {
   t: Tr;
-  lang: Locale;
   data: SignUpData;
   setData: React.Dispatch<React.SetStateAction<SignUpData>>;
+  /** Called after the profile is saved successfully (parent shows the success step). */
   onSubmit: () => void;
   onBack: () => void;
 }) {
   const update = <K extends keyof SignUpData>(k: K, v: SignUpData[K]) =>
     setData((d) => ({ ...d, [k]: v }));
-  const ok = Boolean(data.businessType && data.address);
+
+  // Reference data for the pickers — the auth modal is a client component, so it
+  // pulls business/partner types + the location tree from /api/lookups on mount.
+  const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
+  const [partnerTypes, setPartnerTypes] = useState<PartnerType[]>([]);
+  const [locations, setLocations] = useState<StateRegion[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/lookups", { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: unknown) => {
+        if (!d || typeof d !== "object") return;
+        const o = d as Record<string, unknown>;
+        if (Array.isArray(o.businessTypes))
+          setBusinessTypes(o.businessTypes as BusinessType[]);
+        if (Array.isArray(o.partnerTypes))
+          setPartnerTypes(o.partnerTypes as PartnerType[]);
+        if (Array.isArray(o.locations))
+          setLocations(o.locations as StateRegion[]);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  const isOther = data.businessTypeId === OTHER_BUSINESS;
+  const ok = Boolean(
+    data.businessTypeId !== null &&
+      (!isOther || data.customBusinessType.trim()) &&
+      data.townshipId !== null &&
+      (data.partner === "yes" || data.partner === "no") &&
+      (data.partner !== "yes" || data.partnerType !== null),
+  );
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!ok || busy) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/account", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_name: data.companyName.trim() || undefined,
+          address: data.address.trim() || null,
+          business_type_id: isOther
+            ? undefined
+            : (data.businessTypeId ?? undefined),
+          custom_business_type: isOther
+            ? data.customBusinessType.trim()
+            : undefined,
+          partner_type_id:
+            data.partner === "yes" && data.partnerType
+              ? data.partnerType
+              : undefined,
+          township_id: data.townshipId ?? null,
+        }),
+      });
+      if (!res.ok) {
+        toast.error(
+          await readError(
+            res,
+            t("Could not save your details.", "အချက်အလက်များ မသိမ်းဆည်းနိုင်ပါ။"),
+          ),
+        );
+        return;
+      }
+      onSubmit();
+    } catch {
+      toast.error(
+        t("Something went wrong. Try again.", "တစ်ခုခုမှားယွင်းနေပါသည်။"),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <form
-      className="auth-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (ok) onSubmit();
-      }}
-    >
+    <form className="auth-form" onSubmit={submit}>
       <div className="auth-step-head">
         <h3 className="auth-step-h">
           {t("Tell us about your business", "သင့်လုပ်ငန်းအကြောင်း ပြောပြပါ")}
@@ -618,46 +684,72 @@ function SignUpStep3({
         </p>
       </div>
 
-      <fieldset className="auth-field">
-        <legend className="auth-label">
-          {t("Business type", "လုပ်ငန်းအမျိုးအစား")}
-        </legend>
-        <div className="auth-bz">
-          {BUSINESS_TYPES.map((b) => (
-            <label
-              key={b.id}
-              className={
-                "auth-bz-opt" + (data.businessType === b.id ? " is-on" : "")
-              }
-            >
-              <input
-                type="radio"
-                name="bz"
-                value={b.id}
-                checked={data.businessType === b.id}
-                onChange={() => update("businessType", b.id)}
-              />
-              <div className="auth-bz-text">{lang === "my" ? b.my : b.en}</div>
-              <Check className="icon-sm auth-bz-check" strokeWidth={1.75} />
-            </label>
+      {/* Business type */}
+      <label className="auth-field auth-float auth-float--select">
+        <select
+          className="pf-select"
+          value={data.businessTypeId === null ? "" : String(data.businessTypeId)}
+          onChange={(e) =>
+            update(
+              "businessTypeId",
+              e.target.value === "" ? null : Number(e.target.value),
+            )
+          }
+        >
+          <option value="">{t("Select a type", "အမျိုးအစား ရွေးပါ")}</option>
+          {businessTypes.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
           ))}
-        </div>
-      </fieldset>
+          <option value={OTHER_BUSINESS}>{t("Other", "အခြား")}</option>
+        </select>
+        <ChevronDown className="pf-select-chev" strokeWidth={1.75} />
+        <span className="auth-label">
+          {t("Business type", "လုပ်ငန်းအမျိုးအစား")}
+        </span>
+      </label>
 
-      <FloatingTextarea
-        label={t("Office address", "ရုံးခန်းလိပ်စာ")}
-        rows={3}
-        value={data.address}
-        onChange={(e) => update("address", e.target.value)}
+      {isOther && (
+        <FloatingField
+          label={t("Specify business type", "လုပ်ငန်းအမျိုးအစား သတ်မှတ်ပါ")}
+          value={data.customBusinessType}
+          onChange={(e) => update("customBusinessType", e.target.value)}
+        />
+      )}
+
+      <FloatingField
+        label={t("Company name", "ကုမ္ပဏီအမည်")}
+        value={data.companyName}
+        onChange={(e) => update("companyName", e.target.value)}
+        autoComplete="organization"
+        optional
+        optionalLabel={t("Optional", "ရွေးနိုင်")}
       />
 
+      <FloatingField
+        label={t("Office building / street", "ရုံး အဆောက်အအုံ / လမ်း")}
+        value={data.address}
+        onChange={(e) => update("address", e.target.value)}
+        optional
+        optionalLabel={t("Optional", "ရွေးနိုင်")}
+      />
+
+      <TownshipCombobox
+        label={t("Office township", "ရုံး မြို့နယ်")}
+        locations={locations}
+        value={data.townshipId}
+        onChange={(id) => update("townshipId", id)}
+      />
+
+      {/* Partner */}
       <div className="auth-partner">
         <div className="auth-partner-text">
           <div className="auth-partner-h">
             <BadgeCheck className="icon-sm" strokeWidth={1.75} />
             {t(
-              "Become a ShweLoader Verified Partner",
-              "ShweLoader Verified Partner ဖြစ်ပါ",
+              "Interested in becoming a partner?",
+              "မိတ်ဖက်အဖြစ် ပူးပေါင်းရန် စိတ်ဝင်စားပါသလား?",
             )}
           </div>
           <div className="auth-partner-sub">
@@ -681,6 +773,34 @@ function SignUpStep3({
         </div>
       </div>
 
+      {data.partner === "yes" && (
+        <label className="auth-field auth-float auth-float--select">
+          <select
+            className="pf-select"
+            value={data.partnerType === null ? "" : String(data.partnerType)}
+            onChange={(e) =>
+              update(
+                "partnerType",
+                e.target.value === "" ? null : Number(e.target.value),
+              )
+            }
+          >
+            <option value="">
+              {t("Select a partner type", "မိတ်ဖက်အမျိုးအစား ရွေးပါ")}
+            </option>
+            {partnerTypes.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pf-select-chev" strokeWidth={1.75} />
+          <span className="auth-label">
+            {t("Partner type", "မိတ်ဖက်အမျိုးအစား")}
+          </span>
+        </label>
+      )}
+
       <div className="auth-step-actions">
         <button type="button" className="auth-back" onClick={onBack}>
           <ArrowRight
@@ -690,7 +810,7 @@ function SignUpStep3({
           />
           {t("Back", "နောက်သို့")}
         </button>
-        <button type="submit" className="auth-submit" disabled={!ok}>
+        <button type="submit" className="auth-submit" disabled={!ok || busy}>
           {t("Create account", "အကောင့်ဖွင့်ပါ")}
           <Check className="icon-sm" strokeWidth={1.75} />
         </button>
@@ -948,7 +1068,6 @@ export function AuthModal() {
                     {step === 3 && (
                       <SignUpStep3
                         t={t}
-                        lang={locale}
                         data={data}
                         setData={setData}
                         onSubmit={() => setDone(true)}
