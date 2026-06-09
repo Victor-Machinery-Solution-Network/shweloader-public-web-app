@@ -147,7 +147,11 @@
 .auth-form-inner {
   width: 100%;
   max-width: 460px;
-  margin: 0 auto;
+  /* Auto margins on all sides: centres the form horizontally AND vertically in
+     the space below the top bar. Vertical auto-margins only absorb *positive*
+     free space, so a tall form (e.g. the multi-field signup steps) collapses
+     them to 0 and flows from the top with the column's scroll — never clipped. */
+  margin: auto;
   display: flex;
   flex-direction: column;
 }
