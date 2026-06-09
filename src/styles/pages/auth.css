@@ -377,6 +377,50 @@
 }
 .auth-form textarea { resize: vertical; min-height: 70px; }
 
+/* ── Inline validation errors (custom — replaces the browser's default bubble) ── */
+.auth-form .auth-float.has-error > input,
+.auth-form .auth-float.has-error > textarea,
+.auth-form .auth-float.has-error > select {
+  border-color: var(--m-danger);
+}
+.auth-form .auth-float.has-error > input:focus,
+.auth-form .auth-float.has-error > textarea:focus,
+.auth-form .auth-float.has-error > select:focus {
+  border-color: var(--m-danger);
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18);
+}
+.auth-form .auth-float.has-error > .auth-label { color: var(--m-danger); }
+.auth-error {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--m-danger);
+  animation: authErrIn 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.auth-error--check { margin: -2px 0 0 30px; }
+.auth-check.has-error .auth-check-box { border-color: var(--m-danger); }
+@keyframes authErrIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Shake the field the first time it becomes invalid. */
+.auth-form .auth-float.has-error {
+  animation: authShake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes authShake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-form .auth-float.has-error { animation: none; }
+  .auth-error { animation: none; }
+}
+
 /* ---------------------------------------------------------------------------
    Apple-style floating-label inputs
    ---------------------------------------------------------------------------

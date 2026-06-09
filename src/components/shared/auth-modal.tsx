@@ -50,6 +50,7 @@ interface SignUpData {
   email: string;
   phone: string;
   password: string;
+  confirmPassword: string;
   agree: boolean;
   // Business details (step 3 — mirrors the mobile onboarding screen).
   businessTypeId: number | null; // OTHER_BUSINESS (-1) → use customBusinessType
@@ -67,6 +68,7 @@ const EMPTY_SIGNUP: SignUpData = {
   email: "",
   phone: "",
   password: "",
+  confirmPassword: "",
   agree: false,
   businessTypeId: null,
   customBusinessType: "",
@@ -102,6 +104,7 @@ function FloatingField({
   name,
   optional,
   optionalLabel,
+  error,
 }: {
   label: string;
   type?: string;
@@ -113,9 +116,11 @@ function FloatingField({
   name?: string;
   optional?: boolean;
   optionalLabel?: string;
+  /** Inline validation message — replaces the browser's default bubble. */
+  error?: string;
 }) {
   return (
-    <label className="auth-field auth-float">
+    <label className={"auth-field auth-float" + (error ? " has-error" : "")}>
       <input
         type={type}
         placeholder=" "
@@ -125,11 +130,13 @@ function FloatingField({
         autoComplete={autoComplete}
         inputMode={inputMode}
         name={name}
+        aria-invalid={!!error}
       />
       <span className="auth-label">{label}</span>
-      {optional && (
+      {optional && !error && (
         <span className="auth-optional">{optionalLabel || "Optional"}</span>
       )}
+      {error && <span className="auth-error">{error}</span>}
     </label>
   );
 }
@@ -140,22 +147,28 @@ function FloatingPassword({
   onChange,
   t,
   autoComplete = "current-password",
+  error,
 }: {
   label: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   t: Tr;
   autoComplete?: string;
+  /** Inline validation message — replaces the browser's default bubble. */
+  error?: string;
 }) {
   const [show, setShow] = useState(false);
   return (
-    <label className="auth-field auth-float has-eye">
+    <label
+      className={"auth-field auth-float has-eye" + (error ? " has-error" : "")}
+    >
       <input
         type={show ? "text" : "password"}
         placeholder=" "
         value={value}
         onChange={onChange}
         autoComplete={autoComplete}
+        aria-invalid={!!error}
       />
       <span className="auth-label">{label}</span>
       <button
@@ -174,6 +187,7 @@ function FloatingPassword({
           <Eye className="icon-sm" strokeWidth={1.75} />
         )}
       </button>
+      {error && <span className="auth-error">{error}</span>}
     </label>
   );
 }
@@ -278,15 +292,59 @@ function SignUpStep1({
   onNext: () => void | Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const update = <K extends keyof SignUpData>(k: K, v: SignUpData[K]) =>
     setData((d) => ({ ...d, [k]: v }));
-  const ok = Boolean(
-    data.name && data.username && data.phone && data.password && data.agree,
-  );
+  const clearErr = (k: string) =>
+    setErrors((er) => (er[k] ? { ...er, [k]: "" } : er));
+
+  // Client-side validation, mirroring the mobile signup: required fields, a 6+
+  // char password with a letter and a number, and a matching confirmation. We
+  // render these inline (auth-error) instead of the browser's default bubbles.
+  const validate = (): boolean => {
+    const e: Record<string, string> = {};
+    const required = t(
+      "This field is required",
+      "ဤအချက်ကို ဖြည့်ရန် လိုအပ်ပါသည်",
+    );
+    if (!data.name.trim()) e.name = required;
+    if (!data.username.trim()) e.username = required;
+    if (!data.phone.trim()) e.phone = required;
+    if (!data.password) e.password = required;
+    else if (data.password.length < 6)
+      e.password = t(
+        "Password must be at least 6 characters",
+        "စကားဝှက်သည် အနည်းဆုံး စာလုံး ၆ လုံး ဖြစ်ရမည်",
+      );
+    else if (!/[a-zA-Z]/.test(data.password))
+      e.password = t(
+        "Password must contain at least one letter",
+        "စကားဝှက်တွင် အက္ခရာ အနည်းဆုံး တစ်လုံး ပါဝင်ရမည်",
+      );
+    else if (!/[0-9]/.test(data.password))
+      e.password = t(
+        "Password must contain at least one number",
+        "စကားဝှက်တွင် ဂဏန်း အနည်းဆုံး တစ်လုံး ပါဝင်ရမည်",
+      );
+    if (!data.confirmPassword) e.confirmPassword = required;
+    else if (data.password !== data.confirmPassword)
+      e.confirmPassword = t(
+        "Passwords do not match",
+        "စကားဝှက်များ မကိုက်ညီပါ",
+      );
+    if (!data.agree)
+      e.agree = t(
+        "Please accept the terms to continue.",
+        "ဆက်လက်ရန် စည်းကမ်းချက်များကို သဘောတူပါ။",
+      );
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!ok || busy) return;
+    if (busy) return;
+    if (!validate()) return;
     setBusy(true);
     try {
       const res = await fetch("/api/auth/register", {
@@ -320,12 +378,16 @@ function SignUpStep1({
   };
 
   return (
-    <form className="auth-form" onSubmit={submit}>
+    <form className="auth-form" onSubmit={submit} noValidate>
       <FloatingField
         label={t("Full name", "အမည်အပြည့်အစုံ")}
         autoComplete="name"
         value={data.name}
-        onChange={(e) => update("name", e.target.value)}
+        onChange={(e) => {
+          update("name", e.target.value);
+          clearErr("name");
+        }}
+        error={errors.name}
       />
 
       <div className="auth-row-2">
@@ -333,7 +395,11 @@ function SignUpStep1({
           label={t("Username", "အသုံးပြုသူအမည်")}
           autoComplete="username"
           value={data.username}
-          onChange={(e) => update("username", e.target.value)}
+          onChange={(e) => {
+            update("username", e.target.value);
+            clearErr("username");
+          }}
+          error={errors.username}
         />
         <FloatingField
           label={t("Email", "အီးမေးလ်")}
@@ -353,14 +419,20 @@ function SignUpStep1({
           inputMode="numeric"
           autoComplete="tel"
           value={data.phone}
-          onChange={(e) => update("phone", e.target.value)}
+          onChange={(e) => {
+            update("phone", e.target.value);
+            clearErr("phone");
+          }}
+          error={errors.phone}
         />
-        <span className="auth-help">
-          {t(
-            "We'll send a 6-digit code to verify.",
-            "၆ လုံးပါ ကုဒ်ဖြင့် အတည်ပြုပါမည်။",
-          )}
-        </span>
+        {!errors.phone && (
+          <span className="auth-help">
+            {t(
+              "We'll send a 6-digit code to verify.",
+              "၆ လုံးပါ ကုဒ်ဖြင့် အတည်ပြုပါမည်။",
+            )}
+          </span>
+        )}
       </div>
 
       <FloatingPassword
@@ -368,14 +440,33 @@ function SignUpStep1({
         t={t}
         autoComplete="new-password"
         value={data.password}
-        onChange={(e) => update("password", e.target.value)}
+        onChange={(e) => {
+          update("password", e.target.value);
+          clearErr("password");
+        }}
+        error={errors.password}
       />
 
-      <label className="auth-check">
+      <FloatingPassword
+        label={t("Confirm password", "စကားဝှက် အတည်ပြုပါ")}
+        t={t}
+        autoComplete="new-password"
+        value={data.confirmPassword}
+        onChange={(e) => {
+          update("confirmPassword", e.target.value);
+          clearErr("confirmPassword");
+        }}
+        error={errors.confirmPassword}
+      />
+
+      <label className={"auth-check" + (errors.agree ? " has-error" : "")}>
         <input
           type="checkbox"
           checked={data.agree}
-          onChange={(e) => update("agree", e.target.checked)}
+          onChange={(e) => {
+            update("agree", e.target.checked);
+            clearErr("agree");
+          }}
         />
         <span className="auth-check-box" aria-hidden="true"></span>
         <span>
@@ -403,8 +494,11 @@ function SignUpStep1({
           .
         </span>
       </label>
+      {errors.agree && (
+        <span className="auth-error auth-error--check">{errors.agree}</span>
+      )}
 
-      <button type="submit" className="auth-submit" disabled={!ok || busy}>
+      <button type="submit" className="auth-submit" disabled={busy}>
         {t("Continue", "ဆက်လုပ်ရန်")}
         <ArrowRight className="icon-sm" strokeWidth={1.75} />
       </button>
