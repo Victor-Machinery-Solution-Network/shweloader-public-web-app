@@ -83,6 +83,9 @@
   display: flex; align-items: center; justify-content: center;
   aspect-ratio: 4 / 3;
   max-height: 460px;
+  /* Let horizontal swipes reach the JS handlers (photo change) while vertical
+     drags still scroll the page. */
+  touch-action: pan-y;
   /* Subtle grey frame so a contain'd photo (and its letterbox) doesn't blend
      into the white page; matches the collage tiles. */
   background: #f1f1f1;
@@ -257,6 +260,8 @@
 .g-lb-stage {
   position: relative; flex: 1; min-height: 0;
   display: flex; align-items: center; justify-content: center;
+  /* Capture horizontal swipes to move between photos in the full-screen viewer. */
+  touch-action: pan-y;
 }
 .g-lb-img { position: relative; width: 100%; height: 100%; }
 .g-lb-stage .g-nav { opacity: 1; background: rgba(255, 255, 255, 0.14); }

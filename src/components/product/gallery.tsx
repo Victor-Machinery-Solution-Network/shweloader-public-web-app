@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 import { StatusPill } from "@/components/shared/status-pill";
@@ -61,6 +61,13 @@ export function Gallery({
   // clicking a thumbnail opens the viewer at that photo without ever switching
   // the primary image behind it.
   const [lbIndex, setLbIndex] = useState(0);
+  // Touch-gesture state kept in refs (not React state) so a swipe never forces a
+  // re-render mid-gesture. Declared before the early return to keep hook order
+  // stable. `lastTouchEnd` lets onClick ignore the synthetic click that trails a
+  // tap (which is already handled in onTouchEnd).
+  const heroTouch = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const lbTouch = useRef<{ x: number; y: number } | null>(null);
+  const lastTouchEnd = useRef(0);
 
   const total = photos.length;
   const idx = Math.min(active, Math.max(total - 1, 0));
@@ -156,22 +163,73 @@ export function Gallery({
   const visibleThumbs = overflow ? photos.slice(0, MAX_VISIBLE_THUMBS) : photos;
   const stripHidden = total - MAX_VISIBLE_THUMBS;
 
+  // ── Touch gestures (mobile) ─────────────────────────────────────
+  // Swipe the hero left/right to change photo; a plain tap opens the same
+  // full-screen lightbox desktop gets on click. A horizontal drag past
+  // SWIPE_MIN counts as a swipe; anything smaller (that didn't move) is a tap.
+  const SWIPE_MIN = 40;
+  const onHeroTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    heroTouch.current = { x: t.clientX, y: t.clientY, moved: false };
+  };
+  const onHeroTouchMove = (e: React.TouchEvent) => {
+    const g = heroTouch.current;
+    if (!g) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - g.x) > 8 || Math.abs(t.clientY - g.y) > 8)
+      g.moved = true;
+  };
+  const onHeroTouchEnd = (e: React.TouchEvent) => {
+    const g = heroTouch.current;
+    heroTouch.current = null;
+    lastTouchEnd.current = Date.now();
+    if (!g) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - g.x;
+    const dy = t.clientY - g.y;
+    if (Math.abs(dx) > SWIPE_MIN && Math.abs(dx) > Math.abs(dy)) {
+      go(dx < 0 ? 1 : -1); // horizontal swipe → change photo
+    } else if (!g.moved && !(e.target as HTMLElement).closest("button")) {
+      openLightbox(idx); // tap (not on a nav arrow) → full-screen preview
+    }
+  };
+  const onHeroClick = () => {
+    // Suppress the synthetic click that trails a touch tap (handled above).
+    if (Date.now() - lastTouchEnd.current < 600) return;
+    // Pointer/desktop collage: clicking the primary image opens the lightbox.
+    if (
+      useCollage &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 769px)").matches
+    ) {
+      openLightbox(idx);
+    }
+  };
+  // Lightbox: swipe to move between photos (arrows + keys still work).
+  const onLbTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    lbTouch.current = { x: t.clientX, y: t.clientY };
+  };
+  const onLbTouchEnd = (e: React.TouchEvent) => {
+    const g = lbTouch.current;
+    lbTouch.current = null;
+    if (!g) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - g.x;
+    const dy = t.clientY - g.y;
+    if (Math.abs(dx) > SWIPE_MIN && Math.abs(dx) > Math.abs(dy))
+      goLb(dx < 0 ? 1 : -1);
+  };
+
   return (
     <div className="pdp-gallery">
       <div className="g-stage">
         <div
           className="g-hero"
-          onClick={() => {
-            // Grid view (≥769px): clicking the primary image opens the lightbox
-            // (its in-place arrows are hidden there). Mobile keeps its swipe.
-            if (
-              useCollage &&
-              typeof window !== "undefined" &&
-              window.matchMedia("(min-width: 769px)").matches
-            ) {
-              openLightbox(idx);
-            }
-          }}
+          onClick={onHeroClick}
+          onTouchStart={onHeroTouchStart}
+          onTouchMove={onHeroTouchMove}
+          onTouchEnd={onHeroTouchEnd}
         >
           {photos.map((p, i) => layer(p, i))}
 
@@ -358,7 +416,11 @@ export function Gallery({
             </svg>
           </button>
 
-          <div className="g-lb-stage">
+          <div
+            className="g-lb-stage"
+            onTouchStart={onLbTouchStart}
+            onTouchEnd={onLbTouchEnd}
+          >
             {total > 1 && (
               <button
                 type="button"
