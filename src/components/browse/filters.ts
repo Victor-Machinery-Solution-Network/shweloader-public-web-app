@@ -364,11 +364,17 @@ export function filterAndSortSaved(
     }
 
     if (q) {
+      // Mirror app-api's `search` WHERE clause (listings.ts): it LIKEs the term
+      // against model/title, description, brand name, AND the category names
+      // (equipment main + sub, attachment category). Match the same surface here
+      // so free-text on Saved returns the same set Browse would.
       if (
         !(
           lc(l.title).includes(q) ||
           lc(l.brand).includes(q) ||
-          lc(l.description).includes(q)
+          lc(l.description).includes(q) ||
+          lc(l.category).includes(q) ||
+          lc(l.subCategory).includes(q)
         )
       )
         return false;
