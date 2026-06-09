@@ -133,7 +133,6 @@ export function MobileBar({
               title={title}
               listingId={listingId}
               phone={phone}
-              autoFocus={open}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, Phone, Send } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/use-auth";
@@ -14,8 +14,6 @@ export interface EnquiryFormProps {
   listingId: number;
   /** Dealer phone, already display-formatted; null when masked/absent. */
   phone: string | null;
-  /** Focus the textarea on mount (used inside the mobile bottom sheet). */
-  autoFocus?: boolean;
 }
 
 /** Strip spaces for a `tel:` href. */
@@ -34,9 +32,7 @@ export function EnquiryForm({
   title,
   listingId,
   phone,
-  autoFocus,
 }: EnquiryFormProps) {
-  const ref = useRef<HTMLTextAreaElement>(null);
   const { t } = useI18n();
   const { signedIn } = useAuth();
   const { open } = useAuthUI();
@@ -46,10 +42,6 @@ export function EnquiryForm({
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",
   );
-
-  useEffect(() => {
-    if (autoFocus && ref.current) ref.current.focus();
-  }, [autoFocus]);
 
   async function handleSend(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
@@ -83,7 +75,6 @@ export function EnquiryForm({
           {t("product.messageLabel")}
         </span>
         <textarea
-          ref={ref}
           rows={3}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
