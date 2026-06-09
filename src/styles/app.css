@@ -1503,7 +1503,7 @@ html, body {
   background: var(--m-bg);
   border: 1px solid var(--m-line);
   border-radius: 22px;
-  padding: 24px clamp(10px, 1.5vw, 18px);
+  padding: 18px clamp(10px, 1.5vw, 18px);
   box-shadow:
     0 2px 4px rgba(20,18,12,0.05),
     0 12px 28px -12px rgba(20,18,12,0.16);
@@ -1516,14 +1516,14 @@ html, body {
     0 16px 36px -12px rgba(0,0,0,0.5);
 }
 .cat-v2-group + .cat-v2-group {
-  margin-top: 32px;
-  padding-top: 32px;
+  margin-top: 20px;
+  padding-top: 20px;
   border-top: 1px dashed var(--m-line);
 }
 .cat-v2-group-head {
   display: flex; align-items: center; justify-content: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .cat-v2-group-title {
   font-family: var(--font-sans);
@@ -1567,7 +1567,7 @@ html, body {
 }
 .cat-v2-img {
   width: 90%;
-  max-width: 120px;
+  max-width: 92px;
   aspect-ratio: 1 / 1;
   display: flex; align-items: center; justify-content: center;
   background: transparent;
