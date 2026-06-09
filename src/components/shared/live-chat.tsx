@@ -172,9 +172,9 @@ export function LiveChat() {
             <span className="lc-pulse" aria-hidden="true" />
           </div>
           <div className="lc-head-meta">
-            <div className="lc-head-title">ShweLoader Support</div>
+            <div className="lc-head-title">{t("chat.supportName")}</div>
             <div className="lc-head-sub">
-              <span className="lc-dot" /> Online · replies in ~2 min
+              <span className="lc-dot" /> {t("chat.status")}
             </div>
           </div>
           {signedIn && (
@@ -273,8 +273,8 @@ export function LiveChat() {
               </span>
             </div>
 
-            <h3 className="lc-gate-h">Chat with our team</h3>
-            <p className="lc-gate-sub">Sign in to get started.</p>
+            <h3 className="lc-gate-h">{t("chat.gateTitle")}</h3>
+            <p className="lc-gate-sub">{t("chat.gateSub")}</p>
 
             <div className="lc-gate-cta">
               <button
@@ -286,13 +286,13 @@ export function LiveChat() {
                 <ArrowRight className="icon-sm" />
               </button>
               <div className="lc-gate-foot">
-                New here?{" "}
+                {t("chat.newHere")}{" "}
                 <button
                   type="button"
                   className="lc-gate-link"
                   onClick={() => openAuth("register")}
                 >
-                  Create a free account
+                  {t("chat.createAccount")}
                 </button>
               </div>
             </div>

@@ -485,6 +485,7 @@ function LocationPicker({
   onChange: (v: string) => void;
   label: string;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [hoverStateId, setHoverStateId] = useState<number | null>(
@@ -554,7 +555,7 @@ function LocationPicker({
           id: `state:${s.id}`,
           label: s.name,
           sub: s.nameMy,
-          hint: "State / Region",
+          hint: t("search.stateRegionHint"),
           commit: s.name,
         });
       }
@@ -582,7 +583,7 @@ function LocationPicker({
       }
     }
     return out.slice(0, 40);
-  }, [q, locations]);
+  }, [q, locations, t]);
 
   return (
     <>
@@ -595,7 +596,9 @@ function LocationPicker({
           aria-haspopup="dialog"
           aria-expanded={open}
         >
-          <span className="cat-trigger-val">{value}</span>
+          <span className="cat-trigger-val">
+            {value === ALL_MYANMAR ? t("search.allMyanmar") : value}
+          </span>
           <ChevronDown className="icon-sm cat-trigger-chev" aria-hidden="true" />
         </button>
       </div>
@@ -605,7 +608,7 @@ function LocationPicker({
           className="loc-modal-overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="Choose location"
+          aria-label={t("search.chooseLocation")}
           onClick={(e) => {
             if (e.target === e.currentTarget) close();
           }}
@@ -613,8 +616,8 @@ function LocationPicker({
           <div className={cn("loc-modal", `lvl-${level}`)}>
             <header className="loc-modal-head">
               <div>
-                <div className="loc-modal-eyebrow">Choose location</div>
-                <h3 className="loc-modal-title">Where are you looking?</h3>
+                <div className="loc-modal-eyebrow">{t("search.chooseLocation")}</div>
+                <h3 className="loc-modal-title">{t("search.whereLooking")}</h3>
               </div>
               <button
                 type="button"
@@ -631,10 +634,10 @@ function LocationPicker({
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search state, district, or township"
+                placeholder={t("search.searchLocation")}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                aria-label="Search state, district, or township"
+                aria-label={t("search.searchLocation")}
               />
               {q && (
                 <button
@@ -652,7 +655,7 @@ function LocationPicker({
               <div className="loc-modal-results">
                 {searchResults.length === 0 ? (
                   <div className="loc-modal-empty">
-                    No locations match &ldquo;{q}&rdquo;
+                    {t("search.noLocations")} &ldquo;{q}&rdquo;
                   </div>
                 ) : (
                   searchResults.map((r) => (
@@ -677,7 +680,7 @@ function LocationPicker({
             ) : (
               <>
                 <div className="loc-modal-popular">
-                  <div className="loc-modal-popular-h">Popular</div>
+                  <div className="loc-modal-popular-h">{t("search.popular")}</div>
                   <div className="loc-modal-popular-row">
                     <button
                       type="button"
@@ -687,7 +690,7 @@ function LocationPicker({
                       )}
                       onClick={() => pick(ALL_MYANMAR)}
                     >
-                      {ALL_MYANMAR}
+                      {t("search.allMyanmar")}
                     </button>
                     {locations.slice(0, 4).map((s) => (
                       <button
@@ -707,7 +710,7 @@ function LocationPicker({
 
                 <div className="loc-modal-cascade">
                   <div className="loc-modal-col loc-col-states">
-                    <div className="loc-modal-col-h">States &amp; Regions</div>
+                    <div className="loc-modal-col-h">{t("search.statesRegions")}</div>
                     <ul>
                       {locations.map((s) => (
                         <li key={s.id}>
@@ -742,7 +745,7 @@ function LocationPicker({
                   </div>
 
                   <div className="loc-modal-col loc-col-districts">
-                    <div className="loc-modal-col-h">Districts</div>
+                    <div className="loc-modal-col-h">{t("search.districts")}</div>
                     <ul>
                       {stateObj && (
                         <li>
@@ -787,7 +790,7 @@ function LocationPicker({
                   </div>
 
                   <div className="loc-modal-col loc-col-townships">
-                    <div className="loc-modal-col-h">Townships</div>
+                    <div className="loc-modal-col-h">{t("search.townships")}</div>
                     <ul>
                       {districtObj?.townships.map((t) => {
                         const commit = stateObj
@@ -837,8 +840,9 @@ function LocationPicker({
                     aria-hidden="true"
                   />
                   <span>
-                    Back to{" "}
-                    {level === "townships" ? "districts" : "states & regions"}
+                    {level === "townships"
+                      ? t("search.backToDistricts")
+                      : t("search.backToStates")}
                   </span>
                 </button>
               </footer>
