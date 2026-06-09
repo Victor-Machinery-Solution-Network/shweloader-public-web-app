@@ -303,7 +303,7 @@ function SignUpStep1({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: data.name,
+          full_name: data.name,
           username: data.username,
           email: data.email || undefined,
           phone: data.phone,

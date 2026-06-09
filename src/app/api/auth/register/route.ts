@@ -9,7 +9,9 @@ export async function POST(req: Request) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       username: b.username,
-      full_name: b.full_name ?? b.fullName,
+      // Accept name/full_name/fullName — the web form historically posted `name`,
+      // which silently dropped full_name and 400'd every registration.
+      full_name: b.full_name ?? b.fullName ?? b.name,
       email: b.email || undefined,
       password: b.password,
       phone: b.phone,
