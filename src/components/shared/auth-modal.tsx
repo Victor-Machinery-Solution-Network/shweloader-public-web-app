@@ -281,11 +281,19 @@ function SignInForm({
         body: JSON.stringify({ identifier, password }),
       });
       if (!res.ok) {
+        // Wrong username/password → app-api returns 401 "Invalid credentials"
+        // (same for either field). Match the mobile app's friendlier, bilingual
+        // wording here; keep the API's specific message for other failures.
         toast.error(
-          await readError(
-            res,
-            t("Sign in failed. Check your details.", "ဝင်ရောက်မှု မအောင်မြင်ပါ။"),
-          ),
+          res.status === 401
+            ? t(
+                "Invalid phone/username or password",
+                "ဖုန်းနံပါတ်/အသုံးပြုသူအမည် သို့မဟုတ် စကားဝှက် မှားယွင်းနေပါသည်",
+              )
+            : await readError(
+                res,
+                t("Sign in failed. Check your details.", "ဝင်ရောက်မှု မအောင်မြင်ပါ။"),
+              ),
         );
         return;
       }
