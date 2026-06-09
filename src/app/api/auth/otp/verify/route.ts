@@ -26,6 +26,7 @@ export async function POST(req: Request) {
   await setSession(
     data.access_token as string,
     data.refresh_token as string | undefined,
+    b.remember !== "false", // string body; only signin-with-OTP sends "false"
   );
   return NextResponse.json({ ok: true });
 }

@@ -6,6 +6,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as {
     identifier?: string;
     password?: string;
+    remember?: boolean;
   };
 
   const res = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -29,16 +30,19 @@ export async function POST(req: Request) {
     await setSession(
       data.access_token as string,
       data.refresh_token as string | undefined,
+      body.remember !== false, // default: persistent
     );
     return NextResponse.json({ ok: true });
   }
 
-  // Verified-but-stale or unverified account → OTP step.
+  // Verified-but-stale or unverified account → OTP step. Echo the remember
+  // choice so the OTP-verify step can persist the session the same way.
   return NextResponse.json({
     ok: true,
     requiresOtp: true,
     phone: data.phone,
     phoneMasked: data.phone_masked,
     requestId: data.request_id,
+    remember: body.remember !== false,
   });
 }

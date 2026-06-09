@@ -3,6 +3,7 @@ import { Header } from "@/components/shared/header";
 import { Footer } from "@/components/shared/footer";
 import { AuthModalMount } from "@/components/shared/auth-modal-mount";
 import { DeferredWidgets } from "@/components/shared/deferred-widgets";
+import { BfcacheGuard } from "@/components/shared/bfcache-guard";
 
 /** The whole app area is private — never indexed. */
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function AppLayout({
       <Footer />
       <AuthModalMount />
       <DeferredWidgets />
+      <BfcacheGuard />
     </>
   );
 }

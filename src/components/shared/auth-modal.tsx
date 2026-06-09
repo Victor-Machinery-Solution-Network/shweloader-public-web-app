@@ -268,6 +268,7 @@ function SignInForm({
 }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: FormEvent) => {
@@ -278,7 +279,7 @@ function SignInForm({
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier, password, remember }),
       });
       if (!res.ok) {
         // Wrong username/password → app-api returns 401 "Invalid credentials"
@@ -332,7 +333,11 @@ function SignInForm({
       </div>
 
       <label className="auth-check">
-        <input type="checkbox" defaultChecked />
+        <input
+          type="checkbox"
+          checked={remember}
+          onChange={(e) => setRemember(e.target.checked)}
+        />
         <span className="auth-check-box" aria-hidden="true"></span>
         <span>{t("Remember me", "မှတ်ထားရန်")}</span>
       </label>
@@ -594,6 +599,7 @@ function SignUpStep2({
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [secs, setSecs] = useState(45);
   const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -658,6 +664,37 @@ function SignUpStep2({
     }
   };
 
+  const resend = async () => {
+    if (secs > 0 || resending) return;
+    setResending(true);
+    try {
+      const res = await fetch("/api/auth/otp/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: data.phone }),
+      });
+      if (!res.ok) {
+        toast.error(
+          await readError(
+            res,
+            t("Couldn't resend the code. Try again.", "ကုဒ် ပြန်ပို့၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။"),
+          ),
+        );
+        return;
+      }
+      toast.success(t("Code sent", "ကုဒ် ပြန်ပို့ပြီးပါပြီ"));
+      setSecs(45);
+      setDigits(["", "", "", "", "", ""]);
+      refs.current[0]?.focus();
+    } catch {
+      toast.error(
+        t("Something went wrong. Try again.", "တစ်ခုခုမှားယွင်းနေပါသည်။"),
+      );
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <form className="auth-form auth-otp-form" onSubmit={submit}>
       <div className="auth-otp-icon" aria-hidden="true">
@@ -705,7 +742,8 @@ function SignUpStep2({
           <button
             type="button"
             className="auth-link auth-otp-resend-btn"
-            onClick={() => setSecs(45)}
+            onClick={resend}
+            disabled={resending}
           >
             {t("Resend code", "ပြန်ပို့ပါ")}
           </button>

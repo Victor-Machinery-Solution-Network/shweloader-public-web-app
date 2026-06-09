@@ -10,7 +10,14 @@ import { API_BASE_URL } from "@/lib/env";
 const TOKEN = "sl_token";
 const REFRESH = "sl_refresh";
 const USER = "sl_user";
+// "1" = Remember me (persistent cookies); "0" = session-only (cleared when the
+// browser closes). Read server-side so re-issued cookies (and a future silent
+// refresh) keep the persistence the user chose at login.
+const REMEMBER = "sl_remember";
 const isProd = process.env.NODE_ENV === "production";
+
+const ACCESS_MAXAGE = 60 * 60 * 24 * 7; // 7d
+const REFRESH_MAXAGE = 60 * 60 * 24 * 30; // 30d
 
 const httpOnlyBase = {
   httpOnly: true,
@@ -37,6 +44,10 @@ export async function getRefreshToken(): Promise<string | null> {
  */
 export async function refreshUserCookie(accessToken: string): Promise<void> {
   const store = await cookies();
+  // Mirror the login-time persistence choice: a session-only login keeps
+  // sl_user as a session cookie too, so the UI's "signed in" view can't outlive
+  // the session.
+  const remember = store.get(REMEMBER)?.value !== "0";
   try {
     const res = await fetch(`${API_BASE_URL}/me`, {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -55,15 +66,13 @@ export async function refreshUserCookie(accessToken: string): Promise<void> {
       partner: u.partner_status === "Approved",
       businessType: u.business_type,
     };
-    // Lifetime is pinned to the access token (sl_token, 7d) so the client's
-    // "signed in" view (which reads sl_user) can never outlive the server-side
-    // gate (middleware, which checks sl_token). A longer sl_user would leave
-    // the UI thinking you're logged in while private routes redirect you out.
+    // Lifetime tracks the session: persistent (7d) when "Remember me" is on,
+    // otherwise a session cookie. Either way it never outlives the sl_token gate.
     store.set(USER, JSON.stringify(display), {
       secure: isProd,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      ...(remember ? { maxAge: ACCESS_MAXAGE } : {}),
     });
   } catch {
     /* profile hydration is non-critical */
@@ -74,20 +83,23 @@ export async function refreshUserCookie(accessToken: string): Promise<void> {
 export async function setSession(
   accessToken: string,
   refreshToken?: string,
+  remember = true,
 ): Promise<void> {
   const store = await cookies();
-  store.set(TOKEN, accessToken, { ...httpOnlyBase, maxAge: 60 * 60 * 24 * 7 });
+  // Remember me → persistent cookies (survive browser restart). Unchecked →
+  // session cookies (no maxAge), dropped when the browser closes, so a shared/
+  // public device doesn't stay signed in.
+  store.set(TOKEN, accessToken, remember ? { ...httpOnlyBase, maxAge: ACCESS_MAXAGE } : { ...httpOnlyBase });
   if (refreshToken) {
-    store.set(REFRESH, refreshToken, {
-      ...httpOnlyBase,
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    store.set(REFRESH, refreshToken, remember ? { ...httpOnlyBase, maxAge: REFRESH_MAXAGE } : { ...httpOnlyBase });
   }
+  // Persistence marker, read by refreshUserCookie + (later) the silent refresh.
+  store.set(REMEMBER, remember ? "1" : "0", remember ? { ...httpOnlyBase, maxAge: REFRESH_MAXAGE } : { ...httpOnlyBase });
 
   await refreshUserCookie(accessToken);
 }
 
 export async function clearSession(): Promise<void> {
   const store = await cookies();
-  for (const key of [TOKEN, REFRESH, USER]) store.delete(key);
+  for (const key of [TOKEN, REFRESH, USER, REMEMBER]) store.delete(key);
 }
