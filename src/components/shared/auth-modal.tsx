@@ -192,6 +192,67 @@ function FloatingPassword({
   );
 }
 
+/**
+ * Password-strength meter — mirrors the mobile signup. Three segments that fill
+ * by score (one point each for ≥6 chars, a letter, a number) tinted weak/good/
+ * strong, plus the unmet requirement hints until all three are satisfied.
+ * Renders nothing for an empty password.
+ */
+function PasswordStrength({ password, t }: { password: string; t: Tr }) {
+  if (!password) return null;
+  let score = 0;
+  if (password.length >= 6) score += 1;
+  if (/[a-zA-Z]/.test(password)) score += 1;
+  if (/[0-9]/.test(password)) score += 1;
+  const meta =
+    score <= 1
+      ? { label: t("Weak", "လုံခြုံမှုအားနည်းသည်"), cls: "is-weak" }
+      : score === 2
+        ? { label: t("Good", "ကောင်းမွန်သည်"), cls: "is-good" }
+        : { label: t("Strong", "လုံခြုံမှုအားကောင်းသည်"), cls: "is-strong" };
+  const hints = [
+    {
+      met: password.length >= 6,
+      label: t("At least 6 characters", "အနည်းဆုံး စာလုံး ၆ လုံး"),
+    },
+    {
+      met: /[a-zA-Z]/.test(password),
+      label: t("Contains a letter", "အက္ခရာ ပါဝင်ရန်"),
+    },
+    {
+      met: /[0-9]/.test(password),
+      label: t("Contains a number", "ဂဏန်း ပါဝင်ရန်"),
+    },
+  ];
+  return (
+    <div className={"auth-strength " + meta.cls}>
+      <div className="auth-strength-row">
+        <div className="auth-strength-segs" aria-hidden="true">
+          {[1, 2, 3].map((lvl) => (
+            <span
+              key={lvl}
+              className={"auth-strength-seg" + (score >= lvl ? " is-on" : "")}
+            />
+          ))}
+        </div>
+        <span className="auth-strength-label">{meta.label}</span>
+      </div>
+      {score < 3 && (
+        <ul className="auth-strength-hints">
+          {hints.map((h) => (
+            <li key={h.label} className={h.met ? "is-met" : ""}>
+              <span className="auth-strength-tick" aria-hidden="true">
+                {h.met ? "✓" : "○"}
+              </span>{" "}
+              {h.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Sign in
 // ---------------------------------------------------------------------------
@@ -446,6 +507,7 @@ function SignUpStep1({
         }}
         error={errors.password}
       />
+      <PasswordStrength password={data.password} t={t} />
 
       <FloatingPassword
         label={t("Confirm password", "စကားဝှက် အတည်ပြုပါ")}
