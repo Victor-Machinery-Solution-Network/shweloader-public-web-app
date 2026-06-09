@@ -3714,6 +3714,13 @@ html, body {
 .cat-modal-search-clear:hover { background: var(--m-bg-3); color: var(--m-ink); transform: rotate(90deg); }
 .cat-modal-search { margin-top: 14px; margin-bottom: 14px; }
 
+/* Mobile: tighter inner padding on the search box in BOTH the category and
+   location modals (12px 16px on desktop) so the popups sit shorter on a phone. */
+@media (max-width: 768px) {
+  .cat-modal-search,
+  .loc-modal-search { padding: 8px 14px; }
+}
+
 /* Flat search results inside category modal */
 .cat-modal-results {
   flex: 1;
