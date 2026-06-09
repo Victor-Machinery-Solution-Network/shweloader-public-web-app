@@ -202,7 +202,14 @@
    scrolling form column. */
 @media (max-width: 640px) {
   .auth-form-topbar { justify-content: center; }
-  .auth-logo { align-self: center; }
+  .auth-logo {
+    align-self: center;
+    /* Optically centre the wordmark: "SHWE LOADER" sits 105 viewBox units
+       (~15px at the 28px logo height) left of the lockup's geometric centre
+       because the »»» chevrons share its line. Nudge right so the words read
+       centred; the chevrons overhang slightly to the right. */
+    transform: translateX(15px);
+  }
   .auth-lang {
     position: absolute;
     top: 12px;
