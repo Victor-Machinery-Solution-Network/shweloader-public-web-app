@@ -1221,7 +1221,10 @@
   /* The sticky bottom action bar */
   .pdp-mbar {
     display: flex; align-items: center; justify-content: space-between; gap: 14px;
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 55;
+    /* Sit BELOW the header menu / account scrim (z-index 49) so opening the
+       hamburger or profile dropdown dims this bar along with the page content,
+       instead of leaving it sharp on top. Still well above normal page content. */
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 48;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
     background: var(--m-bg);
     border-top: 1px solid var(--m-line);
