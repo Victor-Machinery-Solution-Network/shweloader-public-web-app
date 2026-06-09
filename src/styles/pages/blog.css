@@ -489,7 +489,9 @@
   padding: 80px 24px;
   color: var(--m-fg-2);
 }
-.bx-empty-icon { width: 40px; height: 40px; color: var(--m-fg-3); margin-bottom: 16px; }
+/* Block + auto side margins so the fixed-size icon centers above the centered
+   text — text-align alone doesn't center it (the svg renders as a block). */
+.bx-empty-icon { display: block; width: 40px; height: 40px; color: var(--m-fg-3); margin: 0 auto 16px; }
 .bx-empty-title { font-size: 18px; font-weight: 600; color: var(--m-ink); }
 .bx-empty-sub { font-size: 15px; margin-top: 6px; color: var(--m-fg-2); }
 
