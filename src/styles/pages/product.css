@@ -91,17 +91,23 @@
   background: #f1f1f1;
 }
 [data-theme="dark"] .pdp-gallery .g-hero { background: #1a1b20; }
-/* All photos are stacked; only the active layer is opaque. Swapping cross-fades
-   opacity between two already-decoded images (smooth, no re-decode). Transitions
-   only run on change, so the initial active layer paints immediately (LCP). */
-.pdp-gallery .g-hero-img {
-  position: absolute; inset: 0;
-  opacity: 0;
-  transition: opacity .35s ease;
+/* Photos sit side-by-side in a flex track that slides horizontally; changing the
+   active index translates the track (a carousel slide, not a cross-fade). All
+   slides are eager-decoded so the slide is smooth. The hero clips the rest. */
+.pdp-gallery .g-hero-track {
+  display: flex;
+  width: 100%; height: 100%;
+  transition: transform .4s cubic-bezier(.22, .61, .36, 1);
+  will-change: transform;
 }
-.pdp-gallery .g-hero-img.is-active { opacity: 1; }
+.pdp-gallery .g-hero-img {
+  flex: 0 0 100%;
+  position: relative;
+  height: 100%;
+  min-width: 0;
+}
 @media (prefers-reduced-motion: reduce) {
-  .pdp-gallery .g-hero-img { transition: none; }
+  .pdp-gallery .g-hero-track { transition: none; }
 }
 .pdp-gallery .g-tag {
   position: absolute; top: 14px; left: 14px;

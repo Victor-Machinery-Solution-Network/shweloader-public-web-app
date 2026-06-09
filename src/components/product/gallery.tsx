@@ -104,7 +104,10 @@ export function Gallery({
   }
 
   const dimmed = isSold || isRented;
-  const go = (delta: number) => setActive((a) => (a + delta + total) % total);
+  // Clamp (don't wrap) so the track always slides a single step — wrapping
+  // last→first would whoosh the track all the way back across every slide.
+  const go = (delta: number) =>
+    setActive((a) => Math.min(Math.max(a + delta, 0), total - 1));
   // Lightbox navigation + opener — separate from the hero so the primary image
   // never changes when a thumbnail is clicked.
   const goLb = (delta: number) => setLbIndex((a) => (a + delta + total) % total);
@@ -113,25 +116,19 @@ export function Gallery({
     setLightbox(true);
   };
 
-  // All photos are rendered as persistent stacked layers; only the active one is
-  // opaque. Swapping just transitions opacity between two already-decoded images
-  // — a true, jank-free cross-fade (no remount / re-decode). The initial active
-  // layer renders at opacity 1 with no transition, so the hero (LCP) paints
-  // immediately.
+  // Each photo is a full-width slide in a horizontal flex track (.g-hero-track):
+  // changing `idx` translates the track, so photos slide rather than cross-fade.
+  // All slides are eager-decoded (below) so the slide stays smooth, and the first
+  // is priority for LCP.
   const layer = (p: Resolved, i: number) =>
     p.hero ? (
-      <div
-        key={i}
-        className={"g-hero-img" + (i === idx ? " is-active" : "")}
-        aria-hidden={i !== idx}
-      >
+      <div key={i} className="g-hero-img" aria-hidden={i !== idx}>
         <Image
           src={p.hero}
           alt={i === idx ? `${title} — ${t("product.photo")} ${idx + 1}` : ""}
           fill
-          // First photo = priority (LCP); the rest load eagerly so swapping is a
-          // smooth opacity cross-fade between already-decoded images (lazy ones
-          // weren't preloading, which made the fade janky).
+          // First photo = priority (LCP); the rest load eagerly so the slide
+          // shows already-decoded images (lazy ones janked the transition).
           priority={i === 0}
           loading={i === 0 ? undefined : "eager"}
           sizes={HERO_IMAGE_SIZES}
@@ -231,7 +228,12 @@ export function Gallery({
           onTouchMove={onHeroTouchMove}
           onTouchEnd={onHeroTouchEnd}
         >
-          {photos.map((p, i) => layer(p, i))}
+          <div
+            className="g-hero-track"
+            style={{ transform: `translate3d(${-idx * 100}%, 0, 0)` }}
+          >
+            {photos.map((p, i) => layer(p, i))}
+          </div>
 
           {isNew && !dimmed && (
             <span style={{ position: "absolute", top: 14, left: 14, zIndex: 2 }}>
