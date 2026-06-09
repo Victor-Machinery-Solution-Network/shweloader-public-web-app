@@ -596,9 +596,7 @@ function LocationPicker({
           aria-haspopup="dialog"
           aria-expanded={open}
         >
-          <span className="cat-trigger-val">
-            {value === ALL_MYANMAR ? t("search.allMyanmar") : value}
-          </span>
+          <span className="cat-trigger-val">{value}</span>
           <ChevronDown className="icon-sm cat-trigger-chev" aria-hidden="true" />
         </button>
       </div>
@@ -690,7 +688,7 @@ function LocationPicker({
                       )}
                       onClick={() => pick(ALL_MYANMAR)}
                     >
-                      {t("search.allMyanmar")}
+                      {ALL_MYANMAR}
                     </button>
                     {locations.slice(0, 4).map((s) => (
                       <button
