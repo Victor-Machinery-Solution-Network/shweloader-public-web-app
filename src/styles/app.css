@@ -3322,6 +3322,19 @@ html, body {
     border-radius: 18px;
     margin: 0 8px;
   }
+  /* Popular pills: one horizontal-scroll row (no wrap) on mobile, so they don't
+     stack onto several lines and lengthen an already-tall popup. Edge-bleed past
+     the 24px gutter so the row reads edge-to-edge and chips scroll under it. */
+  .loc-modal-popular-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -24px;
+    padding: 0 24px 2px;
+  }
+  .loc-modal-popular-row::-webkit-scrollbar { display: none; }
+  .loc-modal-chip { flex: 0 0 auto; }
   .loc-modal-cascade {
     grid-template-columns: 1fr;
     min-height: 0;
