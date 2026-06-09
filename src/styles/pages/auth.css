@@ -194,7 +194,12 @@
 /* Tabs ---------------------------------------------------------------------- */
 .auth-tabs {
   position: relative;
-  display: inline-flex;
+  /* Equal-width tabs (two 1fr columns sized to the wider label) so the 50%
+     glide pill aligns for ANY label length — Burmese "အကောင့်ဖွင့်ရန်" is far
+     wider than "ဝင်ရန်", which broke the old content-width inline-flex. */
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   padding: 4px;
   background: var(--m-bg-2);
   border: 1px solid var(--m-line);
@@ -204,7 +209,7 @@
 }
 .auth-tab {
   position: relative; z-index: 1;
-  display: inline-flex; align-items: center; gap: 8px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 8px 22px;
   border: 0;
   background: transparent;
