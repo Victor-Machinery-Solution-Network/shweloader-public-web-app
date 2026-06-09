@@ -191,50 +191,6 @@
 }
 .auth-lang-btn svg { display: block; flex: 0 0 auto; }
 
-/* Tabs ---------------------------------------------------------------------- */
-.auth-tabs {
-  position: relative;
-  /* Equal-width tabs (two 1fr columns sized to the wider label) so the 50%
-     glide pill aligns for ANY label length — Burmese "အကောင့်ဖွင့်ရန်" is far
-     wider than "ဝင်ရန်", which broke the old content-width inline-flex. */
-  display: inline-grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  padding: 4px;
-  background: var(--m-bg-2);
-  border: 1px solid var(--m-line);
-  border-radius: 9999px;
-  align-self: flex-start;
-  margin-bottom: 28px;
-}
-.auth-tab {
-  position: relative; z-index: 1;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 8px 22px;
-  border: 0;
-  background: transparent;
-  border-radius: 9999px;
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--m-fg-2);
-  cursor: pointer;
-  transition: color .2s;
-}
-.auth-tab.is-on { color: var(--m-on-gold); }
-.auth-tab-glide {
-  position: absolute;
-  top: 4px; bottom: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #fdd968 0%, var(--m-gold) 100%);
-  box-shadow: 0 2px 8px -3px rgba(251,184,17,0.5), 0 1px 0 rgba(255,255,255,0.5) inset;
-  transition: transform .35s cubic-bezier(0.2, 0.8, 0.2, 1);
-  pointer-events: none;
-}
-.auth-tab-glide.signup { transform: translateX(100%); }
-
 /* Headline ------------------------------------------------------------------ */
 .auth-h1 {
   font-family: var(--font-sans);
