@@ -1149,33 +1149,6 @@ export function AuthModal() {
             </div>
 
             <div className="auth-form-inner">
-              {!isOtp && (
-                <div className="auth-tabs" role="tablist">
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === "signin"}
-                    className={"auth-tab" + (tab === "signin" ? " is-on" : "")}
-                    onClick={() => goTab("signin")}
-                  >
-                    {t("Sign in", "ဝင်ရန်")}
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === "signup"}
-                    className={"auth-tab" + (tab === "signup" ? " is-on" : "")}
-                    onClick={() => goTab("signup")}
-                  >
-                    {t("Register", "အကောင့်ဖွင့်ရန်")}
-                  </button>
-                  <span
-                    className={"auth-tab-glide " + tab}
-                    aria-hidden="true"
-                  ></span>
-                </div>
-              )}
-
               {tab === "signin" && (
                 <>
                   <h1 className="auth-h1" id={titleId}>

@@ -505,7 +505,12 @@
 .auth-form .auth-float > .auth-label {
   position: absolute;
   left: 15px;
-  top: 50%;
+  /* Anchor to the input's center (min-height 58px / 2), not top:50% of the
+     field — the error message is an in-flow child of .auth-float, so on an
+     invalid field it grows the box and a 50% label would drop into the lower
+     half of the input. A fixed 29px keeps the placeholder centered on the
+     input whether or not an error is shown. */
+  top: 29px;
   transform: translateY(-50%);
   margin: 0;
   pointer-events: none;
