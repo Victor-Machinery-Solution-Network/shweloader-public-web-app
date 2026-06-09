@@ -202,6 +202,12 @@
    scrolling form column. */
 @media (max-width: 640px) {
   .auth-form-topbar { justify-content: center; }
+  /* Short forms (sign-in, OTP) would otherwise be vertically centred by the
+     base margin:auto, leaving a large gap between the logo and the heading.
+     Top-align on mobile so they sit under the logo like the taller signup
+     steps already do (their auto-margins collapse to 0). Horizontal centring
+     (margin-left/right:auto) is preserved. */
+  .auth-form-inner { margin-top: 0; margin-bottom: 0; }
   .auth-logo {
     align-self: center;
     /* Optically centre the wordmark: "SHWE LOADER" sits 105 viewBox units
