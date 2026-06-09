@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getToken } from "@/lib/auth/session";
 import { apiFetch } from "@/lib/api/client";
+import { redirectIfBlacklisted } from "@/lib/auth/blacklist-redirect";
 import { getBusinessTypes } from "@/lib/api/business-types";
 import { getLocations } from "@/lib/api/locations";
 import { noindexMetadata } from "@/lib/seo/metadata";
@@ -41,7 +42,10 @@ async function AccountContent() {
   // /me is fetched defensively so a transient API failure renders an empty
   // shell instead of crashing the route.
   const [profile, businessTypes, locations] = await Promise.all([
-    apiFetch<Profile>("/me", { token }).catch(() => null),
+    apiFetch<Profile>("/me", { token }).catch((e) => {
+      redirectIfBlacklisted(e);
+      return null;
+    }),
     getBusinessTypes().catch(() => []),
     getLocations().catch(() => []),
   ]);

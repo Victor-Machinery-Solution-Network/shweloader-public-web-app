@@ -147,6 +147,19 @@ export function ChatShell({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: active.id, text }),
       });
+      if (res.status === 403) {
+        const d = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          reason?: string;
+        };
+        if (d.error === "ACCOUNT_BLACKLISTED") {
+          window.dispatchEvent(
+            new CustomEvent("account-blacklisted", {
+              detail: { reason: d.reason },
+            }),
+          );
+        }
+      }
       // Mark the last optimistic message as Sent or Failed.
       setSessions((ss) =>
         ss.map((s) => {

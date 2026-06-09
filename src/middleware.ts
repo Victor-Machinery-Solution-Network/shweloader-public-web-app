@@ -99,9 +99,12 @@ export async function middleware(req: NextRequest) {
     sameSite: "lax" as const,
     path: "/",
   };
-  const res = NextResponse.next();
-  res.cookies.set(TOKEN_COOKIE, data.access_token, { ...base, httpOnly: true, ...persist });
   const slUser = req.cookies.get(USER_COOKIE)?.value;
+  // Make the fresh token visible to THIS request's RSC render — it reads the
+  // request cookies, not the response cookie we set for the browser below.
+  req.cookies.set(TOKEN_COOKIE, data.access_token);
+  const res = NextResponse.next({ request: { headers: req.headers } });
+  res.cookies.set(TOKEN_COOKIE, data.access_token, { ...base, httpOnly: true, ...persist });
   if (slUser) res.cookies.set(USER_COOKIE, slUser, { ...base, ...persist });
   return res;
 }

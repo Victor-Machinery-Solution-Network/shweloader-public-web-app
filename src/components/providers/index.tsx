@@ -6,6 +6,7 @@ import { LanguageProvider } from "./language-provider";
 import { AuthUIProvider } from "./auth-ui";
 import { AuthIntent } from "./auth-intent";
 import { AuthProvider } from "@/lib/auth/use-auth";
+import { SuspensionOverlay } from "@/components/shared/suspension-overlay";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <AuthUIProvider>
             <AuthIntent />
             {children}
+            <SuspensionOverlay />
           </AuthUIProvider>
         </AuthProvider>
         <Toaster

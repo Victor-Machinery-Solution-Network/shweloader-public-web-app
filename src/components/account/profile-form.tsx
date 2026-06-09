@@ -196,8 +196,19 @@ export function ProfileForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(changed),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        reason?: string;
+      };
       if (!res.ok) {
+        if (res.status === 403 && data.error === "ACCOUNT_BLACKLISTED") {
+          window.dispatchEvent(
+            new CustomEvent("account-blacklisted", {
+              detail: { reason: data.reason },
+            }),
+          );
+          return;
+        }
         const msg = (data.error || "").toLowerCase();
         if (res.status === 409 && msg.includes("username")) {
           setErrors({ username: "That username is already taken" });

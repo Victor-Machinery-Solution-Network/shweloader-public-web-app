@@ -4,6 +4,7 @@ import { Bell, ChevronRight } from "lucide-react";
 import { noindexMetadata } from "@/lib/seo/metadata";
 import { getToken } from "@/lib/auth/session";
 import { apiFetch } from "@/lib/api/client";
+import { redirectIfBlacklisted } from "@/lib/auth/blacklist-redirect";
 import {
   NotificationRow,
   type NotificationItem,
@@ -49,7 +50,8 @@ async function Content() {
   let raw: unknown = [];
   try {
     raw = await apiFetch<unknown>("/notifications", { token });
-  } catch {
+  } catch (e) {
+    redirectIfBlacklisted(e);
     raw = [];
   }
   const items = normalizeItems(raw);

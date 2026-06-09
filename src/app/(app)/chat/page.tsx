@@ -5,6 +5,7 @@ import Link from "next/link";
 import { noindexMetadata } from "@/lib/seo/metadata";
 import { getToken } from "@/lib/auth/session";
 import { apiFetch } from "@/lib/api/client";
+import { redirectIfBlacklisted } from "@/lib/auth/blacklist-redirect";
 import { PUSHER_KEY, PUSHER_CLUSTER } from "@/lib/env";
 import { ChatShell, type ChatSession } from "@/components/chat/chat-shell";
 import { ChatSignedOut } from "@/components/chat/chat-signed-out";
@@ -108,7 +109,8 @@ async function loadSessions(token: string): Promise<ChatSession[]> {
     );
 
     return sessions;
-  } catch {
+  } catch (e) {
+    redirectIfBlacklisted(e);
     return [];
   }
 }
