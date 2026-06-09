@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/env";
 import { getToken } from "@/lib/auth/session";
+import { enforceOrigin, enforceJsonContent } from "@/lib/auth/csrf";
 
 /**
  * Start a phone-number change. Server-side proxy to the worker's OTP send step.
  * POST /api/account/phone/send-otp → POST {API}/me/send-phone-otp (authed).
- * Returns the request id + masked phone for the verify step.
+ * Direct fetch (not authedFetch): the short OTP flow doesn't need silent refresh
+ * and the worker uses 401 for OTP errors, which refresh-on-401 would mis-handle.
  */
 export async function POST(req: Request) {
+  const csrf = enforceOrigin(req) ?? enforceJsonContent(req);
+  if (csrf) return csrf;
+
   const token = await getToken();
   if (!token) {
     return NextResponse.json(

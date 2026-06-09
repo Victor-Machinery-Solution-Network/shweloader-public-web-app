@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/env";
 import { getToken, refreshUserCookie } from "@/lib/auth/session";
+import { enforceOrigin, enforceJsonContent } from "@/lib/auth/csrf";
 
 /**
  * Complete a phone-number change. Server-side proxy to the worker's OTP verify
  * step, which updates the phone on success.
  * POST /api/account/phone/verify → POST {API}/me/verify-phone (authed).
+ * Direct fetch (not authedFetch): the worker returns 401 for a wrong/expired
+ * OTP, which a refresh-on-401 wrapper would mislabel as a session problem.
  */
 export async function POST(req: Request) {
+  const csrf = enforceOrigin(req) ?? enforceJsonContent(req);
+  if (csrf) return csrf;
+
   const token = await getToken();
   if (!token) {
     return NextResponse.json(

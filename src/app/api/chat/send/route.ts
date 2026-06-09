@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
-import { apiFetch } from "@/lib/api/client";
-import { getToken } from "@/lib/auth/session";
+import { ApiError } from "@/lib/api/client";
+import { authedFetch, BlacklistError } from "@/lib/auth/authed-fetch";
+import { enforceOrigin, enforceJsonContent } from "@/lib/auth/csrf";
 
 /**
  * Support-chat message send. Server-side proxy so the worker is never called
- * from the browser (the bearer token lives in an httpOnly cookie and is read
- * here, never exposed to the client).
+ * from the browser (the bearer token lives in an httpOnly cookie). Uses
+ * authedFetch for silent 401→refresh and 403 ACCOUNT_BLACKLISTED handling.
  *
- * Best-effort: the live chat endpoint shape is UNVERIFIED. We POST the message
- * to `/chat/messages` with the session token and surface a friendly error on
- * failure so the UI can fall back to an optimistic local echo.
- *
- * TODO: verify against live worker — endpoint path, request body field names
- * (`sessionId` / `session_id`, `text` / `message`, attachments), and the shape
- * of the returned message object.
+ * TODO: verify against live worker — endpoint path + body field names
+ * (`sessionId`/`session_id`, `text`/`message`, attachments) are best-effort.
  */
 export async function POST(req: Request) {
+  const csrf = enforceOrigin(req) ?? enforceJsonContent(req);
+  if (csrf) return csrf;
+
   const body = (await req.json().catch(() => ({}))) as {
     sessionId?: string;
     text?: string;
@@ -26,23 +25,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
   }
 
-  const token = await getToken();
-  if (!token) {
-    return NextResponse.json(
-      { error: "Sign in to chat with support" },
-      { status: 401 },
-    );
-  }
-
   try {
-    // TODO: verify against live worker — path + body shape are best-effort.
-    const data = await apiFetch<unknown>("/chat/messages", {
+    const data = await authedFetch<unknown>("/chat/messages", {
       method: "POST",
-      token,
       body: { sessionId: body.sessionId, text },
     });
     return NextResponse.json({ ok: true, message: data ?? null });
-  } catch {
+  } catch (err) {
+    if (err instanceof BlacklistError) {
+      return NextResponse.json(
+        { error: "ACCOUNT_BLACKLISTED", reason: err.reason },
+        { status: 403 },
+      );
+    }
+    if (err instanceof ApiError && err.status === 401) {
+      return NextResponse.json(
+        { error: "Sign in to chat with support" },
+        { status: 401 },
+      );
+    }
     return NextResponse.json(
       { error: "Failed to send message" },
       { status: 502 },

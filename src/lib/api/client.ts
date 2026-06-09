@@ -26,7 +26,7 @@ type QueryValue = string | number | boolean | undefined | null;
 
 export interface ApiFetchOptions {
   query?: Record<string, QueryValue>;
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   /** Bearer token for authed endpoints (dynamic — never cached). */
   token?: string | null;
