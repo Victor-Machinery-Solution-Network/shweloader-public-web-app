@@ -1593,6 +1593,7 @@ html, body {
   line-height: 1.3;
 }
 @media (min-width: 1025px) {
+  .cat-v2-img { max-width: 140px; }
   .cat-v2-name { font-size: 14px; }
 }
 .cat-v2-item:hover .cat-v2-name {
