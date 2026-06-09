@@ -39,7 +39,7 @@ export default async function SavedPage() {
       locations={locations}
       conditionTypes={conditionTypes}
       headingKey="saved.title"
-      crumbKey="nav.saved"
+      crumbKey="actions.saved"
       screenLabel="Saved"
     >
       <SavedView />
