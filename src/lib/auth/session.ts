@@ -36,6 +36,12 @@ export async function getRefreshToken(): Promise<string | null> {
   return store.get(REFRESH)?.value ?? null;
 }
 
+/** The login-time "Remember me" choice (default true if unset/legacy session). */
+export async function getRememberFlag(): Promise<boolean> {
+  const store = await cookies();
+  return store.get(REMEMBER)?.value !== "0";
+}
+
 /**
  * Best-effort: (re)hydrate the display-only `sl_user` cookie from /me. Called
  * after login/OTP verify and again after profile or phone edits so the header
