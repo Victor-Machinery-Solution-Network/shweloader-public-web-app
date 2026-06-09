@@ -195,6 +195,22 @@
 }
 .auth-lang-btn svg { display: block; flex: 0 0 auto; }
 
+/* Full-screen mobile header: center the logo over the form and lift the
+   language switch to the top-left corner (mirrors the close button, which sits
+   at the top-right). .auth-lang goes absolute against .auth-modal — the only
+   positioned ancestor — so it stays pinned to the sheet corner, not the
+   scrolling form column. */
+@media (max-width: 640px) {
+  .auth-form-topbar { justify-content: center; }
+  .auth-logo { align-self: center; }
+  .auth-lang {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 5;
+  }
+}
+
 /* Headline ------------------------------------------------------------------ */
 .auth-h1 {
   font-family: var(--font-sans);
