@@ -3,25 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Image as ImageIcon, Maximize2, X } from "lucide-react";
+import { ArrowRight, Maximize2, X } from "lucide-react";
 import { HeadsetIcon } from "@/components/shared/icons/headset-icon";
 
 import { useAuthUI } from "@/components/providers/auth-ui";
 import { useI18n } from "@/components/providers/language-provider";
 import { useAuth } from "@/lib/auth/use-auth";
-
-type ChatMessage = {
-  from: "agent" | "me";
-  text: string;
-  time: string;
-  status?: "Sent" | "Delivered" | "Read";
-};
-
-const QUICK_REPLIES = [
-  "I'm looking for an excavator",
-  "Do you offer rentals?",
-  "Request an inspection",
-];
+import { useChatStore } from "@/components/chat/core/store";
+import { usePusherChat } from "@/components/chat/core/use-pusher-chat";
+import { useChatSync } from "@/components/chat/core/use-chat-sync";
+import { Thread } from "@/components/chat/core/Thread";
+import { Composer } from "@/components/chat/core/Composer";
+import type { ChatSession } from "@/components/chat/core/types";
 
 /**
  * Live chat support — floating gold pulsing launcher (bottom-right), shared
@@ -30,8 +23,10 @@ const QUICK_REPLIES = [
  *
  * Signed-out: the launcher opens the global auth modal (sign in to chat). If the
  * panel is opened via the global event, it shows the sign-in gate instead.
- * Signed-in: the launcher toggles the chat panel (agent intro, quick replies,
- * composer). Sending is UI-only for now — realtime delivery needs Pusher.
+ * Signed-in: bootstraps the user's primary session via POST /api/chat/sessions
+ * (get-or-create, once per component lifecycle), then renders the shared Thread +
+ * Composer backed by the realtime core. The launcher button keeps its static
+ * always-green dot — purely decorative, no presence call.
  *
  * Motion is handled entirely by the design CSS, which already disables the
  * pulse/shake animations under `prefers-reduced-motion: reduce`.
@@ -47,19 +42,61 @@ export function LiveChat() {
   const onProductPage = pathname?.startsWith("/product/") ?? false;
 
   const [open, setOpen] = useState(false);
-  const [msg, setMsg] = useState("");
-  const [thread, setThread] = useState<ChatMessage[]>([
-    {
-      from: "agent",
-      text: "Hi! How can we help you find the right machine today?",
-      time: "2:30 PM",
-    },
-  ]);
+  const [bootstrapping, setBootstrapping] = useState(false);
 
-  const fileRef = useRef<HTMLInputElement>(null);
+  // Guard: POST /api/chat/sessions only once per component lifecycle.
+  const bootstrappedRef = useRef(false);
 
-  const now = () =>
-    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const { activeSessionId, adminReadAt, messages, setActive, setSessions } =
+    useChatStore();
+  const sessionMessages =
+    activeSessionId != null ? (messages[activeSessionId] ?? []) : [];
+  const sessionAdminReadAt =
+    activeSessionId != null ? (adminReadAt[activeSessionId] ?? null) : null;
+
+  const { adminTyping } = usePusherChat(open && signedIn ? activeSessionId : null);
+  const { send, markRead, notifyTyping } = useChatSync(
+    open && signedIn ? activeSessionId : null,
+  );
+
+  // Bootstrap the session when the panel is opened while signed in.
+  // Guard ensures only one POST per component lifecycle regardless of
+  // how many times the panel is opened/closed.
+  useEffect(() => {
+    if (!open || !signedIn || bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+    setBootstrapping(true);
+    fetch("/api/chat/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    })
+      .then((r) => (r.ok ? (r.json() as Promise<{ sessionId: number }>) : null))
+      .then((data) => {
+        if (!data) return;
+        const { sessionId } = data;
+        // Seed a minimal session entry so the store has this session listed.
+        const seedSession: ChatSession = {
+          id: sessionId,
+          status: "active",
+          lastMessageAt: null,
+          lastMessagePreview: null,
+          unreadUserCount: 0,
+          adminLastReadAt: null,
+        };
+        setSessions([seedSession]);
+        setActive(sessionId);
+      })
+      .catch(() => {})
+      .finally(() => setBootstrapping(false));
+  }, [open, signedIn, setActive, setSessions]);
+
+  // Mark messages read when panel opens (signed in + active session).
+  useEffect(() => {
+    if (open && signedIn && activeSessionId != null) {
+      markRead();
+    }
+  }, [open, signedIn, activeSessionId, markRead]);
 
   const openPanel = useCallback(() => {
     // Always open the panel. Signed-out users see the sign-in gate (with the
@@ -77,54 +114,6 @@ export function LiveChat() {
     window.addEventListener("shwe:open-chat", onOpenChat);
     return () => window.removeEventListener("shwe:open-chat", onOpenChat);
   }, []);
-
-  // TODO(pusher): wire to realtime. For now sending is UI-only and appends to
-  // the local thread without dispatching to a backend / receiving agent replies.
-  const send = () => {
-    const text = msg.trim();
-    if (!text) return;
-    setThread((prev) => [
-      ...prev,
-      { from: "me", text, time: now(), status: "Sent" },
-    ]);
-    setMsg("");
-  };
-
-  const sendQuickReply = (text: string) => {
-    // TODO(pusher): same realtime no-op as send().
-    setThread((prev) => [
-      ...prev,
-      { from: "me", text, time: now(), status: "Sent" },
-    ]);
-  };
-
-  const attachImages = (fileList: FileList | null) => {
-    const files = Array.from(fileList ?? []).filter((f) =>
-      f.type.startsWith("image/"),
-    );
-    if (!files.length) return;
-    // TODO(pusher): upload + send attachments over realtime. UI-only for now.
-    for (const file of files) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setThread((prev) => [
-          ...prev,
-          {
-            from: "me",
-            text: file.name,
-            time: now(),
-            status: "Sent",
-          },
-        ]);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const lastMe = thread.reduce(
-    (acc, m, i) => (m.from === "me" ? i : acc),
-    -1,
-  );
 
   return (
     <>
@@ -194,75 +183,24 @@ export function LiveChat() {
 
         {signedIn ? (
           <>
-            <div className="lc-body">
-              {thread.map((m, i) => (
-                <div key={i} className={"lc-msg lc-msg-" + m.from}>
-                  <div className="lc-bubble">{m.text}</div>
-                  <div className="lc-meta">
-                    {m.time}
-                    {m.from === "me" && i === lastMe && m.status && (
-                      <span className="lc-rcpt"> · {m.status}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="lc-quick">
-              {QUICK_REPLIES.map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  className="lc-quick-btn"
-                  onClick={() => sendQuickReply(q)}
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-
-            <form
-              className="lc-input"
-              onSubmit={(e) => {
-                e.preventDefault();
-                send();
-              }}
-            >
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                onChange={(e) => {
-                  attachImages(e.target.files);
-                  e.target.value = "";
-                }}
+            {bootstrapping || activeSessionId == null ? (
+              <div className="lc-body lc-body--loading" aria-live="polite">
+                <span className="chat-typing" aria-label="Loading…">
+                  <span /><span /><span />
+                </span>
+              </div>
+            ) : (
+              <Thread
+                messages={sessionMessages}
+                adminReadAt={sessionAdminReadAt}
+                adminTyping={adminTyping}
               />
-              <button
-                type="button"
-                className="lc-attach"
-                onClick={() => fileRef.current?.click()}
-                aria-label="Attach image"
-              >
-                <ImageIcon />
-              </button>
-              <input
-                type="text"
-                placeholder={t("chat.placeholder")}
-                value={msg}
-                onChange={(e) => setMsg(e.target.value)}
-                aria-label="Message"
-              />
-              <button
-                type="submit"
-                className="lc-send"
-                aria-label={t("chat.send")}
-                disabled={!msg.trim()}
-              >
-                <ArrowRight />
-              </button>
-            </form>
+            )}
+            <Composer
+              onSend={send}
+              onTyping={notifyTyping}
+              disabled={bootstrapping || activeSessionId == null}
+            />
           </>
         ) : (
           <div className="lc-gate" role="region" aria-label="Sign in to chat">
