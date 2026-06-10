@@ -78,16 +78,20 @@ export function LiveChat() {
       .then((data) => {
         if (!data) return;
         const { sessionId } = data;
-        // Seed a minimal session entry so the store has this session listed.
-        const seedSession: ChatSession = {
-          id: sessionId,
-          status: "active",
-          lastMessageAt: null,
-          lastMessagePreview: null,
-          unreadUserCount: 0,
-          adminLastReadAt: null,
-        };
-        setSessions([seedSession]);
+        // Only seed if the store doesn't already know this session — never clobber
+        // existing sessions (the /chat page may have populated the full list).
+        const existing = useChatStore.getState().sessions;
+        if (!existing.some((s) => s.id === sessionId)) {
+          const seedSession: ChatSession = {
+            id: sessionId,
+            status: "active",
+            lastMessageAt: null,
+            lastMessagePreview: null,
+            unreadUserCount: 0,
+            adminLastReadAt: null,
+          };
+          setSessions([...existing, seedSession]);
+        }
         setActive(sessionId);
       })
       .catch(() => {})

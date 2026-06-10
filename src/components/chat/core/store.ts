@@ -36,18 +36,36 @@ export const useChatStore = create<ChatState>()(
       activeSessionId: null,
       adminReadAt: {},
 
-      setSessions: (s) => set({ sessions: s }),
+      setSessions: (s) =>
+        // Seed the "Seen" tick state from each session's admin_last_read_at so
+        // read receipts are correct on first load (not only after a live event).
+        set((st) => ({
+          sessions: s,
+          adminReadAt: {
+            ...st.adminReadAt,
+            ...Object.fromEntries(
+              s
+                .filter((x) => x.adminLastReadAt != null)
+                .map((x) => [x.id, x.adminLastReadAt]),
+            ),
+          },
+        })),
       setActive: (id) => set({ activeSessionId: id }),
       setMessages: (sessionId, msgs) =>
         set((st) => ({ messages: { ...st.messages, [sessionId]: msgs } })),
 
       addMessage: (sessionId, m) => {
-        const list = get().messages[sessionId] ?? [];
         const key = messageKey(m);
-        if (list.some((x) => messageKey(x) === key)) return false;
-        set((st) => ({
-          messages: { ...st.messages, [sessionId]: [...list, m] },
-        }));
+        if ((get().messages[sessionId] ?? []).some((x) => messageKey(x) === key)) {
+          return false;
+        }
+        // Re-check + append against the COMMITTED state inside the updater, so
+        // two events arriving before a flush can't both append off a stale list.
+        set((st) => {
+          const fresh = st.messages[sessionId] ?? [];
+          if (fresh.some((x) => messageKey(x) === key)) return st;
+          return { messages: { ...st.messages, [sessionId]: [...fresh, m] } };
+        });
         return true;
       },
 
@@ -60,16 +78,21 @@ export const useChatStore = create<ChatState>()(
         })),
 
       confirmOptimistic: (sessionId, tempId, serverId) =>
-        set((st) => ({
-          messages: {
-            ...st.messages,
-            [sessionId]: (st.messages[sessionId] ?? []).map((x) =>
-              x.id === tempId
-                ? { ...x, id: `s${serverId}`, serverId, status: "sent" as SendStatus }
-                : x,
-            ),
-          },
-        })),
+        set((st) => {
+          const list = st.messages[sessionId] ?? [];
+          const serverKey = `s${serverId}`;
+          // If the Pusher echo already added the server message (it can beat the
+          // HTTP response), just drop the optimistic copy instead of renaming it
+          // into a duplicate.
+          const next = list.some((x) => x.id === serverKey)
+            ? list.filter((x) => x.id !== tempId)
+            : list.map((x) =>
+                x.id === tempId
+                  ? { ...x, id: serverKey, serverId, status: "sent" as SendStatus }
+                  : x,
+              );
+          return { messages: { ...st.messages, [sessionId]: next } };
+        }),
 
       setStatus: (sessionId, tempId, status) =>
         set((st) => ({

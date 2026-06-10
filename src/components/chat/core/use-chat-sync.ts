@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef } from "react";
 import { useChatStore, nextTempId } from "./store";
-import { fromServerMessage } from "./mappers";
+import { fromServerMessage, messageKey } from "./mappers";
 import type { ChatMessage, ServerMessage } from "./types";
 
 async function postJson(url: string, body: unknown): Promise<Response> {
@@ -20,7 +20,9 @@ export function useChatSync(sessionId: number | null) {
   const setUnread = useChatStore((s) => s.setUnread);
   const lastTypingSent = useRef(0);
 
-  // Load history when a session becomes active.
+  // Load history when a session becomes active. MERGE (don't clobber): any live
+  // Pusher message or optimistic send that landed during the fetch is preserved
+  // by appending current entries whose key isn't already in the fetched history.
   useEffect(() => {
     if (!sessionId) return;
     let cancelled = false;
@@ -28,7 +30,12 @@ export function useChatSync(sessionId: number | null) {
       .then((r) => (r.ok ? r.json() : { messages: [] }))
       .then((data: { messages: ServerMessage[] }) => {
         if (cancelled) return;
-        setMessages(sessionId, (data.messages ?? []).map(fromServerMessage));
+        const history = (data.messages ?? []).map(fromServerMessage);
+        const seen = new Set(history.map(messageKey));
+        const extras = (useChatStore.getState().messages[sessionId] ?? []).filter(
+          (m) => !seen.has(messageKey(m)),
+        );
+        setMessages(sessionId, [...history, ...extras]);
       })
       .catch(() => {});
     return () => {

@@ -18,6 +18,12 @@ export async function POST(req: Request) {
   if (!socket_id || !channel_name) {
     return NextResponse.json({ error: "socket_id and channel_name required" }, { status: 400 });
   }
+  // Defense in depth: a web user only ever subscribes to their own chat session
+  // channel. Refuse anything else here (the worker also enforces ownership) so a
+  // same-origin script can't probe admin/other channels through this proxy.
+  if (!channel_name.startsWith("private-chat-")) {
+    return NextResponse.json({ error: "Forbidden channel" }, { status: 403 });
+  }
 
   try {
     const data = await authedFetch<{ auth: string }>("/chat/pusher-auth", {
