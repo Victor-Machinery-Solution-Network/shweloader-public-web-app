@@ -89,6 +89,29 @@ async function readError(res: Response, fallback: string): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
+// Validation helpers (shared by sign-in + sign-up). Regexes are linear-time
+// (no nested quantifiers) so they're safe against catastrophic backtracking.
+// ---------------------------------------------------------------------------
+
+/** Strip everything except digits and a leading "+", so "09 79-000" / "(09)…"
+ *  collapse to one consistent form before validation/submit. */
+const cleanPhone = (s: string): string => s.trim().replace(/[^\d+]/g, "");
+/** Permissive Myanmar mobile: local 09 + 7–9 digits, or intl +95 9 + 7–9. */
+const MM_PHONE_RE = /^(?:09\d{7,9}|\+?959\d{7,9})$/;
+/** A login identifier that's only phone characters — clean it like a phone so a
+ *  number typed with spaces still matches the stored (cleaned) value. */
+const PHONE_LIKE_RE = /^[\d\s+()-]+$/;
+/** Username handle: 3–20 of lowercase letters, digits, dot, underscore. */
+const USERNAME_RE = /^[a-z0-9._]{3,20}$/;
+/** Pragmatic email shape (one @, a dot in the domain) — the worker is the gate. */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NAME_MIN = 2;
+const NAME_MAX = 60;
+const EMAIL_MAX = 120;
+const PASSWORD_MIN = 8;
+const PASSWORD_MAX = 64;
+
+// ---------------------------------------------------------------------------
 // Floating-label primitives (Apple-style). Styling is fully driven by auth.css
 // via :placeholder-shown + :has() — we only emit the markup + class names.
 // ---------------------------------------------------------------------------
@@ -105,6 +128,8 @@ function FloatingField({
   optional,
   optionalLabel,
   error,
+  describedById,
+  required,
 }: {
   label: string;
   type?: string;
@@ -118,7 +143,15 @@ function FloatingField({
   optionalLabel?: string;
   /** Inline validation message — replaces the browser's default bubble. */
   error?: string;
+  /** Extra element id to reference from aria-describedby (e.g. a help line). */
+  describedById?: string;
+  required?: boolean;
 }) {
+  const reactId = useId();
+  const errId = `${reactId}-err`;
+  const describedBy =
+    [error ? errId : null, describedById ?? null].filter(Boolean).join(" ") ||
+    undefined;
   return (
     <label className={"auth-field auth-float" + (error ? " has-error" : "")}>
       <input
@@ -130,13 +163,20 @@ function FloatingField({
         autoComplete={autoComplete}
         inputMode={inputMode}
         name={name}
+        required={required}
+        aria-required={required || undefined}
         aria-invalid={!!error}
+        aria-describedby={describedBy}
       />
       <span className="auth-label">{label}</span>
       {optional && !error && (
         <span className="auth-optional">{optionalLabel || "Optional"}</span>
       )}
-      {error && <span className="auth-error">{error}</span>}
+      {error && (
+        <span className="auth-error" id={errId} role="alert">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -148,6 +188,7 @@ function FloatingPassword({
   t,
   autoComplete = "current-password",
   error,
+  name,
 }: {
   label: string;
   value: string;
@@ -156,8 +197,11 @@ function FloatingPassword({
   autoComplete?: string;
   /** Inline validation message — replaces the browser's default bubble. */
   error?: string;
+  name?: string;
 }) {
   const [show, setShow] = useState(false);
+  const reactId = useId();
+  const errId = `${reactId}-err`;
   return (
     <label
       className={"auth-field auth-float has-eye" + (error ? " has-error" : "")}
@@ -168,7 +212,9 @@ function FloatingPassword({
         value={value}
         onChange={onChange}
         autoComplete={autoComplete}
+        name={name}
         aria-invalid={!!error}
+        aria-describedby={error ? errId : undefined}
       />
       <span className="auth-label">{label}</span>
       <button
@@ -187,7 +233,11 @@ function FloatingPassword({
           <Eye className="icon-sm" strokeWidth={1.75} />
         )}
       </button>
-      {error && <span className="auth-error">{error}</span>}
+      {error && (
+        <span className="auth-error" id={errId} role="alert">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -201,7 +251,7 @@ function FloatingPassword({
 function PasswordStrength({ password, t }: { password: string; t: Tr }) {
   if (!password) return null;
   let score = 0;
-  if (password.length >= 6) score += 1;
+  if (password.length >= PASSWORD_MIN) score += 1;
   if (/[a-zA-Z]/.test(password)) score += 1;
   if (/[0-9]/.test(password)) score += 1;
   const meta =
@@ -212,8 +262,8 @@ function PasswordStrength({ password, t }: { password: string; t: Tr }) {
         : { label: t("Strong", "လုံခြုံမှုအားကောင်းသည်"), cls: "is-strong" };
   const hints = [
     {
-      met: password.length >= 6,
-      label: t("At least 6 characters", "အနည်းဆုံး စာလုံး ၆ လုံး"),
+      met: password.length >= PASSWORD_MIN,
+      label: t("At least 8 characters", "အနည်းဆုံး စာလုံး ၈ လုံး"),
     },
     {
       met: /[a-zA-Z]/.test(password),
@@ -276,10 +326,15 @@ function SignInForm({
     if (busy) return;
     setBusy(true);
     try {
+      // A phone-like identifier (digits/space/+/-) is cleaned the same way the
+      // signup form cleans the phone, so "09 79…" matches the stored value;
+      // usernames and emails pass through untouched.
+      const id = identifier.trim();
+      const cleanedId = PHONE_LIKE_RE.test(id) ? cleanPhone(id) : id;
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password, remember }),
+        body: JSON.stringify({ identifier: cleanedId, password, remember }),
       });
       if (!res.ok) {
         // Wrong username/password → app-api returns 401 "Invalid credentials"
@@ -367,6 +422,7 @@ function SignUpStep1({
 }) {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const phoneHelpId = useId();
   const update = <K extends keyof SignUpData>(k: K, v: SignUpData[K]) =>
     setData((d) => ({ ...d, [k]: v }));
   const clearErr = (k: string) =>
@@ -381,14 +437,56 @@ function SignUpStep1({
       "This field is required",
       "ဤအချက်ကို ဖြည့်ရန် လိုအပ်ပါသည်",
     );
-    if (!data.name.trim()) e.name = required;
-    if (!data.username.trim()) e.username = required;
-    if (!data.phone.trim()) e.phone = required;
+
+    // Full name — allow any script (Burmese/Latin); just length + must contain
+    // at least one letter (so it isn't digits/punctuation only).
+    const name = data.name.trim();
+    if (!name) e.name = required;
+    else if (name.length < NAME_MIN || name.length > NAME_MAX)
+      e.name = t(
+        `Name must be ${NAME_MIN}–${NAME_MAX} characters`,
+        `အမည်သည် စာလုံး ${NAME_MIN}–${NAME_MAX} လုံး ဖြစ်ရမည်`,
+      );
+    else if (!/\p{L}/u.test(name))
+      e.name = t("Please enter a valid name", "မှန်ကန်သော အမည် ထည့်ပါ");
+
+    // Username — predictable, URL-safe handle.
+    const username = data.username.trim();
+    if (!username) e.username = required;
+    else if (!USERNAME_RE.test(username))
+      e.username = t(
+        "3–20 chars: lowercase letters, numbers, . or _",
+        "စာလုံး ၃–၂၀: စာလုံးအသေး၊ ဂဏန်း၊ . သို့မဟုတ် _ သာ",
+      );
+
+    // Email — optional, but if present it must look like an email.
+    const email = data.email.trim();
+    if (email && (email.length > EMAIL_MAX || !EMAIL_RE.test(email)))
+      e.email = t(
+        "Enter a valid email address",
+        "မှန်ကန်သော အီးမေးလ်လိပ်စာ ထည့်ပါ",
+      );
+
+    // Phone — clean (strip spaces/dashes), then match Myanmar mobile.
+    const phone = cleanPhone(data.phone);
+    if (!phone) e.phone = required;
+    else if (!MM_PHONE_RE.test(phone))
+      e.phone = t(
+        "Enter a valid Myanmar mobile number (e.g. 09…)",
+        "မှန်ကန်သော မြန်မာ ဖုန်းနံပါတ် ထည့်ပါ (ဥပမာ 09…)",
+      );
+
+    // Password — ≥8 with at least one letter and one number.
     if (!data.password) e.password = required;
-    else if (data.password.length < 6)
+    else if (data.password.length < PASSWORD_MIN)
       e.password = t(
-        "Password must be at least 6 characters",
-        "စကားဝှက်သည် အနည်းဆုံး စာလုံး ၆ လုံး ဖြစ်ရမည်",
+        "Password must be at least 8 characters",
+        "စကားဝှက်သည် အနည်းဆုံး စာလုံး ၈ လုံး ဖြစ်ရမည်",
+      );
+    else if (data.password.length > PASSWORD_MAX)
+      e.password = t(
+        "Password is too long (max 64)",
+        "စကားဝှက် ရှည်လွန်းသည် (အများဆုံး ၆၄ လုံး)",
       );
     else if (!/[a-zA-Z]/.test(data.password))
       e.password = t(
@@ -400,12 +498,11 @@ function SignUpStep1({
         "Password must contain at least one number",
         "စကားဝှက်တွင် ဂဏန်း အနည်းဆုံး တစ်လုံး ပါဝင်ရမည်",
       );
+
     if (!data.confirmPassword) e.confirmPassword = required;
     else if (data.password !== data.confirmPassword)
-      e.confirmPassword = t(
-        "Passwords do not match",
-        "စကားဝှက်များ မကိုက်ညီပါ",
-      );
+      e.confirmPassword = t("Passwords do not match", "စကားဝှက်များ မကိုက်ညီပါ");
+
     if (!data.agree)
       e.agree = t(
         "Please accept the terms to continue.",
@@ -425,10 +522,10 @@ function SignUpStep1({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          full_name: data.name,
-          username: data.username,
-          email: data.email || undefined,
-          phone: data.phone,
+          full_name: data.name.trim(),
+          username: data.username.trim(),
+          email: data.email.trim() || undefined,
+          phone: cleanPhone(data.phone),
           password: data.password,
         }),
       });
@@ -455,7 +552,9 @@ function SignUpStep1({
     <form className="auth-form" onSubmit={submit} noValidate>
       <FloatingField
         label={t("Full name", "အမည်အပြည့်အစုံ")}
+        name="name"
         autoComplete="name"
+        required
         value={data.name}
         onChange={(e) => {
           update("name", e.target.value);
@@ -467,7 +566,9 @@ function SignUpStep1({
       <div className="auth-row-2">
         <FloatingField
           label={t("Username", "အသုံးပြုသူအမည်")}
+          name="username"
           autoComplete="username"
+          required
           value={data.username}
           onChange={(e) => {
             update("username", e.target.value);
@@ -477,10 +578,16 @@ function SignUpStep1({
         />
         <FloatingField
           label={t("Email", "အီးမေးလ်")}
+          name="email"
           type="email"
+          inputMode="email"
           autoComplete="email"
           value={data.email}
-          onChange={(e) => update("email", e.target.value)}
+          onChange={(e) => {
+            update("email", e.target.value);
+            clearErr("email");
+          }}
+          error={errors.email}
           optional
           optionalLabel={t("Optional", "ရွေးနိုင်")}
         />
@@ -489,18 +596,21 @@ function SignUpStep1({
       <div className="auth-field">
         <FloatingField
           label={t("Phone number", "ဖုန်းနံပါတ်")}
+          name="phone"
           type="tel"
-          inputMode="numeric"
+          inputMode="tel"
           autoComplete="tel"
+          required
           value={data.phone}
           onChange={(e) => {
             update("phone", e.target.value);
             clearErr("phone");
           }}
           error={errors.phone}
+          describedById={phoneHelpId}
         />
         {!errors.phone && (
-          <span className="auth-help">
+          <span className="auth-help" id={phoneHelpId}>
             {t(
               "We'll send a 6-digit code to verify.",
               "၆ လုံးပါ ကုဒ်ဖြင့် အတည်ပြုပါမည်။",
@@ -512,6 +622,7 @@ function SignUpStep1({
       <FloatingPassword
         label={t("Password", "စကားဝှက်")}
         t={t}
+        name="password"
         autoComplete="new-password"
         value={data.password}
         onChange={(e) => {
@@ -525,6 +636,7 @@ function SignUpStep1({
       <FloatingPassword
         label={t("Confirm password", "စကားဝှက် အတည်ပြုပါ")}
         t={t}
+        name="confirm-password"
         autoComplete="new-password"
         value={data.confirmPassword}
         onChange={(e) => {
@@ -801,6 +913,9 @@ function SignUpStep3({
   const [partnerTypes, setPartnerTypes] = useState<PartnerType[]>([]);
   const [locations, setLocations] = useState<StateRegion[]>([]);
   const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const clearErr = (k: string) =>
+    setErrors((er) => (er[k] ? { ...er, [k]: "" } : er));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -821,17 +936,34 @@ function SignUpStep3({
   }, []);
 
   const isOther = data.businessTypeId === OTHER_BUSINESS;
-  const ok = Boolean(
-    data.businessTypeId !== null &&
-      (!isOther || data.customBusinessType.trim()) &&
-      data.townshipId !== null &&
-      (data.partner === "yes" || data.partner === "no") &&
-      (data.partner !== "yes" || data.partnerType !== null),
-  );
+  // Surface *why* the step is incomplete (inline messages) rather than silently
+  // disabling the button — clearer, and keyboard/screen-reader friendly.
+  const validate = (): boolean => {
+    const e: Record<string, string> = {};
+    if (data.businessTypeId === null)
+      e.businessType = t("Select a business type", "လုပ်ငန်းအမျိုးအစား ရွေးပါ");
+    else if (isOther && !data.customBusinessType.trim())
+      e.customBusinessType = t(
+        "Please specify your business type",
+        "လုပ်ငန်းအမျိုးအစား ဖော်ပြပါ",
+      );
+    if (data.townshipId === null)
+      e.township = t(
+        "Select your office township",
+        "ရုံးတည်ရှိရာ မြို့နယ် ရွေးပါ",
+      );
+    if (data.partner !== "yes" && data.partner !== "no")
+      e.partner = t("Please choose an option", "ရွေးချယ်မှုတစ်ခု ပြုလုပ်ပါ");
+    else if (data.partner === "yes" && data.partnerType === null)
+      e.partnerType = t("Select a partner type", "မိတ်ဖက်အမျိုးအစား ရွေးပါ");
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!ok || busy) return;
+    if (busy) return;
+    if (!validate()) return;
     setBusy(true);
     try {
       const res = await fetch("/api/account", {
@@ -887,16 +1019,23 @@ function SignUpStep3({
       </div>
 
       {/* Business type */}
-      <label className="auth-field auth-float auth-float--select">
+      <label
+        className={
+          "auth-field auth-float auth-float--select" +
+          (errors.businessType ? " has-error" : "")
+        }
+      >
         <select
           className="pf-select"
           value={data.businessTypeId === null ? "" : String(data.businessTypeId)}
-          onChange={(e) =>
+          aria-invalid={!!errors.businessType}
+          onChange={(e) => {
             update(
               "businessTypeId",
               e.target.value === "" ? null : Number(e.target.value),
-            )
-          }
+            );
+            clearErr("businessType");
+          }}
         >
           <option value="">{t("Select a type", "အမျိုးအစား ရွေးပါ")}</option>
           {businessTypes.map((b) => (
@@ -910,13 +1049,22 @@ function SignUpStep3({
         <span className="auth-label">
           {t("Business type", "လုပ်ငန်းအမျိုးအစား")}
         </span>
+        {errors.businessType && (
+          <span className="auth-error" role="alert">
+            {errors.businessType}
+          </span>
+        )}
       </label>
 
       {isOther && (
         <FloatingField
           label={t("Specify business type", "လုပ်ငန်းအမျိုးအစား သတ်မှတ်ပါ")}
           value={data.customBusinessType}
-          onChange={(e) => update("customBusinessType", e.target.value)}
+          onChange={(e) => {
+            update("customBusinessType", e.target.value);
+            clearErr("customBusinessType");
+          }}
+          error={errors.customBusinessType}
         />
       )}
 
@@ -937,12 +1085,22 @@ function SignUpStep3({
         optionalLabel={t("Optional", "ရွေးနိုင်")}
       />
 
-      <TownshipCombobox
-        label={t("Office township", "ရုံး မြို့နယ်")}
-        locations={locations}
-        value={data.townshipId}
-        onChange={(id) => update("townshipId", id)}
-      />
+      <div className={"auth-field" + (errors.township ? " has-error" : "")}>
+        <TownshipCombobox
+          label={t("Office township", "ရုံး မြို့နယ်")}
+          locations={locations}
+          value={data.townshipId}
+          onChange={(id) => {
+            update("townshipId", id);
+            clearErr("township");
+          }}
+        />
+        {errors.township && (
+          <span className="auth-error" role="alert">
+            {errors.township}
+          </span>
+        )}
+      </div>
 
       {/* Partner */}
       <div className="auth-partner">
@@ -967,25 +1125,41 @@ function SignUpStep3({
               key={v}
               type="button"
               className={"auth-toggle-btn" + (data.partner === v ? " is-on" : "")}
-              onClick={() => update("partner", v)}
+              aria-pressed={data.partner === v}
+              onClick={() => {
+                update("partner", v);
+                clearErr("partner");
+              }}
             >
               {v === "yes" ? t("Yes", "ဟုတ်ကဲ့") : t("No", "မဟုတ်ပါ")}
             </button>
           ))}
         </div>
       </div>
+      {errors.partner && (
+        <span className="auth-error" role="alert">
+          {errors.partner}
+        </span>
+      )}
 
       {data.partner === "yes" && (
-        <label className="auth-field auth-float auth-float--select">
+        <label
+          className={
+            "auth-field auth-float auth-float--select" +
+            (errors.partnerType ? " has-error" : "")
+          }
+        >
           <select
             className="pf-select"
             value={data.partnerType === null ? "" : String(data.partnerType)}
-            onChange={(e) =>
+            aria-invalid={!!errors.partnerType}
+            onChange={(e) => {
               update(
                 "partnerType",
                 e.target.value === "" ? null : Number(e.target.value),
-              )
-            }
+              );
+              clearErr("partnerType");
+            }}
           >
             <option value="">
               {t("Select a partner type", "မိတ်ဖက်အမျိုးအစား ရွေးပါ")}
@@ -1000,6 +1174,11 @@ function SignUpStep3({
           <span className="auth-label">
             {t("Partner type", "မိတ်ဖက်အမျိုးအစား")}
           </span>
+          {errors.partnerType && (
+            <span className="auth-error" role="alert">
+              {errors.partnerType}
+            </span>
+          )}
         </label>
       )}
 
@@ -1012,7 +1191,7 @@ function SignUpStep3({
           />
           {t("Back", "နောက်သို့")}
         </button>
-        <button type="submit" className="auth-submit" disabled={!ok || busy}>
+        <button type="submit" className="auth-submit" disabled={busy}>
           {t("Create account", "အကောင့်ဖွင့်ပါ")}
           <Check className="icon-sm" strokeWidth={1.75} />
         </button>
