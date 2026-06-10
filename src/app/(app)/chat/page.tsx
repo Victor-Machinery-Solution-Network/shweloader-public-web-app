@@ -6,109 +6,52 @@ import { noindexMetadata } from "@/lib/seo/metadata";
 import { getToken } from "@/lib/auth/session";
 import { apiFetch } from "@/lib/api/client";
 import { redirectIfBlacklisted } from "@/lib/auth/blacklist-redirect";
-import { PUSHER_KEY, PUSHER_CLUSTER } from "@/lib/env";
-import { ChatShell, type ChatSession } from "@/components/chat/chat-shell";
+import { ChatShell } from "@/components/chat/chat-shell";
 import { ChatSignedOut } from "@/components/chat/chat-signed-out";
-import type { ChatMessage } from "@/components/chat/chat-bubble";
+import type { ChatSession } from "@/components/chat/core/types";
 
 import "@/styles/pages/chat.css";
 
 export const metadata = noindexMetadata;
 
-// Loosely-typed worker shapes — the /chat endpoints are UNVERIFIED.
-// We treat every field as optional and normalize defensively.
-// TODO: verify against live worker.
-interface RawMessage {
-  from?: string;
-  sender?: string;
-  name?: string;
-  text?: string;
-  message?: string;
-  body?: string;
-  image?: string;
-  imageUrl?: string;
-  time?: string;
-  createdAt?: string;
-  day?: string;
-  status?: string;
-}
-
+// Raw row shapes from the worker's GET /chat/sessions response.
 interface RawSession {
   id?: string | number;
-  sessionId?: string | number;
   status?: string;
-  state?: string;
-  topic?: string;
-  subject?: string;
-  closedBy?: string;
-  closedOn?: string;
-  closedAt?: string;
-  messages?: RawMessage[];
+  unread_user_count?: number;
+  last_message_at?: string | null;
+  last_message_preview?: string | null;
+  admin_last_read_at?: string | null;
 }
 
-function normalizeMessage(m: RawMessage): ChatMessage {
-  const senderRaw = (m.from ?? m.sender ?? "agent").toLowerCase();
-  const isMe = senderRaw === "me" || senderRaw === "user" || senderRaw === "self";
+function mapStatus(raw: string | undefined): ChatSession["status"] {
+  const s = (raw ?? "").toLowerCase();
+  if (s === "resolved" || s === "closed") return "resolved";
+  if (s === "pending") return "pending";
+  return "active";
+}
+
+function normalizeSession(row: RawSession, idx: number): ChatSession {
   return {
-    from: isMe ? "me" : "agent",
-    name: m.name,
-    text: m.text ?? m.message ?? m.body ?? "",
-    image: m.image ?? m.imageUrl,
-    time: m.time ?? m.createdAt ?? "",
-    day: m.day ?? "Today",
-    status: m.status,
+    id: Number(row.id ?? idx),
+    status: mapStatus(row.status),
+    unreadUserCount: row.unread_user_count ?? 0,
+    lastMessageAt: row.last_message_at ?? null,
+    lastMessagePreview: row.last_message_preview ?? null,
+    adminLastReadAt: row.admin_last_read_at ?? null,
   };
 }
 
-function normalizeSession(s: RawSession, idx: number): ChatSession {
-  const statusRaw = (s.status ?? s.state ?? "open").toLowerCase();
-  const status: ChatSession["status"] = statusRaw === "closed" ? "closed" : "open";
-  return {
-    id: String(s.id ?? s.sessionId ?? `s${idx}`),
-    status,
-    topic: s.topic ?? s.subject,
-    closedBy: s.closedBy,
-    closedOn: s.closedOn ?? s.closedAt,
-    messages: Array.isArray(s.messages) ? s.messages.map(normalizeMessage) : [],
-  };
-}
-
-/** Defensive fetch of sessions (+ their messages). Returns [] on any failure. */
+/** Defensive fetch of sessions. Returns [] on any failure. */
 async function loadSessions(token: string): Promise<ChatSession[]> {
   try {
-    // TODO: verify against live worker — path + response envelope are best-effort.
     const raw = await apiFetch<unknown>("/chat/sessions", { token });
     const list: RawSession[] = Array.isArray(raw)
       ? (raw as RawSession[])
       : Array.isArray((raw as { sessions?: RawSession[] })?.sessions)
         ? ((raw as { sessions: RawSession[] }).sessions)
         : [];
-    const sessions = list.map(normalizeSession);
-
-    // Some workers return sessions without inlined messages — best-effort
-    // hydrate each thread. Failures degrade to an empty thread, never throw.
-    await Promise.all(
-      sessions.map(async (s) => {
-        if (s.messages.length > 0) return;
-        try {
-          // TODO: verify against live worker — message endpoint shape unverified.
-          const msgRaw = await apiFetch<unknown>(
-            `/chat/sessions/${encodeURIComponent(s.id)}/messages`,
-            { token },
-          );
-          const msgs: RawMessage[] = Array.isArray(msgRaw)
-            ? (msgRaw as RawMessage[])
-            : Array.isArray((msgRaw as { messages?: RawMessage[] })?.messages)
-              ? ((msgRaw as { messages: RawMessage[] }).messages)
-              : [];
-          s.messages = msgs.map(normalizeMessage);
-        } catch {
-          /* leave thread empty */
-        }
-      }),
-    );
-
-    return sessions;
+    return list.map(normalizeSession);
   } catch (e) {
     redirectIfBlacklisted(e);
     return [];
@@ -142,40 +85,22 @@ async function Content() {
   const sessions = await loadSessions(token);
 
   if (sessions.length === 0) {
-    // Seed a single empty open session so the user can start chatting even
+    // Seed a single empty pending session so the user can start chatting even
     // when the worker returns nothing (or the endpoint is unavailable).
     const seed: ChatSession[] = [
       {
-        id: "new",
-        status: "open",
-        topic: "Support",
-        messages: [
-          {
-            from: "agent",
-            name: "ShweLoader Support",
-            text: "Hi! How can we help you find the right machine today?",
-            time: "",
-            day: "Today",
-          },
-        ],
+        id: 0,
+        status: "pending",
+        unreadUserCount: 0,
+        lastMessageAt: null,
+        lastMessagePreview: "Hi! How can we help you find the right machine today?",
+        adminLastReadAt: null,
       },
     ];
-    return (
-      <ChatShell
-        sessions={seed}
-        pusherKey={PUSHER_KEY || undefined}
-        pusherCluster={PUSHER_CLUSTER}
-      />
-    );
+    return <ChatShell sessions={seed} />;
   }
 
-  return (
-    <ChatShell
-      sessions={sessions}
-      pusherKey={PUSHER_KEY || undefined}
-      pusherCluster={PUSHER_CLUSTER}
-    />
-  );
+  return <ChatShell sessions={sessions} />;
 }
 
 export default function ChatPage() {
