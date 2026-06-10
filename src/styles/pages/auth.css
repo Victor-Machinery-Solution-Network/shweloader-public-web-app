@@ -91,6 +91,17 @@
   margin-left: auto;
   margin-right: auto;
 }
+/* The OTP step is full-width (no promo column), so the top bar stretches to the
+   modal edge and the language switch would slide under the absolutely-positioned
+   close button (✕ at right:14px, 36px wide → ~50px of top-right corner). Reserve
+   room on the right so the switch clears it. Desktop only: on mobile (<=640px)
+   the switch is absolutely positioned at the top-LEFT corner, well clear of the
+   ✕, and right padding there would mis-center the optically-centered logo. */
+@media (min-width: 641px) {
+  .auth-modal .auth-split.is-otp .auth-form-topbar {
+    padding-right: 44px;
+  }
+}
 .auth-modal .auth-promo-inner {
   padding: 48px 40px;
 }
