@@ -16,7 +16,7 @@ export function BfcacheGuard() {
   useEffect(() => {
     const onShow = (e: PageTransitionEvent) => {
       if (!e.persisted) return; // only bfcache restores re-run no server code
-      const signedIn = document.cookie.includes("sl_user=");
+      const signedIn = /(?:^|;\s*)sl_user=/.test(document.cookie);
       if (!signedIn) window.location.reload();
     };
     window.addEventListener("pageshow", onShow);

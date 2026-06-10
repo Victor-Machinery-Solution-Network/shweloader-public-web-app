@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-
-/** SITE_URL without a trailing slash, to match the browser's Origin header. */
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+import { SITE_URL } from "@/lib/env";
+// SITE_URL is already trimmed + has a prod fallback, so a missing env var can't
+// collapse it to "" and 403-lock every mutation (a divergence the direct
+// process.env read had).
 
 /**
  * Fail-closed same-origin check for cookie-authed mutations (the httpOnly auth

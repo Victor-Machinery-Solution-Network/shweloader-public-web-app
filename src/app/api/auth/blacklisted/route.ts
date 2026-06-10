@@ -11,6 +11,12 @@ import { clearSession } from "@/lib/auth/session";
  * session (logout-equivalent), so it carries no CSRF risk.
  */
 export async function GET(req: Request) {
+  // Ignore cross-site triggers so a disguised external <a href> can't force-clear
+  // a signed-in user's session or flash the overlay. Our own RSC redirect is
+  // same-origin (or "none" for a typed URL), which we still honor.
+  if (req.headers.get("sec-fetch-site") === "cross-site") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
   await clearSession();
   return NextResponse.redirect(new URL("/?blacklisted=1", req.url));
 }

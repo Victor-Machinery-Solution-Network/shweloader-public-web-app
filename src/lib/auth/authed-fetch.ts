@@ -48,7 +48,7 @@ export async function authedFetch<T>(
   } catch (err) {
     if (isBlacklist(err)) {
       await clearSession();
-      throw new BlacklistError();
+      throw new BlacklistError((err as ApiError).reason);
     }
     if (!(err instanceof ApiError) || err.status !== 401) throw err;
     // else: fall through to refresh + retry
@@ -70,7 +70,16 @@ export async function authedFetch<T>(
   // Persist the new access token, keeping the user's Remember-me persistence,
   // and re-pin sl_user so the display cookie can't outlive the session.
   await setSession(result.token, undefined, await getRememberFlag());
-  return apiFetch<T>(path, { ...opts, token: result.token });
+  try {
+    return await apiFetch<T>(path, { ...opts, token: result.token });
+  } catch (retryErr) {
+    // Account may have been blacklisted between refresh and retry.
+    if (isBlacklist(retryErr)) {
+      await clearSession();
+      throw new BlacklistError((retryErr as ApiError).reason);
+    }
+    throw retryErr;
+  }
 }
 
 async function doRefresh(refreshToken: string): Promise<RefreshResult> {

@@ -15,12 +15,17 @@ const BOOKMARK_COOKIE = "d1_bookmark";
  */
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  /** Optional secondary detail from the worker body (e.g. blacklist reason). */
+  reason?: string;
+  constructor(message: string, status: number, reason?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.reason = reason;
   }
 }
+
+const isProd = process.env.NODE_ENV === "production";
 
 type QueryValue = string | number | boolean | undefined | null;
 
@@ -83,13 +88,15 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     let message = `HTTP ${res.status}`;
+    let reason: string | undefined;
     try {
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as { error?: string; reason?: string };
       if (data?.error) message = data.error;
+      reason = data?.reason;
     } catch {
       /* non-JSON error body */
     }
-    throw new ApiError(message, res.status);
+    throw new ApiError(message, res.status, reason);
   }
 
   // Advance the bookmark cookie from authed WRITE responses. Server actions /
@@ -102,7 +109,7 @@ export async function apiFetch<T>(
         (await cookies()).set(BOOKMARK_COOKIE, newBm, {
           httpOnly: true,
           sameSite: "lax",
-          secure: true,
+          secure: isProd,
           path: "/",
           maxAge: 60 * 60 * 24 * 30,
         });

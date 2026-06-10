@@ -41,7 +41,8 @@ export function SuspensionOverlay() {
     };
     const onAuthChanged = () => {
       // A fresh sl_user means the visitor signed in (possibly another account).
-      if (document.cookie.includes("sl_user=")) {
+      // Exact cookie-name match — substring would also match e.g. "x_sl_user=".
+      if (/(?:^|;\s*)sl_user=/.test(document.cookie)) {
         setShown(false);
         setReason(null);
       }
