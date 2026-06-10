@@ -694,7 +694,7 @@ function SignUpStep1({
 }
 
 // ---------------------------------------------------------------------------
-// Register — step 2: OTP (centered; promo hidden via .is-otp on .auth-split)
+// Register — step 2: OTP (centered; promo hidden via .is-solo on .auth-split)
 // ---------------------------------------------------------------------------
 
 function SignUpStep2({
@@ -895,14 +895,12 @@ function SignUpStep3({
   data,
   setData,
   onSubmit,
-  onBack,
 }: {
   t: Tr;
   data: SignUpData;
   setData: React.Dispatch<React.SetStateAction<SignUpData>>;
   /** Called after the profile is saved successfully (parent shows the success step). */
   onSubmit: () => void;
-  onBack: () => void;
 }) {
   const update = <K extends keyof SignUpData>(k: K, v: SignUpData[K]) =>
     setData((d) => ({ ...d, [k]: v }));
@@ -1182,15 +1180,12 @@ function SignUpStep3({
         </label>
       )}
 
+      {/* No Back button: by this step the phone is OTP-verified and the account
+          exists (this form submits via the authenticated PUT /api/account), so
+          returning to the OTP screen would be nonsensical. The user is logged
+          in; the business details are optional enrichment they can skip by
+          closing the modal. */}
       <div className="auth-step-actions">
-        <button type="button" className="auth-back" onClick={onBack}>
-          <ArrowRight
-            className="icon-sm"
-            strokeWidth={1.75}
-            style={{ transform: "rotate(180deg)" }}
-          />
-          {t("Back", "နောက်သို့")}
-        </button>
         <button type="submit" className="auth-submit" disabled={busy}>
           {t("Create account", "အကောင့်ဖွင့်ပါ")}
           <Check className="icon-sm" strokeWidth={1.75} />
@@ -1513,6 +1508,9 @@ export function AuthModal() {
   if (!open) return null;
 
   const isOtp = tab === "signup" && step === 2 && !done;
+  // "Solo" = full-width, promo-rail-hidden steps: OTP verify (2) + the
+  // form-heavy business-details step (3). isOtp stays OTP-only (footer hide).
+  const isSolo = tab === "signup" && (step === 2 || step === 3) && !done;
 
   return (
     <div
@@ -1536,7 +1534,7 @@ export function AuthModal() {
           <X strokeWidth={1.75} />
         </button>
 
-        <div className={"auth-split" + (isOtp ? " is-otp" : "")}>
+        <div className={"auth-split" + (isSolo ? " is-solo" : "")}>
           {/* Left — form */}
           <section
             className="auth-form-col"
@@ -1645,7 +1643,6 @@ export function AuthModal() {
                         data={data}
                         setData={setData}
                         onSubmit={() => setDone(true)}
-                        onBack={() => setStep(2)}
                       />
                     )}
                   </>

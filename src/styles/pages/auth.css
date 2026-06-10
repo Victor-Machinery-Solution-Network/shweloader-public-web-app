@@ -74,31 +74,32 @@
   overflow-y: auto;
 }
 
-/* When the user is at the OTP step, hide the right brand-promo column and
-   shrink the modal — the focused 6-digit input doesn't need a sales pitch
-   beside it. */
-.auth-modal:has(.auth-split.is-otp) {
+/* "Solo" steps (OTP verify + the form-heavy business-details step) hide the
+   right brand-promo column and shrink the modal — these focused steps don't
+   need a sales pitch beside them, and the business step gets the full width
+   for its fields. */
+.auth-modal:has(.auth-split.is-solo) {
   max-width: 480px;
 }
-.auth-modal .auth-split.is-otp {
+.auth-modal .auth-split.is-solo {
   grid-template-columns: 1fr;
 }
-.auth-modal .auth-split.is-otp .auth-promo-col {
+.auth-modal .auth-split.is-solo .auth-promo-col {
   display: none;
 }
-.auth-modal .auth-split.is-otp .auth-form-col .auth-form-inner {
+.auth-modal .auth-split.is-solo .auth-form-col .auth-form-inner {
   /* Center the form on the now-wide column */
   margin-left: auto;
   margin-right: auto;
 }
-/* The OTP step is full-width (no promo column), so the top bar stretches to the
+/* A solo step is full-width (no promo column), so the top bar stretches to the
    modal edge and the language switch would slide under the absolutely-positioned
    close button (✕ at right:14px, 36px wide → ~50px of top-right corner). Reserve
    room on the right so the switch clears it. Desktop only: on mobile (<=640px)
    the switch is absolutely positioned at the top-LEFT corner, well clear of the
    ✕, and right padding there would mis-center the optically-centered logo. */
 @media (min-width: 641px) {
-  .auth-modal .auth-split.is-otp .auth-form-topbar {
+  .auth-modal .auth-split.is-solo .auth-form-topbar {
     padding-right: 44px;
   }
 }
@@ -121,9 +122,9 @@
     border-radius: 0; box-shadow: none;
     animation: authSheetUp .26s cubic-bezier(.2,.7,.2,1);
   }
-  .auth-modal:has(.auth-split.is-otp) { max-width: none; }
+  .auth-modal:has(.auth-split.is-solo) { max-width: none; }
   .auth-modal .auth-split,
-  .auth-modal .auth-split.is-otp { max-height: 100dvh; height: 100dvh; }
+  .auth-modal .auth-split.is-solo { max-height: 100dvh; height: 100dvh; }
   .auth-modal .auth-form-col { padding: 64px 22px 40px; }
   .auth-modal-close { top: 12px; right: 12px; }
 }
