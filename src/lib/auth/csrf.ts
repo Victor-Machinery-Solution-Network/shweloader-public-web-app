@@ -1,21 +1,45 @@
 import { NextResponse } from "next/server";
 import { SITE_URL } from "@/lib/env";
-// SITE_URL is already trimmed + has a prod fallback, so a missing env var can't
-// collapse it to "" and 403-lock every mutation (a divergence the direct
-// process.env read had).
 
 /**
  * Fail-closed same-origin check for cookie-authed mutations (the httpOnly auth
  * cookies are attached automatically, so these endpoints are CSRF targets).
  *
- * - Origin present  → must equal NEXT_PUBLIC_SITE_URL exactly.
- * - Origin absent   → require the Fetch-Metadata signal Sec-Fetch-Site:same-origin
- *                     (sent by all current browsers). Absent Origin is NEVER a pass.
+ * Environment-agnostic. A request is same-origin when the browser-set Origin's
+ * host matches the host the request actually arrived on — which holds on prod,
+ * staging, per-branch preview URLs, and localhost with NO per-environment
+ * config. It stays CSRF-safe because a cross-site request carries the
+ * attacker's Origin but OUR host (the browser controls neither Host nor
+ * x-forwarded-host), so the two can never match. The configured SITE_URL is
+ * also accepted as a fast-path (covers any proxy that rewrites the host).
+ *
+ * Previously this compared Origin to SITE_URL *only*; since SITE_URL falls back
+ * to the prod URL, every authed mutation 403'd on staging/preview (their origin
+ * never equalled the prod URL) — which broke logout, profile save, chat, etc.
+ *
+ * - Origin present → must match our request host (or equal SITE_URL).
+ * - Origin absent  → require the Fetch-Metadata signal Sec-Fetch-Site:same-origin
+ *                    (sent by all current browsers). Absent Origin is NEVER a pass.
  */
 export function checkOrigin(req: Request): boolean {
   const origin = req.headers.get("origin");
-  if (origin) return !!SITE_URL && origin.replace(/\/$/, "") === SITE_URL;
-  return req.headers.get("sec-fetch-site") === "same-origin";
+  if (!origin) return req.headers.get("sec-fetch-site") === "same-origin";
+
+  // Fast-path: the configured canonical origin (e.g. localhost in dev).
+  if (SITE_URL && origin.replace(/\/$/, "") === SITE_URL) return true;
+
+  // True same-origin: the Origin's host equals the host the request hit. On
+  // Vercel the public host is in x-forwarded-host (host may be the internal
+  // runtime host), so accept a match against either.
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    return false;
+  }
+  const host = req.headers.get("host");
+  const fwdHost = req.headers.get("x-forwarded-host");
+  return originHost === fwdHost || originHost === host;
 }
 
 /** 403 if the request isn't proven same-origin; else null. */
