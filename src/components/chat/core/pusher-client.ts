@@ -9,7 +9,15 @@ let creating: Promise<Pusher | null> | null = null;
  *  Creation is serialized via a module Promise so concurrent callers (the page
  *  and the launcher) can't each spin up a client and orphan a WebSocket. */
 export function getPusher(): Promise<Pusher | null> {
-  if (!PUSHER_KEY) return Promise.resolve(null);
+  if (!PUSHER_KEY) {
+    if (typeof console !== "undefined") {
+      console.warn(
+        "[chat] NEXT_PUBLIC_PUSHER_KEY is empty in this build — realtime is OFF " +
+          "(you can send, but messages won't stream in).",
+      );
+    }
+    return Promise.resolve(null);
+  }
   if (instance) return Promise.resolve(instance);
   if (creating) return creating;
   creating = import("pusher-js").then(({ default: PusherClient }) => {
