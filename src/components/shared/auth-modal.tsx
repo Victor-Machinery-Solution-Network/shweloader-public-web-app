@@ -1066,6 +1066,8 @@ function SignUpStep3({
         />
       )}
 
+      {/* Paired side-by-side on desktop to save space; both optional. */}
+      <div className="auth-row-2">
       <FloatingField
         label={t("Company name", "ကုမ္ပဏီအမည်")}
         value={data.companyName}
@@ -1082,6 +1084,7 @@ function SignUpStep3({
         optional
         optionalLabel={t("Optional", "ရွေးနိုင်")}
       />
+      </div>
 
       <div className={"auth-field" + (errors.township ? " has-error" : "")}>
         <TownshipCombobox
@@ -1187,7 +1190,9 @@ function SignUpStep3({
           closing the modal. */}
       <div className="auth-step-actions">
         <button type="submit" className="auth-submit" disabled={busy}>
-          {t("Create account", "အကောင့်ဖွင့်ပါ")}
+          {/* "Get Started" matches the mobile app's onboarding CTA
+              (i18n auth.getStarted) — the account already exists by this step. */}
+          {t("Get Started", "စတင်လိုက်ပါ")}
           <Check className="icon-sm" strokeWidth={1.75} />
         </button>
       </div>
@@ -1507,9 +1512,9 @@ export function AuthModal() {
 
   if (!open) return null;
 
-  const isOtp = tab === "signup" && step === 2 && !done;
   // "Solo" = full-width, promo-rail-hidden steps: OTP verify (2) + the
-  // form-heavy business-details step (3). isOtp stays OTP-only (footer hide).
+  // form-heavy business-details step (3). Drives the layout AND hides the
+  // "Have an account? Sign in" footer (moot once signed in at these steps).
   const isSolo = tab === "signup" && (step === 2 || step === 3) && !done;
 
   return (
@@ -1675,7 +1680,9 @@ export function AuthModal() {
                 </div>
               )}
 
-              {!isOtp && tab !== "forgot" && (
+              {/* Footer hidden on the solo steps: OTP (verifying) and the
+                  business step (already signed in — a "Sign in" link is moot). */}
+              {!isSolo && tab !== "forgot" && (
                 <div className="auth-foot">
                   {tab === "signin" ? (
                     <>
