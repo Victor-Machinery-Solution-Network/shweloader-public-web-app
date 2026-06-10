@@ -1,0 +1,93 @@
+"use client";
+import { useCallback, useEffect, useRef } from "react";
+import { useChatStore, nextTempId } from "./store";
+import { fromServerMessage } from "./mappers";
+import type { ChatMessage, ServerMessage } from "./types";
+
+async function postJson(url: string, body: unknown): Promise<Response> {
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export function useChatSync(sessionId: number | null) {
+  const setMessages = useChatStore((s) => s.setMessages);
+  const addOptimistic = useChatStore((s) => s.addOptimistic);
+  const confirmOptimistic = useChatStore((s) => s.confirmOptimistic);
+  const setStatus = useChatStore((s) => s.setStatus);
+  const setUnread = useChatStore((s) => s.setUnread);
+  const lastTypingSent = useRef(0);
+
+  // Load history when a session becomes active.
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    fetch(`/api/chat/history?sessionId=${sessionId}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { messages: [] }))
+      .then((data: { messages: ServerMessage[] }) => {
+        if (cancelled) return;
+        setMessages(sessionId, (data.messages ?? []).map(fromServerMessage));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, setMessages]);
+
+  const send = useCallback(
+    async (text: string) => {
+      if (!sessionId) return;
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const tempId = nextTempId();
+      const optimistic: ChatMessage = {
+        id: tempId,
+        serverId: null,
+        senderType: "user",
+        senderName: null,
+        text: trimmed,
+        attachments: [],
+        product: null,
+        createdAt: new Date().toISOString(),
+        status: "sending",
+      };
+      addOptimistic(sessionId, optimistic);
+      try {
+        const res = await postJson("/api/chat/send", { sessionId, text: trimmed });
+        if (res.ok) {
+          const { messageId } = (await res.json()) as { messageId: number };
+          confirmOptimistic(sessionId, tempId, messageId);
+        } else {
+          setStatus(sessionId, tempId, "failed");
+          if (res.status === 403) {
+            const d = (await res.json().catch(() => ({}))) as { error?: string; reason?: string };
+            if (d.error === "ACCOUNT_BLACKLISTED") {
+              window.dispatchEvent(new CustomEvent("account-blacklisted", { detail: { reason: d.reason } }));
+            }
+          }
+        }
+      } catch {
+        setStatus(sessionId, tempId, "failed");
+      }
+    },
+    [sessionId, addOptimistic, confirmOptimistic, setStatus],
+  );
+
+  const markRead = useCallback(() => {
+    if (!sessionId) return;
+    setUnread(sessionId, 0);
+    void postJson("/api/chat/read", { sessionId }).catch(() => {});
+  }, [sessionId, setUnread]);
+
+  const notifyTyping = useCallback(() => {
+    if (!sessionId) return;
+    const t = Date.now();
+    if (t - lastTypingSent.current < 1000) return; // throttle 1s
+    lastTypingSent.current = t;
+    void postJson("/api/chat/typing", { sessionId }).catch(() => {});
+  }, [sessionId]);
+
+  return { send, markRead, notifyTyping };
+}
