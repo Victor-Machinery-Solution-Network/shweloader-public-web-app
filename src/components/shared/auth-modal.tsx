@@ -98,6 +98,16 @@ async function readError(res: Response, fallback: string): Promise<string> {
 const cleanPhone = (s: string): string => s.trim().replace(/[^\d+]/g, "");
 /** Permissive Myanmar mobile: local 09 + 7–9 digits, or intl +95 9 + 7–9. */
 const MM_PHONE_RE = /^(?:09\d{7,9}|\+?959\d{7,9})$/;
+/** Display a Myanmar number with exactly ONE +95 country code, however it was
+ *  typed — so the OTP screen never shows a doubled "+95 +959…". Keeps an
+ *  existing +95/95 prefix, converts local 09… → +959…. */
+const displayPhone = (raw: string): string => {
+  const c = cleanPhone(raw);
+  if (c.startsWith("+95")) return c; // already +95…
+  if (c.startsWith("95")) return "+" + c; // 95… missing the +
+  if (c.startsWith("0")) return "+95" + c.slice(1); // local 09… → +959…
+  return c; // anything else: show as entered
+};
 /** A login identifier that's only phone characters — clean it like a phone so a
  *  number typed with spaces still matches the stored (cleaned) value. */
 const PHONE_LIKE_RE = /^[\d\s+()-]+$/;
@@ -821,7 +831,7 @@ function SignUpStep2({
           "Enter the 6-digit code we sent to ",
           "၆ လုံးပါ ကုဒ်ကို ဤနံပါတ်သို့ ပို့ပြီးပါပြီ ",
         )}
-        <strong>+95 {data.phone || "9 7777 0000"}</strong>
+        <strong>{displayPhone(data.phone) || "+95 9 777 0000"}</strong>
       </p>
 
       <div className="auth-otp" onPaste={onPaste}>
@@ -1376,7 +1386,7 @@ function ForgotPasswordForm({
     <form className="auth-form" onSubmit={reset}>
       <p className="auth-step-sub">
         {t("Enter the code and your new password.", "ကုဒ်နှင့် စကားဝှက်အသစ် ထည့်ပါ။")}{" "}
-        <strong>+95 {phone}</strong>
+        <strong>{displayPhone(phone)}</strong>
       </p>
       <FloatingField
         label={t("6-digit code", "၆ လုံးပါ ကုဒ်")}
