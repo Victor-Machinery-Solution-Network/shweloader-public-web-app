@@ -216,6 +216,16 @@
   border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.14);
   overflow: hidden;
 }
+/* Portaled variant (auth modal): rendered to <body> with fixed positioning via
+   inline left/width/top|bottom, so it escapes the modal's overflow:hidden clip.
+   Null the base `right:0` (left+width drive it) and sit above the modal overlay
+   (z-index 200). Flex column so the sticky search stays and the list scrolls. */
+.pf-combo-pop--fixed {
+  right: auto;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
 .pf-combo-search {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 12px; border-bottom: 1px solid var(--m-line);
