@@ -40,6 +40,9 @@ export function LiveChat() {
   // route CSS + the product DOM can briefly persist after a soft nav.
   const pathname = usePathname();
   const onProductPage = pathname?.startsWith("/product/") ?? false;
+  // Hide the floating launcher on the full /chat page — it renders the same
+  // core, and the two would otherwise fight over the shared activeSessionId.
+  const onChatPage = pathname?.startsWith("/chat") ?? false;
 
   const [open, setOpen] = useState(false);
   const [bootstrapping, setBootstrapping] = useState(false);
@@ -114,6 +117,10 @@ export function LiveChat() {
     window.addEventListener("shwe:open-chat", onOpenChat);
     return () => window.removeEventListener("shwe:open-chat", onOpenChat);
   }, []);
+
+  // Don't render the floating launcher on the full chat page (avoids a second
+  // chat surface fighting over the shared store). All hooks above still run.
+  if (onChatPage) return null;
 
   return (
     <>
