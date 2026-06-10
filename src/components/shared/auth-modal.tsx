@@ -38,7 +38,7 @@ import "@/styles/pages/profile.css";
 /** Bilingual picker bound to the global locale — mirrors the design's `t(en,my)`. */
 type Tr = (en: string, my: string) => string;
 
-type Tab = "signin" | "signup";
+type Tab = "signin" | "signup" | "forgot";
 
 /** "Other" sentinel for the business-type picker — mirrors the mobile app and
  *  routes through the worker's `custom_business_type` path. */
@@ -1028,6 +1028,221 @@ function SignUpStep3({
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
+// ---------------------------------------------------------------------------
+// Forgot password — phone → OTP + new password (worker reset-password)
+// ---------------------------------------------------------------------------
+
+function ForgotPasswordForm({
+  t,
+  onBackToSignIn,
+}: {
+  t: Tr;
+  onBackToSignIn: () => void;
+}) {
+  const [step, setStep] = useState<1 | 2>(1);
+  const [phone, setPhone] = useState("");
+  const [requestId, setRequestId] = useState<string | undefined>(undefined);
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<Record<string, string>>({});
+
+  const sendOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    if (!phone.trim()) {
+      setErr({ phone: t("Enter your phone number", "ဖုန်းနံပါတ် ထည့်ပါ") });
+      return;
+    }
+    setErr({});
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/forgot/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim() }),
+      });
+      const d = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        requestId?: string;
+      };
+      if (!res.ok) {
+        if (res.status === 404) {
+          setErr({
+            phone: t(
+              "No account uses that phone number.",
+              "ထိုဖုန်းနံပါတ်ဖြင့် အကောင့်မရှိပါ။",
+            ),
+          });
+        } else if (res.status === 403) {
+          toast.error(
+            t("This account has been suspended.", "ဤအကောင့်ကို ဆိုင်းငံ့ထားပါသည်။"),
+          );
+        } else {
+          toast.error(
+            d.error ||
+              t("Couldn't send the code. Try again.", "ကုဒ်ပို့၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။"),
+          );
+        }
+        return;
+      }
+      setRequestId(d.requestId ?? undefined);
+      setStep(2);
+      toast.success(t("Code sent", "ကုဒ် ပို့ပြီးပါပြီ"));
+    } catch {
+      toast.error(t("Something went wrong. Try again.", "တစ်ခုခုမှားယွင်းနေပါသည်။"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const reset = async (e: FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    const next: Record<string, string> = {};
+    if (code.trim().length !== 6)
+      next.code = t(
+        "Enter the 6-digit code we sent",
+        "ပို့လိုက်သော ၆ လုံးပါ ကုဒ်ကို ထည့်ပါ",
+      );
+    if (password.length < 6)
+      next.password = t(
+        "At least 6 characters",
+        "အနည်းဆုံး ၆ လုံး",
+      );
+    if (password !== confirm)
+      next.confirm = t("Passwords don't match", "စကားဝှက်များ မတူညီပါ");
+    if (Object.keys(next).length) {
+      setErr(next);
+      return;
+    }
+    setErr({});
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/forgot/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: phone.trim(),
+          code: code.trim(),
+          password,
+          requestId,
+        }),
+      });
+      const d = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        if (res.status === 401) {
+          setErr({
+            code: t(
+              "Invalid or expired code.",
+              "ကုဒ် မှားယွင်းနေသည် သို့မဟုတ် သက်တမ်းကုန်သွားပါပြီ။",
+            ),
+          });
+        } else if (res.status === 403) {
+          toast.error(
+            t("This account has been suspended.", "ဤအကောင့်ကို ဆိုင်းငံ့ထားပါသည်။"),
+          );
+        } else {
+          toast.error(
+            d.error ||
+              t("Couldn't reset your password.", "စကားဝှက် ပြန်လည်သတ်မှတ်၍ မရပါ။"),
+          );
+        }
+        return;
+      }
+      toast.success(
+        t("Password reset. Please sign in.", "စကားဝှက် ပြောင်းပြီးပါပြီ။ ဝင်ရောက်ပါ။"),
+      );
+      onBackToSignIn();
+    } catch {
+      toast.error(t("Something went wrong. Try again.", "တစ်ခုခုမှားယွင်းနေပါသည်။"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (step === 1) {
+    return (
+      <form className="auth-form" onSubmit={sendOtp}>
+        <p className="auth-step-sub">
+          {t(
+            "Enter your phone number and we'll send a reset code.",
+            "သင့်ဖုန်းနံပါတ်ထည့်ပါ၊ ပြန်လည်သတ်မှတ်ရန် ကုဒ်ပို့ပေးပါမည်။",
+          )}
+        </p>
+        <FloatingField
+          label={t("Phone number", "ဖုန်းနံပါတ်")}
+          autoFocus
+          inputMode="tel"
+          autoComplete="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          error={err.phone}
+        />
+        <button type="submit" className="auth-submit" disabled={busy}>
+          {t("Send code", "ကုဒ်ပို့ပါ")}
+          <ArrowRight className="icon-sm" strokeWidth={1.75} />
+        </button>
+        <div className="auth-forgot-row">
+          <button type="button" className="auth-link" onClick={onBackToSignIn}>
+            {t("Back to sign in", "ဝင်ရန် သို့ ပြန်သွားရန်")}
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <form className="auth-form" onSubmit={reset}>
+      <p className="auth-step-sub">
+        {t("Enter the code and your new password.", "ကုဒ်နှင့် စကားဝှက်အသစ် ထည့်ပါ။")}{" "}
+        <strong>+95 {phone}</strong>
+      </p>
+      <FloatingField
+        label={t("6-digit code", "၆ လုံးပါ ကုဒ်")}
+        autoFocus
+        inputMode="numeric"
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        error={err.code}
+      />
+      <FloatingPassword
+        label={t("New password", "စကားဝှက်အသစ်")}
+        t={t}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        autoComplete="new-password"
+        error={err.password}
+      />
+      <FloatingPassword
+        label={t("Confirm new password", "စကားဝှက်အသစ် အတည်ပြုပါ")}
+        t={t}
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+        autoComplete="new-password"
+        error={err.confirm}
+      />
+      <button type="submit" className="auth-submit" disabled={busy}>
+        {t("Reset password", "စကားဝှက် ပြန်သတ်မှတ်ပါ")}
+        <ArrowRight className="icon-sm" strokeWidth={1.75} />
+      </button>
+      <div className="auth-forgot-row">
+        <button
+          type="button"
+          className="auth-link"
+          onClick={() => {
+            setErr({});
+            setStep(1);
+          }}
+        >
+          {t("Use a different number", "အခြားနံပါတ် သုံးရန်")}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export function AuthModal() {
   const { mode, close } = useAuthUI();
   const { refresh } = useAuth();
@@ -1202,15 +1417,20 @@ export function AuthModal() {
                   </h1>
                   <SignInForm
                     t={t}
-                    onForgot={() =>
-                      toast(
-                        t(
-                          "Password reset is coming soon.",
-                          "စကားဝှက်ပြန်လည်သတ်မှတ်ခြင်း မကြာမီ ရရှိပါမည်။",
-                        ),
-                      )
-                    }
+                    onForgot={() => goTab("forgot")}
                     onSuccess={finish}
+                  />
+                </>
+              )}
+
+              {tab === "forgot" && (
+                <>
+                  <h1 className="auth-h1" id={titleId}>
+                    {t("Reset your password", "စကားဝှက် ပြန်သတ်မှတ်ပါ")}
+                  </h1>
+                  <ForgotPasswordForm
+                    t={t}
+                    onBackToSignIn={() => goTab("signin")}
                   />
                 </>
               )}
@@ -1279,7 +1499,7 @@ export function AuthModal() {
                 </div>
               )}
 
-              {!isOtp && (
+              {!isOtp && tab !== "forgot" && (
                 <div className="auth-foot">
                   {tab === "signin" ? (
                     <>
