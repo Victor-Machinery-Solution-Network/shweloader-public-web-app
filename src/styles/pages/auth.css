@@ -594,6 +594,49 @@
   padding-bottom: 0;
 }
 
+/* Selects + comboboxes in the auth MODAL. A <select> / combobox <button> shows
+   its current option text in the field and can't use the :placeholder-shown
+   float-trick the inputs use — so without these rules the .auth-label sits
+   centered ON TOP of the field's value text (the "Business type"/"Select a type"
+   overlap). Mirror profile.css's `.pf-card.auth-form` select styling (which only
+   targets the profile page): reserve top room on the control and keep the label
+   permanently floated. text-align:left is for the combobox trigger (a <button>,
+   which would otherwise centre its text). */
+.auth-form .auth-float--select { position: relative; }
+.auth-form .auth-float--select > .pf-select {
+  width: 100%;
+  border: 1px solid var(--m-line-2);
+  background: var(--m-bg);
+  border-radius: 12px;
+  padding: 22px 40px 8px 14px;
+  min-height: 58px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color: var(--m-ink);
+  text-align: left;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.auth-form .auth-float--select > .pf-select:focus {
+  border-color: var(--m-ink);
+  box-shadow: 0 0 0 3px rgba(20,18,12,0.06);
+}
+[data-theme="dark"] .auth-form .auth-float--select > .pf-select:focus {
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
+}
+.auth-form .auth-float--select > .auth-label {
+  transform: translate(0, -18px) scale(0.74);
+  color: var(--m-fg-2);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.auth-form .auth-float--select:has(> .pf-select:focus) > .auth-label {
+  color: var(--m-ink);
+}
+
 /* Help text under a floating field — looks better when slightly inset. */
 .auth-form .auth-float + .auth-help,
 .auth-form .auth-float .auth-help {
