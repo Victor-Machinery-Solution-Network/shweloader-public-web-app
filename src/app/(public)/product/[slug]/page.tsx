@@ -88,17 +88,13 @@ export async function generateMetadata({
     ? truncate(toPlainText(listing.description), 200)
     : `${listing.title} for ${listing.isRent ? "rent" : "sale"} on ShweLoader.`;
 
-  const images = [listing.thumbnail, ...listing.images]
-    .map((img) => assetUrl(img.url ?? img.thumbUrl))
-    .filter((u): u is string => !!u)
-    .slice(0, 4)
-    .map((url) => ({ url, width: 1200, height: 800, alt: listing.title }));
-
   return buildMetadata({
     title: listing.title,
     description,
     path: `/product/${canonicalSlug}`,
-    images: images.length ? images : undefined,
+    // og:image + twitter:image come from the colocated opengraph-image route
+    // (branded photo-hero card), not the raw photo.
+    socialImagesFromRoute: true,
   });
 }
 

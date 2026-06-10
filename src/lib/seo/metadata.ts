@@ -18,20 +18,11 @@ export const baseMetadata: Metadata = {
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
-  keywords: [
-    "heavy equipment",
-    "machinery",
-    "Myanmar",
-    "excavator",
-    "wheel loader",
-    "crane",
-    "bulldozer",
-    "dump truck",
-    "for sale",
-    "for rent",
-    "ShweLoader",
-  ],
-  alternates: { canonical: "/" },
+  // No `keywords`: Google has ignored <meta name="keywords"> since ~2009.
+  // No global `alternates.canonical`: a root-level "/" canonical is INHERITED by
+  // any indexable page that omits its own `path`, wrongly marking it a duplicate
+  // of the homepage. Each page sets its canonical via buildMetadata({ path });
+  // a page with no path self-canonicalizes to its own URL (the safe default).
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
@@ -73,6 +64,10 @@ export interface PageMetaInput {
   publishedTime?: string;
   authors?: string[];
   section?: string;
+  /** Set when a colocated opengraph-image route owns the social image. Omits
+   *  openGraph/twitter `images` here so the file convention isn't overridden
+   *  (config-level images take precedence over file-based ones in Next). */
+  socialImagesFromRoute?: boolean;
 }
 
 /** Build per-page metadata that inherits the base + sets canonical + OG. */
@@ -80,17 +75,21 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
   const { title, description, path, images, type, noindex } = input;
   const canonical = path || undefined;
   const resolvedDescription = description ?? DEFAULT_DESCRIPTION;
-  // Always emit an og:image. Per-page metadata replaces (doesn't deep-merge) the
-  // root's openGraph, so default every page that passes no explicit images to the
-  // static branded share banner (public/brand/og-banner.png, 1800×753).
-  const ogImages = images ?? [
-    {
-      url: absoluteUrl("/brand/og-banner.png"),
-      width: 1800,
-      height: 753,
-      alt: title ?? DEFAULT_TITLE,
-    },
-  ];
+  // Emit an og:image unless a colocated opengraph-image route owns it (then we
+  // must leave the `images` key absent or it overrides the file convention).
+  // Pages with neither default to the static branded banner (1800×753).
+  const ogImages = images
+    ? images
+    : input.socialImagesFromRoute
+      ? undefined
+      : [
+          {
+            url: absoluteUrl("/brand/og-banner.png"),
+            width: 1800,
+            height: 753,
+            alt: title ?? DEFAULT_TITLE,
+          },
+        ];
 
   return {
     // Pages with a title get the "%s · ShweLoader" template; pages without one
@@ -121,7 +120,7 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
       url: canonical ? absoluteUrl(canonical) : SITE_URL,
       locale: "en_MM",
       alternateLocale: ["my_MM"],
-      images: ogImages,
+      ...(ogImages ? { images: ogImages } : {}),
       ...(input.publishedTime
         ? { publishedTime: input.publishedTime }
         : {}),
@@ -137,7 +136,7 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
       creator: TWITTER_HANDLE,
       title: title ?? DEFAULT_TITLE,
       description: description ?? DEFAULT_DESCRIPTION,
-      images: ogImages.map((i) => i.url),
+      ...(ogImages ? { images: ogImages.map((i) => i.url) } : {}),
     },
   };
 }

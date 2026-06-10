@@ -72,15 +72,13 @@ export async function generateMetadata({
   const post = await resolvePost(slug);
   if (!post) return {};
 
-  const cover = assetUrl(post.cover.url);
   return buildMetadata({
     title: post.title,
     description: excerpt(post),
     path: `/blogs/${blogSlug(post)}`,
     type: "article",
-    images: cover
-      ? [{ url: cover, width: 1200, height: 675, alt: post.title }]
-      : undefined,
+    // og:image + twitter:image come from the colocated opengraph-image route.
+    socialImagesFromRoute: true,
     publishedTime: post.date ?? undefined,
     authors: post.author ? [post.author] : undefined,
     section: post.category ?? undefined,

@@ -37,20 +37,23 @@ export function organizationSchema(): Json {
     logo: absoluteUrl("/brand/logo_dark.svg"),
     description:
       "Myanmar's marketplace for heavy equipment and machinery — buy, rent, or sell construction equipment, excavators, loaders, cranes, and attachments.",
-    sameAs: [
-      "https://www.facebook.com/shweloader",
-      "https://www.instagram.com/shweloader",
-    ],
+    sameAs: ["https://www.facebook.com/profile.php?id=61559388680768"],
+    // Online-only business: declare the service country, NOT a street/region.
+    // A fabricated locality (e.g. a Yangon address) is a false local signal that
+    // would conflict with having no physical presence / Google Business Profile.
+    areaServed: "MM",
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
+      // Business hotline (also the Viber number). Keep in sync with
+      // footer.tsx HOTLINE_TEL.
+      telephone: "+959940475000",
       areaServed: "MM",
       availableLanguage: ["English", "Burmese"],
     },
     address: {
       "@type": "PostalAddress",
       addressCountry: "MM",
-      addressRegion: "Yangon",
     },
   };
 }
@@ -94,16 +97,25 @@ export function productSchema(listing: Listing): Json {
     .map((i) => i.url)
     .filter((u): u is string => !!u);
 
-  const price =
-    listing.sale && !listing.sale.hide
-      ? (listing.sale.usd ?? listing.sale.mmk)
-      : null;
-  const currency =
-    listing.sale?.currency === "USD" && listing.sale.usd != null
-      ? "USD"
-      : listing.sale?.mmk != null
-        ? "MMK"
-        : "USD";
+  // Derive price + currency together so they can never disagree, mirroring
+  // formatMoney() exactly (USD only when display-currency is USD AND a usd value
+  // exists; else MMK; else USD) — so the structured-data price matches the price
+  // shown on the page. The old code took `usd ?? mmk` for the value but labelled
+  // the currency independently, so a USD value could ship as `priceCurrency:MMK`.
+  let price: number | null = null;
+  let currency = "USD";
+  if (listing.sale && !listing.sale.hide) {
+    if (listing.sale.currency === "USD" && listing.sale.usd != null) {
+      price = listing.sale.usd;
+      currency = "USD";
+    } else if (listing.sale.mmk != null) {
+      price = listing.sale.mmk;
+      currency = "MMK";
+    } else if (listing.sale.usd != null) {
+      price = listing.sale.usd;
+      currency = "USD";
+    }
+  }
 
   const offers =
     price != null
