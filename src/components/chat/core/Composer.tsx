@@ -28,7 +28,11 @@ export function Composer({
   disabled,
   sessionId,
 }: {
-  onSend: (text: string, attachments?: ChatAttachment[]) => void;
+  onSend: (
+    text: string,
+    attachments?: ChatAttachment[],
+    listing?: { saleListingId?: number; rentListingId?: number },
+  ) => void;
   onTyping: () => void;
   disabled?: boolean;
   sessionId: number | null;

@@ -107,8 +107,10 @@ export function LiveChat() {
   // resets when signedIn flips false → true).
   useEffect(() => {
     if (!signedIn) {
-      // Reset so the sync fires again on the next sign-in.
+      // Reset so both the sync AND the session bootstrap fire again on the next
+      // sign-in (e.g. after a token-expiry logout + re-login as another user).
       sessionSyncedRef.current = false;
+      bootstrappedRef.current = false;
       return;
     }
     if (sessionSyncedRef.current) return;
