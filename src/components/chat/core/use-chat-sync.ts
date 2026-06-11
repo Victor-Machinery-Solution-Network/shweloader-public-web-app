@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useChatStore, nextTempId } from "./store";
 import { fromServerMessage, messageKey } from "./mappers";
-import type { ChatMessage, ServerMessage } from "./types";
+import type { ChatAttachment, ChatMessage, ServerMessage } from "./types";
 
 async function postJson(url: string, body: unknown): Promise<Response> {
   return fetch(url, {
@@ -44,25 +44,29 @@ export function useChatSync(sessionId: number | null) {
   }, [sessionId, setMessages]);
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, attachments?: ChatAttachment[]) => {
       if (!sessionId) return;
       const trimmed = text.trim();
-      if (!trimmed) return;
+      if (!trimmed && !(attachments?.length)) return;
       const tempId = nextTempId();
       const optimistic: ChatMessage = {
         id: tempId,
         serverId: null,
         senderType: "user",
         senderName: null,
-        text: trimmed,
-        attachments: [],
+        text: trimmed || null,
+        attachments: attachments ?? [],
         product: null,
         createdAt: new Date().toISOString(),
         status: "sending",
       };
       addOptimistic(sessionId, optimistic);
       try {
-        const res = await postJson("/api/chat/send", { sessionId, text: trimmed });
+        const res = await postJson("/api/chat/send", {
+          sessionId,
+          text: trimmed,
+          attachments: attachments?.length ? attachments : undefined,
+        });
         if (res.ok) {
           const { messageId } = (await res.json()) as { messageId: number };
           confirmOptimistic(sessionId, tempId, messageId);
