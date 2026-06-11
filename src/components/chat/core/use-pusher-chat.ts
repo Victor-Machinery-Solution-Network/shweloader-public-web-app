@@ -27,6 +27,16 @@ export function usePusherChat(sessionId: number | null): { adminTyping: boolean 
       if (!pusher || cancelled) return;
       channel = pusher.subscribe(name);
 
+      // Diagnostics: make the private-channel handshake visible in the console so
+      // a subscribe/auth failure (the usual cause of "outbound works, inbound
+      // dead") is obvious rather than silent.
+      channel.bind("pusher:subscription_succeeded", () => {
+        console.info("[chat] subscribed OK:", name);
+      });
+      channel.bind("pusher:subscription_error", (status: unknown) => {
+        console.error("[chat] subscription_error:", name, status);
+      });
+
       channel.bind("new-message", (raw: PusherMessage) => {
         const m = fromPusherMessage(raw);
         const added = addMessage(sessionId, m);
