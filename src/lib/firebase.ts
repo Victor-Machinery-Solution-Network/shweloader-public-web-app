@@ -22,22 +22,14 @@ export function getRtdb(): Promise<Database | null> {
     dbPromise = (async () => {
       try {
         const { initializeApp, getApps, getApp } = await import("firebase/app");
-        const { getAuth, signInAnonymously } = await import("firebase/auth");
         const { getDatabase } = await import("firebase/database");
 
         const app =
-          getApps().length > 0
-            ? getApp()
-            : initializeApp(FIREBASE);
+          getApps().length > 0 ? getApp() : initializeApp(FIREBASE);
 
-        const auth = getAuth(app);
-        // Sign in anonymously so RTDB rules that require auth are satisfied.
-        // If already signed in (currentUser exists), skip the call to avoid
-        // a redundant network round-trip.
-        if (!auth.currentUser) {
-          await signInAnonymously(auth);
-        }
-
+        // The RTDB rules for admin-presence/user-presence are public
+        // read/write (matching the mobile app, which also connects
+        // unauthenticated), so no Firebase Auth sign-in is needed.
         return getDatabase(app, FIREBASE.databaseURL);
       } catch (err) {
         // Defensive: never crash the page if Firebase is misconfigured.
