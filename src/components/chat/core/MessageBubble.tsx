@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/assets";
+import { formatMoney } from "@/lib/format";
 import { Lightbox } from "./Lightbox";
 import { SeenTick } from "./SeenTick";
-import type { ChatMessage, ChatAttachment } from "./types";
+import type { ChatMessage, ChatAttachment, ProductRef } from "./types";
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -63,6 +64,46 @@ function ImageGrid({
   );
 }
 
+/** Compact product-reference card rendered above the text bubble. Static — no
+ *  link (the payload carries no slug). */
+function ProductCard({ product }: { product: ProductRef }) {
+  const thumbSrc = assetUrl(product.productThumbnail ?? null);
+  const price = formatMoney(product.mmkPrice, product.usdPrice, product.displayCurrency);
+
+  const subParts: string[] = [];
+  if (product.brandName) subParts.push(product.brandName);
+  if (product.customId) subParts.push(product.customId);
+  const sub = subParts.join(" · ");
+
+  return (
+    <div className="chat-product-card">
+      {thumbSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={thumbSrc}
+          alt={product.productName ?? "Product"}
+          className="chat-product-thumb"
+        />
+      ) : (
+        <span className="chat-product-thumb-placeholder" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="3" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="M21 15l-5-5L5 21" />
+          </svg>
+        </span>
+      )}
+      <div className="chat-product-body">
+        {product.productName && (
+          <span className="chat-product-name">{product.productName}</span>
+        )}
+        {sub && <span className="chat-product-sub">{sub}</span>}
+        {price && <span className="chat-product-price">{price}</span>}
+      </div>
+    </div>
+  );
+}
+
 /** Renders a single PDF/non-image file chip. */
 function FileChip({ att }: { att: ChatAttachment }) {
   const href = assetUrl(att.fileUrl);
@@ -114,6 +155,9 @@ export function MessageBubble({
 
   return (
     <div className={cn("chat-msg", mine ? "is-me" : "is-agent")}>
+      {/* Product reference card — rendered above the text bubble */}
+      {message.product && <ProductCard product={message.product} />}
+
       {message.text && <div className="chat-bubble">{message.text}</div>}
 
       {/* Image grid */}

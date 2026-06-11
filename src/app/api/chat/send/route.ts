@@ -15,14 +15,20 @@ export async function POST(req: Request) {
     sessionId?: number;
     text?: string;
     attachments?: ChatAttachment[];
+    saleListingId?: number;
+    rentListingId?: number;
   };
   const text = body.text?.trim();
   const attachments = body.attachments;
+  const saleListingId = body.saleListingId;
+  const rentListingId = body.rentListingId;
+  const hasListing = saleListingId != null || rentListingId != null;
 
   if (!body.sessionId) {
     return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
   }
-  if (!text && !(attachments?.length)) {
+  // The worker allows a message with only a listing ref (no text/attachments).
+  if (!text && !(attachments?.length) && !hasListing) {
     return NextResponse.json({ error: "Message or attachment is required" }, { status: 400 });
   }
 
@@ -34,6 +40,8 @@ export async function POST(req: Request) {
         body: {
           message: text || undefined,
           attachments: attachments?.length ? attachments : undefined,
+          sale_listing_id: saleListingId ?? undefined,
+          rent_listing_id: rentListingId ?? undefined,
         },
       },
     );

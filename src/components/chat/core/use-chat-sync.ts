@@ -44,10 +44,15 @@ export function useChatSync(sessionId: number | null) {
   }, [sessionId, setMessages]);
 
   const send = useCallback(
-    async (text: string, attachments?: ChatAttachment[]) => {
+    async (
+      text: string,
+      attachments?: ChatAttachment[],
+      listing?: { saleListingId?: number; rentListingId?: number },
+    ) => {
       if (!sessionId) return;
       const trimmed = text.trim();
-      if (!trimmed && !(attachments?.length)) return;
+      // Allow sending if there's text, attachments, or a listing reference.
+      if (!trimmed && !(attachments?.length) && !listing) return;
       const tempId = nextTempId();
       const optimistic: ChatMessage = {
         id: tempId,
@@ -66,6 +71,8 @@ export function useChatSync(sessionId: number | null) {
           sessionId,
           text: trimmed,
           attachments: attachments?.length ? attachments : undefined,
+          saleListingId: listing?.saleListingId,
+          rentListingId: listing?.rentListingId,
         });
         if (res.ok) {
           const { messageId } = (await res.json()) as { messageId: number };
