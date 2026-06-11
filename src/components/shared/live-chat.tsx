@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Maximize2, X } from "lucide-react";
+import { ArrowRight, Bell, BellOff, Maximize2, X } from "lucide-react";
 import { HeadsetIcon } from "@/components/shared/icons/headset-icon";
 
 import { useAuthUI } from "@/components/providers/auth-ui";
@@ -16,7 +16,9 @@ import { usePresence } from "@/components/chat/core/use-presence";
 import { Thread } from "@/components/chat/core/Thread";
 import { Composer } from "@/components/chat/core/Composer";
 import type { ChatSession } from "@/components/chat/core/types";
-import { PRESENCE_ENABLED } from "@/lib/env";
+import { PRESENCE_ENABLED, WEB_PUSH_ENABLED } from "@/lib/env";
+import { useWebPush } from "@/components/chat/core/use-web-push";
+import { cn } from "@/lib/utils";
 // The launcher renders the shared chat-core (Thread/Composer/MessageBubble),
 // which emit .chat-* classes. Those styles live in chat.css — imported here so
 // the floating panel is styled too (the /chat page imports it separately).
@@ -77,6 +79,10 @@ export function LiveChat() {
   const numericUserId =
     user?.id != null ? Number(user.id) : null;
   const { supportOnline } = usePresence(numericUserId, open && signedIn);
+
+  // Phase 4: Web push notification toggle. No-op when WEB_PUSH_ENABLED is false
+  // (NEXT_PUBLIC_VAPID_PUBLIC_KEY not set) or the browser lacks SW/Push support.
+  const webPush = useWebPush();
 
   // Bootstrap the session when the panel is opened while signed in.
   // Guard ensures only one POST per component lifecycle regardless of
@@ -265,6 +271,27 @@ export function LiveChat() {
             <Link className="lc-expand" href="/chat" aria-label="Open full screen">
               <Maximize2 />
             </Link>
+          )}
+          {WEB_PUSH_ENABLED && webPush.supported && signedIn && (
+            <button
+              type="button"
+              className={cn(
+                "chat-notif-btn",
+                webPush.permission === "denied" && "is-denied",
+                webPush.subscribed && webPush.permission === "granted" && "is-on",
+              )}
+              onClick={() => (webPush.subscribed ? webPush.disable() : webPush.enable())}
+              aria-label={
+                webPush.permission === "denied"
+                  ? "Notifications blocked — allow them in browser settings"
+                  : webPush.subscribed
+                    ? "Disable chat notifications"
+                    : "Enable chat notifications"
+              }
+              disabled={webPush.permission === "denied"}
+            >
+              {webPush.subscribed && webPush.permission === "granted" ? <Bell /> : <BellOff />}
+            </button>
           )}
           <button
             type="button"

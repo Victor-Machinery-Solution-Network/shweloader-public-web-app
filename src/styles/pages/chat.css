@@ -635,3 +635,23 @@
 [data-theme="dark"] .chat-product-price {
   color: var(--m-gold-ink);
 }
+
+/* ---- Phase 4: web push notification toggle button ---- */
+.chat-notif-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--m-fg-2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.chat-notif-btn:hover { background: var(--m-bg-2); color: var(--m-ink); }
+.chat-notif-btn.is-on { color: var(--m-gold-ink); }
+.chat-notif-btn.is-denied { color: var(--m-fg-3); cursor: not-allowed; opacity: 0.5; }
+.chat-notif-btn svg { width: 16px; height: 16px; }

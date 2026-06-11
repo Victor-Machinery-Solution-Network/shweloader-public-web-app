@@ -51,6 +51,14 @@ export const FIREBASE = {
  *  When false every presence path is a no-op and Firebase is never imported. */
 export const PRESENCE_ENABLED = !!(FIREBASE.apiKey && FIREBASE.databaseURL);
 
+// ---------------------------------------------------------------------------
+// Web Push (Phase 4) — NEXT_PUBLIC_VAPID_PUBLIC_KEY must be set to activate.
+// When absent every push path is a no-op: no SW registration, no permission
+// prompt, no UI change. The flag is inlined at build time.
+// ---------------------------------------------------------------------------
+export const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
+export const WEB_PUSH_ENABLED = !!VAPID_PUBLIC_KEY;
+
 /** Absolute URL helper for canonical/OG/sitemap links. Pass-through for inputs
  * that are already absolute (e.g. a full asset URL handed to og:image). */
 export function absoluteUrl(path = ""): string {

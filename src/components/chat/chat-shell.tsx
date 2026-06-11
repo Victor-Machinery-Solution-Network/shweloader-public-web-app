@@ -12,7 +12,9 @@ import { Thread } from "./core/Thread";
 import { Composer } from "./core/Composer";
 import type { ChatSession } from "./core/types";
 import { useAuth } from "@/lib/auth/use-auth";
-import { PRESENCE_ENABLED } from "@/lib/env";
+import { PRESENCE_ENABLED, WEB_PUSH_ENABLED } from "@/lib/env";
+import { useWebPush } from "./core/use-web-push";
+import { Bell, BellOff } from "lucide-react";
 
 /**
  * Support chat — Messenger-style two-pane client UI. Left: session list with
@@ -62,6 +64,8 @@ export function ChatShell({
   // The /chat page is always "active" — the user is signed in to reach it.
   const numericUserId = user?.id != null ? Number(user.id) : null;
   const { supportOnline } = usePresence(numericUserId, true);
+
+  const webPush = useWebPush();
 
   const [query, setQuery] = useState("");
 
@@ -215,6 +219,27 @@ export function ChatShell({
               <div className="chat-id-status is-closed">Session closed</div>
             )}
           </div>
+          {WEB_PUSH_ENABLED && webPush.supported && (
+            <button
+              type="button"
+              className={cn(
+                "chat-notif-btn",
+                webPush.permission === "denied" && "is-denied",
+                webPush.subscribed && webPush.permission === "granted" && "is-on",
+              )}
+              onClick={() => (webPush.subscribed ? webPush.disable() : webPush.enable())}
+              aria-label={
+                webPush.permission === "denied"
+                  ? "Notifications blocked — allow them in browser settings"
+                  : webPush.subscribed
+                    ? "Disable chat notifications"
+                    : "Enable chat notifications"
+              }
+              disabled={webPush.permission === "denied"}
+            >
+              {webPush.subscribed && webPush.permission === "granted" ? <Bell /> : <BellOff />}
+            </button>
+          )}
           <a
             href={`tel:${supportPhone}`}
             className="chat-id-call"
