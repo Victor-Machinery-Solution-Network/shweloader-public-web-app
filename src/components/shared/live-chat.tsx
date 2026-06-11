@@ -12,9 +12,11 @@ import { useAuth } from "@/lib/auth/use-auth";
 import { useChatStore } from "@/components/chat/core/store";
 import { usePusherChat } from "@/components/chat/core/use-pusher-chat";
 import { useChatSync } from "@/components/chat/core/use-chat-sync";
+import { usePresence } from "@/components/chat/core/use-presence";
 import { Thread } from "@/components/chat/core/Thread";
 import { Composer } from "@/components/chat/core/Composer";
 import type { ChatSession } from "@/components/chat/core/types";
+import { PRESENCE_ENABLED } from "@/lib/env";
 // The launcher renders the shared chat-core (Thread/Composer/MessageBubble),
 // which emit .chat-* classes. Those styles live in chat.css — imported here so
 // the floating panel is styled too (the /chat page imports it separately).
@@ -36,7 +38,7 @@ import "@/styles/pages/chat.css";
  * pulse/shake animations under `prefers-reduced-motion: reduce`.
  */
 export function LiveChat() {
-  const { signedIn } = useAuth();
+  const { signedIn, user } = useAuth();
   const { open: openAuth } = useAuthUI();
   const { t } = useI18n();
   // Lift the launcher above the product page's sticky enquiry bar. Driven by the
@@ -69,6 +71,12 @@ export function LiveChat() {
   const { send, markRead, notifyTyping } = useChatSync(
     open && signedIn ? activeSessionId : null,
   );
+
+  // Phase 3: Firebase RTDB presence. No-op when PRESENCE_ENABLED is false
+  // (no Firebase config present), keeping the static green dot unchanged.
+  const numericUserId =
+    user?.id != null ? Number(user.id) : null;
+  const { supportOnline } = usePresence(numericUserId, open && signedIn);
 
   // Bootstrap the session when the panel is opened while signed in.
   // Guard ensures only one POST per component lifecycle regardless of
@@ -236,7 +244,21 @@ export function LiveChat() {
           <div className="lc-head-meta">
             <div className="lc-head-title">{t("chat.supportName")}</div>
             <div className="lc-head-sub">
-              <span className="lc-dot" /> {t("chat.status")}
+              {/* When presence is enabled show a live dot; otherwise keep the
+                  static always-green dot so the UI is unchanged today. */}
+              {PRESENCE_ENABLED ? (
+                supportOnline ? (
+                  <>
+                    <span className="lc-dot" /> {t("chat.status")}
+                  </>
+                ) : (
+                  <span className="lc-dot lc-dot--away" />
+                )
+              ) : (
+                <>
+                  <span className="lc-dot" /> {t("chat.status")}
+                </>
+              )}
             </div>
           </div>
           {signedIn && (

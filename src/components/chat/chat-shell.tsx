@@ -7,9 +7,12 @@ import { cn } from "@/lib/utils";
 import { useChatStore } from "./core/store";
 import { usePusherChat } from "./core/use-pusher-chat";
 import { useChatSync } from "./core/use-chat-sync";
+import { usePresence } from "./core/use-presence";
 import { Thread } from "./core/Thread";
 import { Composer } from "./core/Composer";
 import type { ChatSession } from "./core/types";
+import { useAuth } from "@/lib/auth/use-auth";
+import { PRESENCE_ENABLED } from "@/lib/env";
 
 /**
  * Support chat — Messenger-style two-pane client UI. Left: session list with
@@ -44,6 +47,8 @@ export function ChatShell({
   sessions: initial,
   supportPhone = "+95977123456",
 }: ChatShellProps) {
+  const { user } = useAuth();
+
   const {
     sessions,
     messages,
@@ -52,6 +57,11 @@ export function ChatShell({
     setSessions,
     setActive,
   } = useChatStore();
+
+  // Phase 3: live admin presence via Firebase RTDB.
+  // The /chat page is always "active" — the user is signed in to reach it.
+  const numericUserId = user?.id != null ? Number(user.id) : null;
+  const { supportOnline } = usePresence(numericUserId, true);
 
   const [query, setQuery] = useState("");
 
@@ -192,7 +202,15 @@ export function ChatShell({
           <div className="chat-id-meta">
             <div className="chat-id-name">{SUPPORT_NAME}</div>
             {active && active.status !== "resolved" ? (
-              <div className="chat-id-status">Active now</div>
+              <div className="chat-id-status">
+                {/* When presence is enabled show live admin status; otherwise
+                    keep the existing static "Active now" text unchanged. */}
+                {PRESENCE_ENABLED
+                  ? supportOnline
+                    ? "Support online"
+                    : "Support away"
+                  : "Active now"}
+              </div>
             ) : (
               <div className="chat-id-status is-closed">Session closed</div>
             )}

@@ -31,6 +31,26 @@ export const API_BASE_URL =
 
 export const REVALIDATE_SECRET = process.env.REVALIDATE_SECRET || "";
 
+// ---------------------------------------------------------------------------
+// Firebase (Realtime Database presence) — Phase 3 web chat presence
+// All values are NEXT_PUBLIC_* (browser-side). When apiKey is absent the
+// feature is fully inert — no Firebase import, no network.
+// ---------------------------------------------------------------------------
+export const FIREBASE = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  databaseURL:
+    process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL ||
+    "https://shwe-loader-default-rtdb.asia-southeast1.firebasedatabase.app",
+};
+
+/** True only when the minimum Firebase config is present at build/runtime.
+ *  When false every presence path is a no-op and Firebase is never imported. */
+export const PRESENCE_ENABLED = !!(FIREBASE.apiKey && FIREBASE.databaseURL);
+
 /** Absolute URL helper for canonical/OG/sitemap links. Pass-through for inputs
  * that are already absolute (e.g. a full asset URL handed to og:image). */
 export function absoluteUrl(path = ""): string {
