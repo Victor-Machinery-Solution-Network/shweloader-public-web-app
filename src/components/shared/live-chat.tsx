@@ -211,6 +211,7 @@ export function LiveChat() {
               onSend={send}
               onTyping={notifyTyping}
               disabled={bootstrapping || activeSessionId == null}
+              sessionId={activeSessionId ?? null}
             />
           </>
         ) : (

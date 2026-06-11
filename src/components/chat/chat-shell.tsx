@@ -217,6 +217,7 @@ export function ChatShell({
             onSend={send}
             onTyping={notifyTyping}
             disabled={false}
+            sessionId={activeId ?? null}
           />
         ) : (
           <div className="chat-foot-closed">
