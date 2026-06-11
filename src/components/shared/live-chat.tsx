@@ -49,13 +49,17 @@ export function LiveChat() {
 
   // Guard: POST /api/chat/sessions only once per component lifecycle.
   const bootstrappedRef = useRef(false);
+  // Guard: GET /api/chat/sessions once per sign-in.
+  const sessionSyncedRef = useRef(false);
 
-  const { activeSessionId, adminReadAt, messages, setActive, setSessions } =
+  const { activeSessionId, sessions, adminReadAt, messages, setActive, setSessions } =
     useChatStore();
   const sessionMessages =
     activeSessionId != null ? (messages[activeSessionId] ?? []) : [];
   const sessionAdminReadAt =
     activeSessionId != null ? (adminReadAt[activeSessionId] ?? null) : null;
+  const activeSession =
+    activeSessionId != null ? sessions.find((s) => s.id === activeSessionId) ?? null : null;
 
   const { adminTyping } = usePusherChat(open && signedIn ? activeSessionId : null);
   const { send, markRead, notifyTyping } = useChatSync(
@@ -97,6 +101,58 @@ export function LiveChat() {
       .catch(() => {})
       .finally(() => setBootstrapping(false));
   }, [open, signedIn, setActive, setSessions]);
+
+  // Post-login sync: when the user signs in, load all their sessions from the
+  // server and merge into the store. Runs once per sign-in (guard by ref that
+  // resets when signedIn flips false → true).
+  useEffect(() => {
+    if (!signedIn) {
+      // Reset so the sync fires again on the next sign-in.
+      sessionSyncedRef.current = false;
+      return;
+    }
+    if (sessionSyncedRef.current) return;
+    sessionSyncedRef.current = true;
+    fetch("/api/chat/sessions")
+      .then((r) => (r.ok ? (r.json() as Promise<{ sessions: Array<{
+        id: number | string;
+        status: ChatSession["status"];
+        unread_user_count?: number;
+        last_message_at?: string | null;
+        last_message_preview?: string | null;
+        admin_last_read_at?: string | null;
+      }> }>) : null))
+      .then((data) => {
+        if (!data?.sessions) return;
+        const mapped: ChatSession[] = data.sessions.map((row) => ({
+          id: Number(row.id),
+          status: row.status,
+          unreadUserCount: row.unread_user_count ?? 0,
+          lastMessageAt: row.last_message_at ?? null,
+          lastMessagePreview: row.last_message_preview ?? null,
+          adminLastReadAt: row.admin_last_read_at ?? null,
+        }));
+        const existing = useChatStore.getState().sessions;
+        // Merge: server rows provide status/unread updates; existing store entries
+        // win for identity continuity (activeSessionId won't be invalidated).
+        const existingMap = new Map(existing.map((s) => [s.id, s]));
+        const merged = mapped.map((s) => {
+          const ex = existingMap.get(s.id);
+          return ex
+            ? { ...ex, status: s.status, unreadUserCount: s.unreadUserCount,
+                lastMessageAt: s.lastMessageAt, lastMessagePreview: s.lastMessagePreview,
+                adminLastReadAt: s.adminLastReadAt }
+            : s;
+        });
+        // Preserve any sessions only known locally (e.g. just bootstrapped).
+        const mergedIds = new Set(merged.map((s) => s.id));
+        for (const s of existing) {
+          if (!mergedIds.has(s.id)) merged.push(s);
+        }
+        setSessions(merged);
+      })
+      .catch(() => {});
+  }, [signedIn, setSessions]);
 
   // Mark messages read when panel opens (signed in + active session).
   useEffect(() => {
@@ -206,6 +262,11 @@ export function LiveChat() {
                 adminReadAt={sessionAdminReadAt}
                 adminTyping={adminTyping}
               />
+            )}
+            {activeSession?.status === "resolved" && (
+              <div className="chat-reopen-note" role="status">
+                This conversation was closed — send a message to reopen.
+              </div>
             )}
             <Composer
               onSend={send}

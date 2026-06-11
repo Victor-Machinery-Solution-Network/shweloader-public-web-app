@@ -15,6 +15,7 @@ export function usePusherChat(sessionId: number | null): { adminTyping: boolean 
   const addMessage = useChatStore((s) => s.addMessage);
   const bumpUnread = useChatStore((s) => s.bumpUnread);
   const setAdminReadAt = useChatStore((s) => s.setAdminReadAt);
+  const setSessionStatus = useChatStore((s) => s.setSessionStatus);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -45,7 +46,12 @@ export function usePusherChat(sessionId: number | null): { adminTyping: boolean 
       });
 
       channel.bind("session-reopened", () => {
-        /* Phase 2 handles status flip; harmless no-op in Phase 1. */
+        setSessionStatus(sessionId, "active");
+      });
+
+      // Defensive: the worker may emit this in a future release.
+      channel.bind("session-resolved", () => {
+        setSessionStatus(sessionId, "resolved");
       });
     });
 
@@ -57,7 +63,7 @@ export function usePusherChat(sessionId: number | null): { adminTyping: boolean 
         pusher.unsubscribe(name);
       });
     };
-  }, [sessionId, addMessage, bumpUnread, setAdminReadAt]);
+  }, [sessionId, addMessage, bumpUnread, setAdminReadAt, setSessionStatus]);
 
   return { adminTyping };
 }

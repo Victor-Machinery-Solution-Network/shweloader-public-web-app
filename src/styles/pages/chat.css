@@ -203,6 +203,21 @@
 .cgrp-agent .cgrp-time { margin-left: 36px; }
 .cgrp-status { color: var(--m-fg-2); }
 
+/* Reopen note — shown above the Composer when session is resolved. Disappears
+   automatically when the session-reopened Pusher event flips status → active. */
+.chat-reopen-note {
+  flex: 0 0 auto;
+  margin: 0 var(--m-space-md, 18px) 0;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: var(--m-bg-2);
+  border: 1px solid var(--m-line);
+  font-size: 13px;
+  color: var(--m-fg-2);
+  text-align: center;
+  line-height: 1.4;
+}
+
 /* Closed-session states */
 .chat-closed-note {
   align-self: center; margin: 8px 0 4px;

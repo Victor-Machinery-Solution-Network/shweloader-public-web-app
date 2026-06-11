@@ -22,6 +22,7 @@ interface ChatState {
   setUnread: (sessionId: number, n: number) => void;
   bumpUnread: (sessionId: number) => void;
   setAdminReadAt: (sessionId: number, iso: string) => void;
+  setSessionStatus: (sessionId: number, status: ChatSession["status"]) => void;
   totalUnread: () => number;
 }
 
@@ -122,6 +123,13 @@ export const useChatStore = create<ChatState>()(
 
       setAdminReadAt: (sessionId, iso) =>
         set((st) => ({ adminReadAt: { ...st.adminReadAt, [sessionId]: iso } })),
+
+      setSessionStatus: (sessionId, status) =>
+        set((st) => ({
+          sessions: st.sessions.map((s) =>
+            s.id === sessionId ? { ...s, status } : s,
+          ),
+        })),
 
       totalUnread: () =>
         get().sessions.reduce((n, s) => n + (s.unreadUserCount || 0), 0),

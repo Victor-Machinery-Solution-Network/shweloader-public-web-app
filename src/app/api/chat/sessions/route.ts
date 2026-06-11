@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 import { authedFetch, BlacklistError } from "@/lib/auth/authed-fetch";
 import { enforceOrigin, enforceJsonContent } from "@/lib/auth/csrf";
 
+/** Fetch all sessions for the signed-in user. Proxies GET /chat/sessions. */
+export async function GET() {
+  try {
+    const data = await authedFetch<{ sessions: unknown[] }>("/chat/sessions", { method: "GET" });
+    return NextResponse.json(data);
+  } catch (err) {
+    if (err instanceof BlacklistError) {
+      return NextResponse.json({ error: "ACCOUNT_BLACKLISTED", reason: err.reason }, { status: 403 });
+    }
+    return NextResponse.json({ error: "Could not fetch sessions" }, { status: 502 });
+  }
+}
+
 /** Create or reuse the user's active session. Proxies POST /chat/sessions. */
 export async function POST(req: Request) {
   const csrf = enforceOrigin(req) ?? enforceJsonContent(req);

@@ -212,20 +212,17 @@ export function ChatShell({
           adminTyping={adminTyping}
         />
 
-        {active && active.status !== "resolved" ? (
-          <Composer
-            onSend={send}
-            onTyping={notifyTyping}
-            disabled={false}
-            sessionId={activeId ?? null}
-          />
-        ) : (
-          <div className="chat-foot-closed">
-            <span className="chat-foot-closed-text">
-              This chat session has ended.
-            </span>
+        {active?.status === "resolved" && (
+          <div className="chat-reopen-note" role="status">
+            This conversation was closed — send a message to reopen.
           </div>
         )}
+        <Composer
+          onSend={send}
+          onTyping={notifyTyping}
+          disabled={false}
+          sessionId={activeId ?? null}
+        />
       </section>
     </div>
   );
