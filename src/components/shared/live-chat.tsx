@@ -15,6 +15,10 @@ import { useChatSync } from "@/components/chat/core/use-chat-sync";
 import { Thread } from "@/components/chat/core/Thread";
 import { Composer } from "@/components/chat/core/Composer";
 import type { ChatSession } from "@/components/chat/core/types";
+// The launcher renders the shared chat-core (Thread/Composer/MessageBubble),
+// which emit .chat-* classes. Those styles live in chat.css — imported here so
+// the floating panel is styled too (the /chat page imports it separately).
+import "@/styles/pages/chat.css";
 
 /**
  * Live chat support — floating gold pulsing launcher (bottom-right), shared
