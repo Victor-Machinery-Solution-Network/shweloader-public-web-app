@@ -82,16 +82,21 @@ export function Thread({
   // between them) are visually grouped: tighter spacing, connected corners, and
   // a single timestamp at the group's bottom (mobile parity).
   const GROUP_WINDOW_MS = 3 * 60 * 1000;
+  // Group by visual SIDE (user vs support), not exact senderType — so a support
+  // auto-reply (system) and a human admin message stack together, as they do on
+  // the same side of the thread.
+  const sameSide = (a: ChatMessage, b: ChatMessage) =>
+    (a.senderType === "user") === (b.senderType === "user");
   const grouped = messages.map((m, i) => {
     const ms = new Date(m.createdAt).getTime();
     const withPrev =
       i > 0 &&
-      messages[i - 1].senderType === m.senderType &&
+      sameSide(messages[i - 1], m) &&
       days[i] === null &&
       ms - new Date(messages[i - 1].createdAt).getTime() < GROUP_WINDOW_MS;
     const withNext =
       i < messages.length - 1 &&
-      messages[i + 1].senderType === m.senderType &&
+      sameSide(messages[i + 1], m) &&
       days[i + 1] === null &&
       new Date(messages[i + 1].createdAt).getTime() - ms < GROUP_WINDOW_MS;
     return { withPrev, withNext };
