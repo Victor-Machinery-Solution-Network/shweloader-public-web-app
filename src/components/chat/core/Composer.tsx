@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
-import { ArrowUp, Paperclip, X } from "lucide-react";
-import type { ChatAttachment } from "./types";
+import { ArrowUp, Package, Paperclip, X } from "lucide-react";
+import type { ChatAttachment, ProductRef } from "./types";
 
 interface PendingFile {
   /** Client-side key for React list rendering. */
@@ -27,6 +27,8 @@ export function Composer({
   onTyping,
   disabled,
   sessionId,
+  pendingProduct,
+  onClearPending,
 }: {
   onSend: (
     text: string,
@@ -36,6 +38,12 @@ export function Composer({
   onTyping: () => void;
   disabled?: boolean;
   sessionId: number | null;
+  /** Listing reference staged by "Chat about this" — shown as a dismissible chip
+   *  above the input, signalling it'll be attached to the next message. Optional
+   *  and inert when absent (the /chat page passes neither). */
+  pendingProduct?: ProductRef | null;
+  /** Dismiss the pending product chip (the ✕ on the chip). */
+  onClearPending?: () => void;
 }) {
   const [text, setText] = useState("");
   const [pending, setPending] = useState<PendingFile[]>([]);
@@ -114,6 +122,43 @@ export function Composer({
 
   return (
     <div className="chat-card-foot-wrap">
+      {/* Pending product chip — staged by "Chat about this"; attached to the
+          next sent message. Purely a visual affordance. */}
+      {pendingProduct && (
+        <div className="chat-composer-product">
+          {pendingProduct.productThumbnail ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={pendingProduct.productThumbnail}
+              alt=""
+              className="chat-composer-product-thumb"
+            />
+          ) : (
+            <span className="chat-composer-product-thumb chat-composer-product-thumb--ph" aria-hidden="true">
+              <Package size={16} />
+            </span>
+          )}
+          <div className="chat-composer-product-body">
+            <span className="chat-composer-product-name">
+              {pendingProduct.productName ?? "This listing"}
+            </span>
+            {pendingProduct.customId && (
+              <span className="chat-composer-product-sub">{pendingProduct.customId}</span>
+            )}
+          </div>
+          {onClearPending && (
+            <button
+              type="button"
+              className="chat-composer-product-remove"
+              aria-label="Don't attach this listing"
+              onClick={onClearPending}
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Pending upload chips */}
       {pending.length > 0 && (
         <div className="chat-pending-row">

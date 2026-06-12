@@ -12,6 +12,7 @@ import {
   listingMode,
   priceFields,
   splitPrice,
+  productRefFromListing,
 } from "@/components/product/overview-card";
 import { Description } from "@/components/product/description";
 import { Similar } from "@/components/product/similar";
@@ -242,6 +243,7 @@ export default async function ProductPage({ params }: PageProps) {
         priceOnRequest={priceOnRequest}
         kind={mode}
         phone={seller?.phone ?? null}
+        product={productRefFromListing(listing)}
       />
     </div>
   );

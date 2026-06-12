@@ -16,7 +16,7 @@ import { usePresence } from "@/components/chat/core/use-presence";
 import { resetPusher } from "@/components/chat/core/pusher-client";
 import { Thread } from "@/components/chat/core/Thread";
 import { Composer } from "@/components/chat/core/Composer";
-import type { ChatSession } from "@/components/chat/core/types";
+import type { ChatAttachment, ChatSession, ProductRef } from "@/components/chat/core/types";
 import { PRESENCE_ENABLED, WEB_PUSH_ENABLED } from "@/lib/env";
 import { useWebPush } from "@/components/chat/core/use-web-push";
 import { useSessionRefresh, refreshSessions } from "@/components/chat/core/refresh-sessions";
@@ -56,6 +56,11 @@ export function LiveChat() {
 
   const [open, setOpen] = useState(false);
   const [bootstrapping, setBootstrapping] = useState(false);
+  // Product reference staged by a "Chat about this" click on the product page
+  // (dispatched via the shwe:open-chat event). Attached to the user's NEXT sent
+  // message so the worker enriches it into a product card, then cleared. Survives
+  // the signed-out gate so it's still applied after the user signs in.
+  const [pendingProduct, setPendingProduct] = useState<ProductRef | null>(null);
 
   // Focus management: move focus into the panel (close button) on open, and
   // restore it to the launcher FAB on close.
@@ -212,10 +217,36 @@ export function LiveChat() {
     setOpen(true);
   }, []);
 
-  // Allow any part of the app (header Messages link, etc.) to open the chat.
+  // Wrap the chat-core `send` so the FIRST message after a "Chat about this"
+  // click carries the listing ref (sale/rent id). The worker turns that into a
+  // product card in the thread; we then clear the pending product. Only the
+  // launcher does this — the /chat page passes `onSend={send}` unchanged.
+  const handleSend = useCallback(
+    (text: string, attachments?: ChatAttachment[]) => {
+      send(
+        text,
+        attachments,
+        pendingProduct
+          ? {
+              saleListingId: pendingProduct.saleListingId ?? undefined,
+              rentListingId: pendingProduct.rentListingId ?? undefined,
+            }
+          : undefined,
+      );
+      setPendingProduct(null);
+    },
+    [send, pendingProduct],
+  );
+
+  // Allow any part of the app (header Messages link, product "Chat about this"
+  // button, etc.) to open the chat. An optional `detail.product` ProductRef is
+  // staged so the next sent message carries the listing reference.
   useEffect(() => {
-    const onOpenChat = () => {
-      // Always open the panel here; signed-out users see the sign-in gate.
+    const onOpenChat = (e: Event) => {
+      const detail = (e as CustomEvent<{ product?: ProductRef }>).detail;
+      if (detail?.product) setPendingProduct(detail.product);
+      // Always open the panel here; signed-out users see the sign-in gate (the
+      // pending product is preserved and applied once they're signed in).
       setOpen(true);
     };
     window.addEventListener("shwe:open-chat", onOpenChat);
@@ -350,10 +381,12 @@ export function LiveChat() {
               </div>
             )}
             <Composer
-              onSend={send}
+              onSend={handleSend}
               onTyping={notifyTyping}
               disabled={bootstrapping || activeSessionId == null}
               sessionId={activeSessionId ?? null}
+              pendingProduct={pendingProduct}
+              onClearPending={() => setPendingProduct(null)}
             />
           </>
         ) : (

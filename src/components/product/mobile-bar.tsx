@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { Phone, X } from "lucide-react";
 
 import { EnquiryForm } from "@/components/product/enquiry-form";
+import { ChatAboutButton } from "@/components/product/chat-about-button";
 import { useI18n } from "@/components/providers/language-provider";
+import type { ProductRef } from "@/components/chat/core/types";
 
 /** i18n keys for the kind tag, keyed by listing mode. */
 const KIND_KEY = {
@@ -25,6 +27,8 @@ export interface MobileBarProps {
   kind: "sale" | "rent" | "both";
   /** Visible dealer phone (masking honoured by caller), or null. */
   phone: string | null;
+  /** Serializable listing reference for the "Chat about this" launcher entry. */
+  product: ProductRef;
 }
 
 /**
@@ -40,6 +44,7 @@ export function MobileBar({
   priceOnRequest,
   kind,
   phone,
+  product,
 }: MobileBarProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -83,6 +88,7 @@ export function MobileBar({
           </span>
         </div>
         <div className="pdp-mbar-actions">
+          <ChatAboutButton product={product} variant="compact" />
           {phone && (
             <a
               href={`tel:${phone.replace(/\s+/g, "")}`}

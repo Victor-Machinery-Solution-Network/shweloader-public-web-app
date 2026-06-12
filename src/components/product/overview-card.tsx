@@ -1,13 +1,16 @@
 import { Package, User } from "lucide-react";
 
 import { EnquiryForm } from "@/components/product/enquiry-form";
+import { ChatAboutButton } from "@/components/product/chat-about-button";
 import { T } from "@/components/t";
 import {
   formatInt,
   rentalUnitLabel,
   type ListingPriceFields,
 } from "@/lib/format";
+import { assetUrl } from "@/lib/assets";
 import type { Listing } from "@/lib/api/types";
+import type { ProductRef } from "@/components/chat/core/types";
 
 export type ProductMode = "sale" | "rent" | "both";
 
@@ -82,6 +85,36 @@ function priceParts(
   if (mmk != null) return { num: formatInt(mmk), ccy: "MMK" };
   if (usd != null) return { num: formatInt(usd), ccy: "USD" };
   return null;
+}
+
+/**
+ * Build a serializable {@link ProductRef} from a normalized listing, for the
+ * "Chat about this" entry point. Picks the sale OR rent listing id based on the
+ * listing's type (defaulting to sale when it's both), and resolves a single
+ * display price + currency using the same precedence as the price card. Plain
+ * object only — it's handed to a CustomEvent and read by the chat composer chip.
+ */
+export function productRefFromListing(listing: Listing): ProductRef {
+  const mode = listingMode(listing);
+  // "both" defaults to sale (mirrors the mobile EnquirySheet default).
+  const listingType: "sale" | "rent" = mode === "rent" ? "rent" : "sale";
+  const side = listingType === "rent" ? listing.rent : listing.sale;
+
+  const price = side ? priceParts(side.mmk, side.usd, side.currency, !!side.hide) : null;
+  const usePrice = price?.ccy === "USD";
+
+  return {
+    productName: listing.title,
+    productThumbnail: assetUrl(listing.thumbnail?.thumbUrl ?? listing.thumbnail?.url),
+    brandName: listing.brand,
+    customId: side?.customId ?? null,
+    mmkPrice: price && !usePrice ? side?.mmk ?? null : null,
+    usdPrice: price && usePrice ? side?.usd ?? null : null,
+    displayCurrency: price ? price.ccy : null,
+    listingType,
+    saleListingId: listingType === "sale" ? listing.id : null,
+    rentListingId: listingType === "rent" ? listing.id : null,
+  };
 }
 
 /** Price line(s) in the left main column. Inline format — "12,000 USD for sale"
@@ -252,6 +285,7 @@ export function ContactCard({ listing }: { listing: Listing }) {
       )}
 
       <div className="ov-cta" id="enquiry">
+        <ChatAboutButton product={productRefFromListing(listing)} />
         <EnquiryForm
           title={listing.title}
           listingId={listing.id}

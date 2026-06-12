@@ -160,6 +160,7 @@ export const en = {
     enquiryMsgPost: ". Is it still available?",
     contactSeller: "Contact seller",
     enquiryNow: "Enquiry now",
+    chatAboutThis: "Chat about this",
   },
   status: {
     new: "NEW",
@@ -382,6 +383,7 @@ export const my: Dictionary = {
     enquiryMsgPost: " ကိုစိတ်ဝင်စားပါသည်။ ရနိုင်ပါသေးလား?",
     contactSeller: "ရောင်းသူကိုဆက်သွယ်ရန်",
     enquiryNow: "ယခုစုံစမ်းရန်",
+    chatAboutThis: "ဤပစ္စည်းအကြောင်း စကားပြောရန်",
   },
   status: {
     new: "အသစ်",
