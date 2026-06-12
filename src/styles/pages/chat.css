@@ -283,6 +283,13 @@
   color: var(--m-ink);
   outline: none;
   transition: box-shadow .15s;
+  /* Now a <textarea> (for Shift+Enter newlines): no drag handle, single row by
+     default, grow up to a cap (auto-grow where field-sizing is supported). */
+  resize: none;
+  line-height: 1.4;
+  max-height: 96px;
+  overflow-y: auto;
+  field-sizing: content;
 }
 .chat-foot-input:focus { box-shadow: 0 0 0 2px var(--m-gold) inset; }
 .chat-foot-input::placeholder { color: var(--m-fg-3); }
