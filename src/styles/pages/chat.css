@@ -390,6 +390,16 @@
 .chat-msg.is-agent .chat-msg-meta { flex-direction: row; }
 .chat-msg-time { font-size: 11px; color: var(--m-fg-3); }
 
+/* Consecutive same-sender grouping (mobile parity): tighten the gap between
+   stacked bubbles and flatten the sender-side corners so they read as one
+   "connected" group. Base bubble radius is 18px; grouped middles drop to 6px on
+   the sender's side. The meta row is suppressed in JS on all but the last. */
+.chat-msg.grp-prev { margin-top: 2px; }
+.chat-msg.is-me.grp-prev .chat-bubble { border-top-right-radius: 6px; }
+.chat-msg.is-me.grp-next .chat-bubble { border-bottom-right-radius: 6px; }
+.chat-msg.is-agent.grp-prev .chat-bubble { border-top-left-radius: 6px; }
+.chat-msg.is-agent.grp-next .chat-bubble { border-bottom-left-radius: 6px; }
+
 /* ============================================================
    Attachment grid — images in MessageBubble
    ============================================================ */

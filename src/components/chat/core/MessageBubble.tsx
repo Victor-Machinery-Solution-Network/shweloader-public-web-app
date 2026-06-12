@@ -150,10 +150,14 @@ export function MessageBubble({
   message,
   isLastOutgoing,
   adminReadAt,
+  groupedWithPrev = false,
+  groupedWithNext = false,
 }: {
   message: ChatMessage;
   isLastOutgoing: boolean;
   adminReadAt: string | null;
+  groupedWithPrev?: boolean;
+  groupedWithNext?: boolean;
 }) {
   const mine = message.senderType === "user";
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -168,7 +172,14 @@ export function MessageBubble({
     .filter((u): u is string => u != null);
 
   return (
-    <div className={cn("chat-msg", mine ? "is-me" : "is-agent")}>
+    <div
+      className={cn(
+        "chat-msg",
+        mine ? "is-me" : "is-agent",
+        groupedWithPrev && "grp-prev",
+        groupedWithNext && "grp-next",
+      )}
+    >
       {/* Product reference card — rendered above the text bubble */}
       {message.product && <ProductCard product={message.product} />}
 
@@ -191,10 +202,14 @@ export function MessageBubble({
         </div>
       )}
 
-      <div className="chat-msg-meta">
-        <span className="chat-msg-time">{fmtTime(message.createdAt)}</span>
-        {mine && isLastOutgoing && <SeenTick message={message} adminReadAt={adminReadAt} />}
-      </div>
+      {/* Show the time/Seen meta only on the last message of a group (or a
+          standalone message) — grouped messages share one timestamp below. */}
+      {!groupedWithNext && (
+        <div className="chat-msg-meta">
+          <span className="chat-msg-time">{fmtTime(message.createdAt)}</span>
+          {mine && isLastOutgoing && <SeenTick message={message} adminReadAt={adminReadAt} />}
+        </div>
+      )}
 
       {/* Lightbox */}
       {lightboxIndex != null && imageUrls.length > 0 && (

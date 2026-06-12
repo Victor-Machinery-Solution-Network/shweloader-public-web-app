@@ -78,6 +78,25 @@ export function Thread({
     return day !== prev ? day : null;
   });
 
+  // Consecutive same-sender messages within a 3-min window (and no day break
+  // between them) are visually grouped: tighter spacing, connected corners, and
+  // a single timestamp at the group's bottom (mobile parity).
+  const GROUP_WINDOW_MS = 3 * 60 * 1000;
+  const grouped = messages.map((m, i) => {
+    const ms = new Date(m.createdAt).getTime();
+    const withPrev =
+      i > 0 &&
+      messages[i - 1].senderType === m.senderType &&
+      days[i] === null &&
+      ms - new Date(messages[i - 1].createdAt).getTime() < GROUP_WINDOW_MS;
+    const withNext =
+      i < messages.length - 1 &&
+      messages[i + 1].senderType === m.senderType &&
+      days[i + 1] === null &&
+      new Date(messages[i + 1].createdAt).getTime() - ms < GROUP_WINDOW_MS;
+    return { withPrev, withNext };
+  });
+
   return (
     <div className="chat-thread">
       <div
@@ -96,7 +115,13 @@ export function Thread({
             {days[i] !== null && (
               <div className="chat-day" key={`d${i}`}><span>{days[i]}</span></div>
             )}
-            <MessageBubble message={m} isLastOutgoing={i === lastOutgoingIdx} adminReadAt={adminReadAt} />
+            <MessageBubble
+              message={m}
+              isLastOutgoing={i === lastOutgoingIdx}
+              adminReadAt={adminReadAt}
+              groupedWithPrev={grouped[i].withPrev}
+              groupedWithNext={grouped[i].withNext}
+            />
           </div>
         ))}
         {adminTyping && <TypingDots />}
