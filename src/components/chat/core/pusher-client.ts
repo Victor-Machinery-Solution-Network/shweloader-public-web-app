@@ -44,3 +44,18 @@ export function getPusher(): Promise<Pusher | null> {
   });
   return creating;
 }
+
+/** Tear down the shared Pusher client and clear the singleton so the next
+ *  getPusher() builds a fresh connection. Call on logout to prevent the prior
+ *  user's authorized channels from leaking into the next session. */
+export function resetPusher(): void {
+  if (instance) {
+    try {
+      instance.disconnect();
+    } catch {
+      // ignore — disconnecting a torn-down socket can throw; we just want it gone
+    }
+    instance = null;
+  }
+  creating = null;
+}

@@ -34,7 +34,8 @@ function ImageGrid({
         "chat-att-grid",
         count === 1 && "chat-att-grid-1",
         count === 2 && "chat-att-grid-2",
-        count >= 3 && "chat-att-grid-4",
+        count === 3 && "chat-att-grid-3",
+        count >= 4 && "chat-att-grid-4",
       )}
     >
       {displayed.map((att, i) => {

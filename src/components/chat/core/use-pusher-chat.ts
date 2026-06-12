@@ -40,8 +40,16 @@ export function usePusherChat(sessionId: number | null): { adminTyping: boolean 
       channel.bind("new-message", (raw: PusherMessage) => {
         const m = fromPusherMessage(raw);
         const added = addMessage(sessionId, m);
-        // Only count unread for genuinely new, non-self messages.
-        if (added && m.senderType !== "user") bumpUnread(sessionId);
+        // Only count unread for genuinely new, non-self messages — and not when
+        // the user is actively viewing this session in a visible tab (it'll be
+        // read immediately, so bumping would flash a phantom unread badge).
+        if (added && m.senderType !== "user") {
+          const activeVisible =
+            useChatStore.getState().activeSessionId === sessionId &&
+            typeof document !== "undefined" &&
+            document.visibilityState === "visible";
+          if (!activeVisible) bumpUnread(sessionId);
+        }
       });
 
       channel.bind("messages-read", (raw: { reader_type: string; read_at: string }) => {

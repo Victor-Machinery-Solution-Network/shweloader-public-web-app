@@ -13,7 +13,6 @@ async function postJson(url: string, body: unknown): Promise<Response> {
 }
 
 export function useChatSync(sessionId: number | null) {
-  const setMessages = useChatStore((s) => s.setMessages);
   const addOptimistic = useChatStore((s) => s.addOptimistic);
   const confirmOptimistic = useChatStore((s) => s.confirmOptimistic);
   const setStatus = useChatStore((s) => s.setStatus);
@@ -32,16 +31,20 @@ export function useChatSync(sessionId: number | null) {
         if (cancelled) return;
         const history = (data.messages ?? []).map(fromServerMessage);
         const seen = new Set(history.map(messageKey));
-        const extras = (useChatStore.getState().messages[sessionId] ?? []).filter(
-          (m) => !seen.has(messageKey(m)),
-        );
-        setMessages(sessionId, [...history, ...extras]);
+        // Compute `extras` against the CURRENT state inside the updater (not a
+        // pre-read snapshot) so a live/optimistic message that arrives between
+        // the fetch resolving and the commit isn't dropped by the replace.
+        useChatStore.setState((st) => {
+          const current = st.messages[sessionId] ?? [];
+          const extras = current.filter((m) => !seen.has(messageKey(m)));
+          return { messages: { ...st.messages, [sessionId]: [...history, ...extras] } };
+        });
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [sessionId, setMessages]);
+  }, [sessionId]);
 
   const send = useCallback(
     async (
@@ -95,9 +98,12 @@ export function useChatSync(sessionId: number | null) {
 
   const markRead = useCallback(() => {
     if (!sessionId) return;
+    // Read the guard BEFORE zeroing: if there's nothing unread, bail without
+    // touching state. This also avoids a TOCTOU where a message arriving
+    // between the zero and the POST would be silently cleared locally.
     const s = useChatStore.getState().sessions.find((x) => x.id === sessionId);
-    setUnread(sessionId, 0);
     if (!s || s.unreadUserCount === 0) return; // nothing to clear server-side
+    setUnread(sessionId, 0);
     void postJson("/api/chat/read", { sessionId }).catch(() => {});
   }, [sessionId, setUnread]);
 

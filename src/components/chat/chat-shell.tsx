@@ -126,9 +126,14 @@ export function ChatShell({
 
   const visibleSessions = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const reversed = sessions.slice().reverse();
-    if (!q) return reversed;
-    return reversed.filter((s) =>
+    // Most-recent-activity first (null timestamps sort last).
+    const ordered = sessions.slice().sort((a, b) => {
+      const ta = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const tb = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      return tb - ta;
+    });
+    if (!q) return ordered;
+    return ordered.filter((s) =>
       (s.lastMessagePreview ?? "").toLowerCase().includes(q),
     );
   }, [sessions, query]);

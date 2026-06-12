@@ -57,17 +57,18 @@ export const useChatStore = create<ChatState>()(
 
       addMessage: (sessionId, m) => {
         const key = messageKey(m);
-        if ((get().messages[sessionId] ?? []).some((x) => messageKey(x) === key)) {
-          return false;
-        }
-        // Re-check + append against the COMMITTED state inside the updater, so
-        // two events arriving before a flush can't both append off a stale list.
+        // Compute newness INSIDE the updater so two near-simultaneous duplicate
+        // events can't both observe a stale list and both report "new" (which
+        // would double-bump unread). The flag is only set on the run that
+        // actually appends.
+        let wasNew = false;
         set((st) => {
           const fresh = st.messages[sessionId] ?? [];
           if (fresh.some((x) => messageKey(x) === key)) return st;
+          wasNew = true;
           return { messages: { ...st.messages, [sessionId]: [...fresh, m] } };
         });
-        return true;
+        return wasNew;
       },
 
       addOptimistic: (sessionId, m) =>
