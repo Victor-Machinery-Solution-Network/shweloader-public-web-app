@@ -14,6 +14,7 @@ import type { ChatSession } from "./core/types";
 import { useAuth } from "@/lib/auth/use-auth";
 import { PRESENCE_ENABLED, WEB_PUSH_ENABLED } from "@/lib/env";
 import { useWebPush } from "./core/use-web-push";
+import { useSessionRefresh } from "./core/refresh-sessions";
 import { Bell, BellOff } from "lucide-react";
 
 /**
@@ -66,6 +67,11 @@ export function ChatShell({
   const { supportOnline } = usePresence(numericUserId, true);
 
   const webPush = useWebPush();
+
+  // Mirror mobile's focus-based chat sync: re-fetch sessions when the tab
+  // regains focus so admin-started/closed sessions on a NON-active channel show
+  // up (the live Pusher sub only covers the active session).
+  useSessionRefresh(true);
 
   const [query, setQuery] = useState("");
 

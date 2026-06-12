@@ -19,6 +19,7 @@ import { Composer } from "@/components/chat/core/Composer";
 import type { ChatSession } from "@/components/chat/core/types";
 import { PRESENCE_ENABLED, WEB_PUSH_ENABLED } from "@/lib/env";
 import { useWebPush } from "@/components/chat/core/use-web-push";
+import { useSessionRefresh, refreshSessions } from "@/components/chat/core/refresh-sessions";
 import { cn } from "@/lib/utils";
 // The launcher renders the shared chat-core (Thread/Composer/MessageBubble),
 // which emit .chat-* classes. Those styles live in chat.css — imported here so
@@ -85,6 +86,14 @@ export function LiveChat() {
   const { send, markRead, notifyTyping } = useChatSync(
     open && signedIn ? activeSessionId : null,
   );
+
+  // Mirror mobile's focus-based chat sync: refresh sessions on tab focus (keeps
+  // the FAB unread badge fresh + surfaces admin-started/closed sessions), and
+  // also whenever the panel is opened.
+  useSessionRefresh(signedIn);
+  useEffect(() => {
+    if (open && signedIn) void refreshSessions();
+  }, [open, signedIn]);
 
   // Phase 3: Firebase RTDB presence. No-op when PRESENCE_ENABLED is false
   // (no Firebase config present), keeping the static green dot unchanged.
