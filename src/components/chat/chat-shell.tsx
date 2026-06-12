@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronLeft, Headset, Phone, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -85,16 +86,26 @@ export function ChatShell({
   // OR when the persisted activeSessionId is stale (not among the current
   // sessions) — e.g. User A logs out and User B logs in, leaving A's id in
   // localStorage, which would otherwise show the wrong/empty thread.
+  // Deep-link from a web-push notification: /chat?session=<id> selects that
+  // conversation (matches mobile's notification routing); takes precedence over
+  // the default first-session selection when the id is one of the user's.
+  const searchParams = useSearchParams();
   useEffect(() => {
     setSessions(initial);
+    const paramId = Number(searchParams.get("session"));
+    const paramValid =
+      Number.isFinite(paramId) && paramId > 0 && initial.some((s) => s.id === paramId);
     const validPersisted = initial.some((s) => s.id === activeSessionId);
-    if (initial.length && (activeSessionId == null || !validPersisted)) {
+    if (paramValid) {
+      setActive(paramId);
+      setMobileView("conv");
+    } else if (initial.length && (activeSessionId == null || !validPersisted)) {
       const first =
         initial.find((s) => s.status !== "resolved") ?? initial[0];
       setActive(first.id);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initial]);
+  }, [initial, searchParams]);
 
   const activeId = activeSessionId;
 

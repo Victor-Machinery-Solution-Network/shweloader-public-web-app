@@ -41,21 +41,26 @@ self.addEventListener("push", function (event) {
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
 
-  var targetUrl = (event.notification.data && event.notification.data.url)
+  var rawUrl = (event.notification.data && event.notification.data.url)
     ? event.notification.data.url
     : "/chat";
+  // The URL may carry a query (e.g. /chat?session=123) — resolve it absolutely.
+  var absUrl = new URL(rawUrl, self.location.origin);
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (windowClients) {
-      // Focus the first tab whose URL ends with the target path.
+      // Focus the first tab on the same path; if it's a different deep-link
+      // (e.g. another session), navigate it there so the right chat is selected.
       for (var i = 0; i < windowClients.length; i++) {
         var client = windowClients[i];
         try {
           var clientUrl = new URL(client.url);
-          var targetPath = targetUrl.startsWith("http")
-            ? new URL(targetUrl).pathname
-            : targetUrl;
-          if (clientUrl.pathname === targetPath && "focus" in client) {
+          if (clientUrl.pathname === absUrl.pathname && "focus" in client) {
+            if ("navigate" in client && clientUrl.href !== absUrl.href) {
+              return client.navigate(absUrl.href).then(function (c) {
+                return c && "focus" in c ? c.focus() : client.focus();
+              }).catch(function () { return client.focus(); });
+            }
             return client.focus();
           }
         } catch (_) {
@@ -64,7 +69,7 @@ self.addEventListener("notificationclick", function (event) {
       }
       // No matching tab found — open a new one.
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        return clients.openWindow(absUrl.href);
       }
     })
   );
