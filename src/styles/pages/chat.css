@@ -598,7 +598,13 @@
   box-shadow: var(--m-shadow-sm);
   margin-bottom: 4px;
   overflow: hidden;
+  /* The card is an <a> when the listing is linkable — reset link styling. */
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow .15s, transform .15s;
 }
+a.chat-product-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.12); transform: translateY(-1px); }
+a.chat-product-card:focus-visible { outline: 2px solid var(--m-gold); outline-offset: 2px; }
 /* On the sent (right) side: gold-tinted surface to match the gold bubble */
 .chat-msg.is-me .chat-product-card {
   background: var(--m-gold-soft);

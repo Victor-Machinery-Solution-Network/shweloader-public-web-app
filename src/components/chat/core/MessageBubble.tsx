@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/assets";
 import { formatMoney } from "@/lib/format";
@@ -65,8 +66,9 @@ function ImageGrid({
   );
 }
 
-/** Compact product-reference card rendered above the text bubble. Static — no
- *  link (the payload carries no slug). */
+/** Compact product-reference card rendered above the text bubble. Links to the
+ *  listing when an id is present — the product page resolves /product/<…id> via
+ *  parseIdFromSlug and 301s to the canonical slug (mobile parity). */
 function ProductCard({ product }: { product: ProductRef }) {
   const thumbSrc = assetUrl(product.productThumbnail ?? null);
   const price = formatMoney(product.mmkPrice, product.usdPrice, product.displayCurrency);
@@ -76,8 +78,11 @@ function ProductCard({ product }: { product: ProductRef }) {
   if (product.customId) subParts.push(product.customId);
   const sub = subParts.join(" · ");
 
-  return (
-    <div className="chat-product-card">
+  const linkId =
+    product.saleListingId ?? product.rentListingId ?? product.productListId ?? null;
+
+  const inner = (
+    <>
       {thumbSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -101,7 +106,15 @@ function ProductCard({ product }: { product: ProductRef }) {
         {sub && <span className="chat-product-sub">{sub}</span>}
         {price && <span className="chat-product-price">{price}</span>}
       </div>
-    </div>
+    </>
+  );
+
+  return linkId != null ? (
+    <Link href={`/product/${linkId}`} className="chat-product-card" aria-label={`View ${product.productName ?? "product"}`}>
+      {inner}
+    </Link>
+  ) : (
+    <div className="chat-product-card">{inner}</div>
   );
 }
 
