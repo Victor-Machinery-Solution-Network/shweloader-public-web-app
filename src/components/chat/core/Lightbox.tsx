@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 export function Lightbox({
@@ -16,6 +16,20 @@ export function Lightbox({
   const hasPrev = index > 0;
   const hasNext = index < images.length - 1;
 
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const prevRef = useRef<HTMLButtonElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+
+  // Move focus to the close button on mount; restore focus to whatever was
+  // focused before the lightbox opened when it unmounts/closes.
+  useEffect(() => {
+    const prevFocused = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    return () => {
+      prevFocused?.focus?.();
+    };
+  }, []);
+
   // Close on Escape, navigate with arrow keys.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -31,6 +45,30 @@ export function Lightbox({
     return () => document.removeEventListener("keydown", handler);
   }, [index, hasPrev, hasNext, onClose, onNavigate]);
 
+  // Focus trap: keep Tab / Shift+Tab cycling among the visible buttons so focus
+  // can never leave the modal.
+  const onTrapKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab") return;
+    const focusables = [closeRef.current, prevRef.current, nextRef.current].filter(
+      (el): el is HTMLButtonElement => el != null,
+    );
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const activeEl = document.activeElement;
+    if (e.shiftKey) {
+      if (activeEl === first || !focusables.includes(activeEl as HTMLButtonElement)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (activeEl === last || !focusables.includes(activeEl as HTMLButtonElement)) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
+
   const src = images[index];
 
   return (
@@ -40,9 +78,16 @@ export function Lightbox({
       aria-modal="true"
       aria-label="Image viewer"
       onClick={onClose}
+      onKeyDown={onTrapKeyDown}
     >
+      {/* Persistent polite live region — announces the current position on navigate. */}
+      <div aria-live="polite" className="sr-only">
+        {`Image ${index + 1} of ${images.length}`}
+      </div>
+
       {/* Close */}
       <button
+        ref={closeRef}
         type="button"
         className="chat-lightbox-close"
         aria-label="Close image viewer"
@@ -54,6 +99,7 @@ export function Lightbox({
       {/* Prev */}
       {hasPrev && (
         <button
+          ref={prevRef}
           type="button"
           className="chat-lightbox-nav chat-lightbox-prev"
           aria-label="Previous image"
@@ -83,6 +129,7 @@ export function Lightbox({
       {/* Next */}
       {hasNext && (
         <button
+          ref={nextRef}
           type="button"
           className="chat-lightbox-nav chat-lightbox-next"
           aria-label="Next image"

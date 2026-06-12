@@ -193,15 +193,21 @@ export function Composer({
           <Paperclip size={20} />
         </button>
 
-        <input
-          type="text"
+        <textarea
           className="chat-foot-input"
           placeholder="Type a message…"
           value={text}
           disabled={disabled}
+          rows={1}
           onChange={(e) => {
             setText(e.target.value);
             onTyping();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              submit();
+            }
           }}
           aria-label="Message"
         />

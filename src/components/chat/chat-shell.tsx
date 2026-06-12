@@ -140,8 +140,8 @@ export function ChatShell({
 
   if (!active && sessions.length === 0) {
     return (
-      <div className="chat-shell2">
-        <section className="chat-conv">
+      <div className="chat-shell2" data-mobile-view="conv">
+        <section className="chat-conv" style={{ gridColumn: "1 / -1" }}>
           <div className="chat-card-body">
             <div className="chat-day">
               <span>No conversations yet</span>
@@ -180,6 +180,8 @@ export function ChatShell({
                 s.status === "resolved" && "is-closed",
               )}
               onClick={() => handleSetActive(s.id)}
+              aria-pressed={s.id === activeId}
+              aria-label={`Support chat — ${s.status === "resolved" ? "closed" : s.status}${s.unreadUserCount > 0 ? `, ${s.unreadUserCount} unread` : ""}`}
             >
               <span className="sess-av" aria-hidden="true">
                 <Headset />
@@ -200,7 +202,9 @@ export function ChatShell({
                         : "Open"}
                   </span>
                   {s.unreadUserCount > 0 && (
-                    <span className="chat-unread">{s.unreadUserCount}</span>
+                    <span className="chat-unread" aria-label={`${s.unreadUserCount} unread`}>
+                      {s.unreadUserCount}
+                    </span>
                   )}
                 </span>
               </span>

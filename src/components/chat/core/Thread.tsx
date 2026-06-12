@@ -37,7 +37,11 @@ export function Thread({
   });
 
   return (
-    <div className="chat-card-body">
+    <div className="chat-card-body" role="log" aria-label="Chat messages">
+      {/* Persistent polite live region so AT reliably announces typing. */}
+      <div aria-live="polite" className="sr-only">
+        {adminTyping ? "Support is typing" : ""}
+      </div>
       {messages.map((m, i) => (
         <div key={m.id}>
           {days[i] !== null && (

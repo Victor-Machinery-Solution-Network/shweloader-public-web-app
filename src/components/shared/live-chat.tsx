@@ -13,6 +13,7 @@ import { useChatStore } from "@/components/chat/core/store";
 import { usePusherChat } from "@/components/chat/core/use-pusher-chat";
 import { useChatSync } from "@/components/chat/core/use-chat-sync";
 import { usePresence } from "@/components/chat/core/use-presence";
+import { resetPusher } from "@/components/chat/core/pusher-client";
 import { Thread } from "@/components/chat/core/Thread";
 import { Composer } from "@/components/chat/core/Composer";
 import type { ChatSession } from "@/components/chat/core/types";
@@ -54,6 +55,17 @@ export function LiveChat() {
 
   const [open, setOpen] = useState(false);
   const [bootstrapping, setBootstrapping] = useState(false);
+
+  // Focus management: move focus into the panel (close button) on open, and
+  // restore it to the launcher FAB on close.
+  const fabRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const prevOpen = useRef(false);
+  useEffect(() => {
+    if (open && !prevOpen.current) closeBtnRef.current?.focus();
+    else if (!open && prevOpen.current) fabRef.current?.focus();
+    prevOpen.current = open;
+  }, [open]);
 
   // Guard: POST /api/chat/sessions only once per component lifecycle.
   const bootstrappedRef = useRef(false);
@@ -125,6 +137,9 @@ export function LiveChat() {
   // resets when signedIn flips false → true).
   useEffect(() => {
     if (!signedIn) {
+      // Tear down the Pusher connection on logout so the next user doesn't
+      // inherit the previous user's authenticated socket / channel subscriptions.
+      resetPusher();
       // Reset so both the sync AND the session bootstrap fire again on the next
       // sign-in (e.g. after a token-expiry logout + re-login as another user).
       sessionSyncedRef.current = false;
@@ -213,6 +228,7 @@ export function LiveChat() {
 
       {/* Panel */}
       <div
+        id="lc-chat-panel"
         className={"lc-panel" + (open ? " is-open" : "")}
         role="dialog"
         aria-label={t("chat.title")}
@@ -294,6 +310,7 @@ export function LiveChat() {
             </button>
           )}
           <button
+            ref={closeBtnRef}
             type="button"
             className="lc-close"
             onClick={() => setOpen(false)}
@@ -368,6 +385,7 @@ export function LiveChat() {
 
       {/* Floating launcher */}
       <button
+        ref={fabRef}
         type="button"
         className={
           "lc-fab" +
@@ -376,6 +394,8 @@ export function LiveChat() {
         }
         onClick={() => (open ? setOpen(false) : openPanel())}
         aria-label={open ? "Close chat" : "Open live chat"}
+        aria-expanded={open}
+        aria-controls="lc-chat-panel"
       >
         <span className="lc-fab-icon lc-fab-chat" aria-hidden="true">
           <HeadsetIcon />
