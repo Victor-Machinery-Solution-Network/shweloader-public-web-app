@@ -22,7 +22,6 @@ export function Thread({
   adminTyping: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const endRef = useRef<HTMLDivElement>(null);
   // Tracked via ref (not state) so the new-message effect reads it without
   // re-subscribing — avoids yanking a user who has scrolled up to read history.
   const atBottomRef = useRef(true);
@@ -30,8 +29,12 @@ export function Thread({
   const [showFab, setShowFab] = useState(false);
   const [newCount, setNewCount] = useState(0);
 
-  const scrollToBottom = (behavior: ScrollBehavior) => {
-    endRef.current?.scrollIntoView({ behavior, block: "end" });
+  // Scroll the container straight to the bottom. NOTE: smooth scrolling (both
+  // scrollIntoView and scrollTo with behavior:"smooth") silently no-ops inside
+  // this nested flex scroll area — only instant works — so we jump instantly.
+  const scrollToBottom = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight });
     atBottomRef.current = true;
     setNewCount(0);
     setShowFab(false);
@@ -43,7 +46,8 @@ export function Thread({
     const delta = messages.length - prevCountRef.current;
     prevCountRef.current = messages.length;
     if (atBottomRef.current) {
-      endRef.current?.scrollIntoView({ block: "end" });
+      const el = scrollRef.current;
+      if (el) el.scrollTo({ top: el.scrollHeight });
     } else if (delta > 0) {
       setNewCount((n) => n + delta);
       setShowFab(true);
@@ -96,14 +100,13 @@ export function Thread({
           </div>
         ))}
         {adminTyping && <TypingDots />}
-        <div ref={endRef} />
       </div>
 
       {showFab && (
         <button
           type="button"
           className="chat-scroll-fab"
-          onClick={() => scrollToBottom("smooth")}
+          onClick={scrollToBottom}
           aria-label={newCount > 0 ? `${newCount} new messages — scroll to latest` : "Scroll to latest"}
         >
           <ChevronDown aria-hidden="true" />
