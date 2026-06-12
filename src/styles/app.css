@@ -2284,13 +2284,14 @@ html, body {
 .lc-head-meta { flex: 1; min-width: 0; }
 .lc-head-title { font-size: 15px; font-weight: 600; color: var(--m-ink); }
 .lc-head-sub {
-  font-size: 12px; color: var(--m-ink-3);
+  font-size: 12px; color: var(--m-fg-2);
   display: inline-flex; align-items: center; gap: 6px; margin-top: 2px;
 }
 .lc-dot {
   width: 6px; height: 6px; border-radius: 9999px; background: #2eaa6b;
   display: inline-block;
 }
+.lc-dot--away { background: var(--m-fg-3); animation: none; box-shadow: none; }
 .lc-expand {
   width: 32px; height: 32px; flex: 0 0 auto;
   display: inline-flex; align-items: center; justify-content: center;
@@ -2314,6 +2315,7 @@ html, body {
   display: flex; flex-direction: column; gap: 10px;
   background: var(--m-bg);
 }
+.lc-body--loading { align-items: center; justify-content: center; }
 .lc-msg { display: flex; flex-direction: column; max-width: 85%; }
 .lc-msg-agent { align-self: flex-start; align-items: flex-start; }
 .lc-msg-me    { align-self: flex-end; align-items: flex-end; }
@@ -2960,7 +2962,7 @@ html, body {
 .pp-skip {
   margin-top: 14px;
   background: none; border: 0; cursor: pointer;
-  font-size: 12px; color: var(--m-ink-3);
+  font-size: 12px; color: var(--m-fg-2);
   text-decoration: underline; text-underline-offset: 3px;
   align-self: center;
 }
