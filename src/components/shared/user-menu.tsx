@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useI18n } from "@/components/providers/language-provider";
+import { useChatStore } from "@/components/chat/core/store";
+import { useNotificationsStore } from "@/components/notifications/store";
+import { useNotificationsRealtime } from "@/components/notifications/use-notifications-realtime";
 
 /**
  * Default avatar — a soft gold disc with a person glyph, identical for every
@@ -40,11 +43,16 @@ export function Avatar({
   );
 }
 
-// Unread counts surfaced in the account menu (and on the collapsed chip). These
-// are presentational placeholders matching the design until a live unread
-// source is wired in.
-const UNREAD = { notifications: 3, messages: 2 };
-const UNREAD_TOTAL = UNREAD.notifications + UNREAD.messages;
+/** Normalize the auth user id (number | string | undefined) → number | null
+ *  for the realtime hook / channel name. */
+function toUserId(id: number | string | undefined): number | null {
+  if (typeof id === "number") return Number.isFinite(id) ? id : null;
+  if (typeof id === "string") {
+    const n = Number(id);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
 
 /**
  * Signed-in identity cluster — avatar + first name + chevron trigger that opens
@@ -54,10 +62,19 @@ const UNREAD_TOTAL = UNREAD.notifications + UNREAD.messages;
  */
 export function UserMenu() {
   const { t } = useI18n();
-  const { user, signOut } = useAuth();
+  const { user, signedIn, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const [render, setRender] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Live unread counts: notifications from the per-user Pusher channel, messages
+  // from the chat store. Both render as badges (hidden at 0); their sum drives
+  // the dot on the collapsed avatar chip.
+  const userId = toUserId(user?.id);
+  useNotificationsRealtime(userId, signedIn);
+  const notifUnread = useNotificationsStore((s) => s.unreadCount);
+  const messagesUnread = useChatStore((s) => s.totalUnread());
+  const unreadTotal = notifUnread + messagesUnread;
 
   useEffect(() => {
     if (!open) return;
@@ -134,9 +151,9 @@ export function UserMenu() {
       >
         <span className="mh-user-av">
           <Avatar size={32} />
-          {UNREAD_TOTAL > 0 && (
+          {unreadTotal > 0 && (
             <span className="mh-user-dot tnum">
-              {UNREAD_TOTAL > 9 ? "9+" : UNREAD_TOTAL}
+              {unreadTotal > 9 ? "9+" : unreadTotal}
             </span>
           )}
         </span>
@@ -192,7 +209,11 @@ export function UserMenu() {
         >
           <Bell className="icon-sm" strokeWidth={1.75} />
           <span>{t("notifications.title")}</span>
-          <span className="mh-user-badge tnum">{UNREAD.notifications}</span>
+          {notifUnread > 0 && (
+            <span className="mh-user-badge tnum">
+              {notifUnread > 9 ? "9+" : notifUnread}
+            </span>
+          )}
           <ArrowRight className="icon-sm mh-user-go" strokeWidth={1.75} />
         </Link>
         <Link
@@ -203,7 +224,11 @@ export function UserMenu() {
         >
           <MessageCircle className="icon-sm" strokeWidth={1.75} />
           <span>{t("chat.title")}</span>
-          <span className="mh-user-badge tnum">{UNREAD.messages}</span>
+          {messagesUnread > 0 && (
+            <span className="mh-user-badge tnum">
+              {messagesUnread > 9 ? "9+" : messagesUnread}
+            </span>
+          )}
           <ArrowRight className="icon-sm mh-user-go" strokeWidth={1.75} />
         </Link>
 

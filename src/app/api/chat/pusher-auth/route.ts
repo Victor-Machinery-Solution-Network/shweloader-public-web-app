@@ -19,9 +19,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "socket_id and channel_name required" }, { status: 400 });
   }
   // Defense in depth: a web user only ever subscribes to their own chat session
-  // channel. Refuse anything else here (the worker also enforces ownership) so a
-  // same-origin script can't probe admin/other channels through this proxy.
-  if (!channel_name.startsWith("private-chat-")) {
+  // channels (`private-chat-{id}`) or their own per-user notification channel
+  // (`private-user-{id}`). Refuse anything else here — the worker also enforces
+  // per-user ownership on both — so a same-origin script can't probe
+  // admin/other channels through this proxy.
+  if (
+    !channel_name.startsWith("private-chat-") &&
+    !channel_name.startsWith("private-user-")
+  ) {
     return NextResponse.json({ error: "Forbidden channel" }, { status: 403 });
   }
 
