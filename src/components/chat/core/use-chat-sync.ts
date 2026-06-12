@@ -95,7 +95,9 @@ export function useChatSync(sessionId: number | null) {
 
   const markRead = useCallback(() => {
     if (!sessionId) return;
+    const s = useChatStore.getState().sessions.find((x) => x.id === sessionId);
     setUnread(sessionId, 0);
+    if (!s || s.unreadUserCount === 0) return; // nothing to clear server-side
     void postJson("/api/chat/read", { sessionId }).catch(() => {});
   }, [sessionId, setUnread]);
 

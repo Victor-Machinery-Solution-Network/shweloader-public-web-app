@@ -31,9 +31,9 @@ function mapStatus(raw: string | undefined): ChatSession["status"] {
   return "active";
 }
 
-function normalizeSession(row: RawSession, idx: number): ChatSession {
+function normalizeSession(row: RawSession): ChatSession {
   return {
-    id: Number(row.id ?? idx),
+    id: Number(row.id),
     status: mapStatus(row.status),
     unreadUserCount: row.unread_user_count ?? 0,
     lastMessageAt: row.last_message_at ?? null,
@@ -51,7 +51,10 @@ async function loadSessions(token: string): Promise<ChatSession[]> {
       : Array.isArray((raw as { sessions?: RawSession[] })?.sessions)
         ? ((raw as { sessions: RawSession[] }).sessions)
         : [];
-    return list.map(normalizeSession);
+    // Drop rows the API returned without an id — `Number(undefined)` is NaN and
+    // `Number(null)` is 0, and an id of 0 trips every `!sessionId` guard
+    // (send/markRead/Pusher), silently breaking the session.
+    return list.filter((r) => r.id != null).map(normalizeSession);
   } catch (e) {
     redirectIfBlacklisted(e);
     return [];
@@ -85,19 +88,37 @@ async function Content() {
   const sessions = await loadSessions(token);
 
   if (sessions.length === 0) {
-    // Seed a single empty pending session so the user can start chatting even
-    // when the worker returns nothing (or the endpoint is unavailable).
-    const seed: ChatSession[] = [
-      {
-        id: 0,
-        status: "pending",
-        unreadUserCount: 0,
-        lastMessageAt: null,
-        lastMessagePreview: "Hi! How can we help you find the right machine today?",
-        adminLastReadAt: null,
-      },
-    ];
-    return <ChatShell sessions={seed} />;
+    // No existing sessions — get-or-create a REAL session so the user can
+    // actually send. A placeholder id:0 would silently break sending: send(),
+    // markRead() and the Pusher subscription all guard with `if (!sessionId)`,
+    // and `!0` is truthy, so the very first message would be dropped.
+    // Build the seed list inside the try, but construct the JSX *after* it —
+    // react-hooks/error-boundaries forbids returning JSX from within try/catch.
+    let fresh: ChatSession[] = [];
+    try {
+      const created = await apiFetch<{ sessionId: number }>("/chat/sessions", {
+        method: "POST",
+        body: {},
+        token,
+      });
+      if (created?.sessionId) {
+        fresh = [
+          {
+            id: created.sessionId,
+            status: "pending",
+            unreadUserCount: 0,
+            lastMessageAt: null,
+            lastMessagePreview: "Hi! How can we help you find the right machine today?",
+            adminLastReadAt: null,
+          },
+        ];
+      }
+    } catch (e) {
+      redirectIfBlacklisted(e);
+    }
+    // `fresh` carries the created session on success, or stays [] (read-only
+    // empty state) when creation failed.
+    return <ChatShell sessions={fresh} />;
   }
 
   return <ChatShell sessions={sessions} />;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Headset, Phone, Search } from "lucide-react";
+import { ChevronLeft, Headset, Phone, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useChatStore } from "./core/store";
@@ -69,11 +69,20 @@ export function ChatShell({
 
   const [query, setQuery] = useState("");
 
+  // Mobile-only master-detail toggle: "list" shows the session rail,
+  // "conv" shows the open conversation. Ignored at desktop widths (>768px),
+  // where both panes are always visible (the back button is hidden).
+  const [mobileView, setMobileView] = useState<"list" | "conv">("list");
+
   // Seed the store with server-rendered sessions on mount / when they change.
-  // Only set activeSessionId when none is set yet (preserve user navigation).
+  // Only set activeSessionId when none is set yet (preserve user navigation),
+  // OR when the persisted activeSessionId is stale (not among the current
+  // sessions) — e.g. User A logs out and User B logs in, leaving A's id in
+  // localStorage, which would otherwise show the wrong/empty thread.
   useEffect(() => {
     setSessions(initial);
-    if (initial.length && activeSessionId == null) {
+    const validPersisted = initial.some((s) => s.id === activeSessionId);
+    if (initial.length && (activeSessionId == null || !validPersisted)) {
       const first =
         initial.find((s) => s.status !== "resolved") ?? initial[0];
       setActive(first.id);
@@ -110,6 +119,7 @@ export function ChatShell({
   const handleSetActive = useCallback(
     (id: number) => {
       setActive(id);
+      setMobileView("conv");
     },
     [setActive],
   );
@@ -138,7 +148,7 @@ export function ChatShell({
   }
 
   return (
-    <div className="chat-shell2">
+    <div className="chat-shell2" data-mobile-view={mobileView}>
       {/* Left: session list */}
       <aside className="chat-list">
         <div className="chat-list-head">
@@ -197,6 +207,14 @@ export function ChatShell({
       {/* Right: conversation */}
       <section className="chat-conv">
         <div className="chat-card-head">
+          <button
+            type="button"
+            className="chat-back"
+            aria-label="Back to chats"
+            onClick={() => setMobileView("list")}
+          >
+            <ChevronLeft />
+          </button>
           <span className="chat-id-av" aria-hidden="true">
             <Headset />
             {active && active.status !== "resolved" && (
