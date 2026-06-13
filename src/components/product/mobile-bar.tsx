@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Phone, X } from "lucide-react";
 
 import { EnquiryForm } from "@/components/product/enquiry-form";
-import { ChatAboutButton } from "@/components/product/chat-about-button";
 import { useI18n } from "@/components/providers/language-provider";
 import type { ProductRef } from "@/components/chat/core/types";
 
@@ -17,7 +16,6 @@ const KIND_KEY = {
 
 export interface MobileBarProps {
   title: string;
-  listingId: number;
   /** Pre-split price parts for the sticky bar. */
   priceUnits: string;
   priceNum: string;
@@ -27,7 +25,8 @@ export interface MobileBarProps {
   kind: "sale" | "rent" | "both";
   /** Visible dealer phone (masking honoured by caller), or null. */
   phone: string | null;
-  /** Serializable listing reference for the "Chat about this" launcher entry. */
+  /** Serializable listing reference — attached to the first chat message when
+   *  the enquiry sheet routes into the live chat. */
   product: ProductRef;
 }
 
@@ -37,7 +36,6 @@ export interface MobileBarProps {
  */
 export function MobileBar({
   title,
-  listingId,
   priceUnits,
   priceNum,
   priceSuffix,
@@ -88,7 +86,6 @@ export function MobileBar({
           </span>
         </div>
         <div className="pdp-mbar-actions">
-          <ChatAboutButton product={product} variant="compact" />
           {phone && (
             <a
               href={`tel:${phone.replace(/\s+/g, "")}`}
@@ -137,8 +134,8 @@ export function MobileBar({
           <div className="pdp-sheet-body">
             <EnquiryForm
               title={title}
-              listingId={listingId}
               phone={phone}
+              product={product}
             />
           </div>
         </div>

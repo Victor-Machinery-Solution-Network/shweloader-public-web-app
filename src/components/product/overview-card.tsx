@@ -1,7 +1,6 @@
 import { Package, User } from "lucide-react";
 
 import { EnquiryForm } from "@/components/product/enquiry-form";
-import { ChatAboutButton } from "@/components/product/chat-about-button";
 import { T } from "@/components/t";
 import {
   formatInt,
@@ -89,7 +88,7 @@ function priceParts(
 
 /**
  * Build a serializable {@link ProductRef} from a normalized listing, for the
- * "Chat about this" entry point. Picks the sale OR rent listing id based on the
+ * "Send enquiry" → chat entry point. Picks the sale OR rent listing id based on the
  * listing's type (defaulting to sale when it's both), and resolves a single
  * display price + currency using the same precedence as the price card. Plain
  * object only — it's handed to a CustomEvent and read by the chat composer chip.
@@ -285,11 +284,10 @@ export function ContactCard({ listing }: { listing: Listing }) {
       )}
 
       <div className="ov-cta" id="enquiry">
-        <ChatAboutButton product={productRefFromListing(listing)} />
         <EnquiryForm
           title={listing.title}
-          listingId={listing.id}
           phone={seller?.phone ?? null}
+          product={productRefFromListing(listing)}
         />
       </div>
     </div>

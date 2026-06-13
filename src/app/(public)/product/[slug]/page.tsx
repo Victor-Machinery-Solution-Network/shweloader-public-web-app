@@ -236,7 +236,6 @@ export default async function ProductPage({ params }: PageProps) {
 
       <MobileBar
         title={listing.title}
-        listingId={listing.id}
         priceUnits={primary.units}
         priceNum={primary.num}
         priceSuffix={primary.suffix}

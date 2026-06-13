@@ -6,14 +6,17 @@ import { ArrowRight, Phone, Send } from "lucide-react";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useAuthUI } from "@/components/providers/auth-ui";
 import { useI18n } from "@/components/providers/language-provider";
+import type { ProductRef } from "@/components/chat/core/types";
 
 export interface EnquiryFormProps {
   /** Listing title — seeds the default message. */
   title: string;
-  /** Listing id — referenced in the enquiry message. */
-  listingId: number;
   /** Dealer phone, already display-formatted; null when masked/absent. */
   phone: string | null;
+  /** Serializable listing reference — attached to the first chat message so the
+   *  worker enriches it into a product card (1-click enquiry → chat). The
+   *  sale/rent listing ids it carries identify the listing to the worker. */
+  product: ProductRef;
 }
 
 /** Strip spaces for a `tel:` href. */
@@ -24,14 +27,17 @@ function telHref(phone: string): string {
 /**
  * Enquiry block reused by the overview card and the mobile bottom sheet.
  *
- * "Send enquiry": opens the global auth modal when signed-out; once signed in
- * the message is posted as feedback. "Call dealer" is a plain `tel:` link shown
- * only when the seller phone is visible (masking honoured by the caller).
+ * "Send enquiry": opens the global auth modal when signed-out; once signed in it
+ * opens the live chat and sends the typed message as the first chat message with
+ * the product attached (mirrors the mobile app's EnquirySheet). The actual send
+ * is performed by the floating `LiveChat` launcher, which listens for the global
+ * `shwe:open-chat` event. "Call dealer" is a plain `tel:` link shown only when
+ * the seller phone is visible (masking honoured by the caller).
  */
 export function EnquiryForm({
   title,
-  listingId,
   phone,
+  product,
 }: EnquiryFormProps) {
   const { t } = useI18n();
   const { signedIn } = useAuth();
@@ -39,33 +45,27 @@ export function EnquiryForm({
   const [message, setMessage] = useState(
     `${t("product.enquiryMsgPre")}${title}${t("product.enquiryMsgPost")}`,
   );
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
-    "idle",
-  );
+  const [opening, setOpening] = useState(false);
 
-  async function handleSend(e: React.MouseEvent<HTMLButtonElement>) {
+  function handleSend(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
-    if (status === "sending") return;
+    const text = message.trim();
+    if (!text) return; // never send an empty enquiry
     if (!signedIn) {
+      // The launcher preserves a staged product+message across the sign-in gate,
+      // so dispatch first; the auth modal handles the rest.
+      window.dispatchEvent(
+        new CustomEvent("shwe:open-chat", { detail: { product, message: text } }),
+      );
       open("signin");
       return;
     }
-    setStatus("sending");
-    try {
-      const res = await fetch("/api/enquiry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId, title, message }),
-      });
-      if (!res.ok) throw new Error("send failed");
-      setStatus("sent");
-    } catch {
-      setStatus("error");
-    }
+    // Brief "Opening chat…" affordance; the launcher takes over from here.
+    setOpening(true);
+    window.dispatchEvent(
+      new CustomEvent("shwe:open-chat", { detail: { product, message: text } }),
+    );
   }
-
-  const sending = status === "sending";
-  const sent = status === "sent";
 
   return (
     <>
@@ -78,27 +78,17 @@ export function EnquiryForm({
           rows={3}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          disabled={sending || sent}
         />
       </label>
       <button
         type="button"
         className="cc-send"
         onClick={handleSend}
-        disabled={sending || sent}
+        disabled={opening}
       >
-        {sent
-          ? t("product.enquirySent")
-          : sending
-            ? t("product.enquirySending")
-            : t("actions.enquire")}
+        {opening ? t("product.enquiryOpening") : t("actions.enquire")}
         <ArrowRight className="icon-sm" aria-hidden="true" />
       </button>
-      {status === "error" && (
-        <p className="ov-foot" role="alert">
-          {t("product.enquiryError")}
-        </p>
-      )}
       {phone && (
         <a href={telHref(phone)} className="cc-quick-btn">
           <Phone className="icon-sm" aria-hidden="true" />

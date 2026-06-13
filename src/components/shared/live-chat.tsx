@@ -56,11 +56,19 @@ export function LiveChat() {
 
   const [open, setOpen] = useState(false);
   const [bootstrapping, setBootstrapping] = useState(false);
-  // Product reference staged by a "Chat about this" click on the product page
+  // Product reference staged by a product-page enquiry/chat entry point
   // (dispatched via the shwe:open-chat event). Attached to the user's NEXT sent
   // message so the worker enriches it into a product card, then cleared. Survives
   // the signed-out gate so it's still applied after the user signs in.
   const [pendingProduct, setPendingProduct] = useState<ProductRef | null>(null);
+  // Message text staged by the product-page "Send enquiry" form (1-click flow):
+  // the typed message is auto-sent — with the pending product attached — as soon
+  // as the session is ready. Survives the signed-out gate too (sends post-login).
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  // Guard: the auto-send effect fires exactly once per staged message. Set the
+  // instant we hand the message to `send()` so a re-run (state settle) can't
+  // re-fire before `pendingMessage` clears.
+  const autoSentRef = useRef(false);
 
   // Focus management: move focus into the panel (close button) on open, and
   // restore it to the launcher FAB on close.
@@ -238,20 +246,50 @@ export function LiveChat() {
     [send, pendingProduct],
   );
 
-  // Allow any part of the app (header Messages link, product "Chat about this"
-  // button, etc.) to open the chat. An optional `detail.product` ProductRef is
-  // staged so the next sent message carries the listing reference.
+  // Allow any part of the app (header Messages link, product "Send enquiry"
+  // form, etc.) to open the chat. An optional `detail.product` ProductRef is
+  // staged so the next sent message carries the listing reference; an optional
+  // `detail.message` is auto-sent (with the product attached) once the session
+  // is ready — the product page's 1-click enquiry flow.
   useEffect(() => {
     const onOpenChat = (e: Event) => {
-      const detail = (e as CustomEvent<{ product?: ProductRef }>).detail;
+      const detail = (e as CustomEvent<{ product?: ProductRef; message?: string }>)
+        .detail;
       if (detail?.product) setPendingProduct(detail.product);
+      const msg = detail?.message?.trim();
+      if (msg) {
+        setPendingMessage(msg);
+        // Re-arm the one-shot guard for this freshly staged message.
+        autoSentRef.current = false;
+      }
       // Always open the panel here; signed-out users see the sign-in gate (the
-      // pending product is preserved and applied once they're signed in).
+      // pending product/message are preserved and applied once they're signed in).
       setOpen(true);
     };
     window.addEventListener("shwe:open-chat", onOpenChat);
     return () => window.removeEventListener("shwe:open-chat", onOpenChat);
   }, []);
+
+  // Auto-send the staged enquiry message once the session is ready. Keyed on
+  // `[activeSessionId, signedIn]` so it fires after the bootstrap POST resolves
+  // (which sets activeSessionId) and after a signed-out → signed-in transition.
+  // `autoSentRef` makes it a one-shot: we flip it before calling `send()` and
+  // clear both pending values, so a re-run can't double-fire. If signed out we
+  // do nothing — `pendingMessage`/`pendingProduct` persist for post-login send.
+  useEffect(() => {
+    if (!signedIn || activeSessionId == null) return;
+    if (!pendingMessage || !pendingProduct) return;
+    if (autoSentRef.current) return;
+    autoSentRef.current = true;
+    const text = pendingMessage;
+    const product = pendingProduct;
+    setPendingMessage(null);
+    setPendingProduct(null);
+    send(text, undefined, {
+      saleListingId: product.saleListingId ?? undefined,
+      rentListingId: product.rentListingId ?? undefined,
+    });
+  }, [activeSessionId, signedIn, pendingMessage, pendingProduct, send]);
 
   // Don't render the floating launcher on the full chat page (avoids a second
   // chat surface fighting over the shared store). All hooks above still run.
