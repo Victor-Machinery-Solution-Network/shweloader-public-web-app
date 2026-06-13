@@ -50,15 +50,8 @@ const nextConfig: NextConfig = {
     inlineCss: true,
   },
 
-  // Native/CJS packages that must NOT be bundled — Next externalizes them and
-  // traces their files into the serverless function. `sharp` powers next/image.
-  // `isomorphic-dompurify` (+ its `jsdom` dep) runs in renderMarkdown on the
-  // product & blog pages: Turbopack auto-externalizes jsdom but failed to trace
-  // it into the on-demand function bundle, so every NON-prerendered render
-  // (bare-id deep-links, invalid-id 404s, any non-canonical slug → notFound/
-  // redirect) threw "Failed to load external module …/jsdom…" → 500. Listing it
-  // here forces the trace. Prerendered (static) pages never hit this.
-  serverExternalPackages: ["sharp", "isomorphic-dompurify", "jsdom"],
+  // Use the native sharp pipeline for next/image optimization.
+  serverExternalPackages: ["sharp"],
 
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
