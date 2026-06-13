@@ -32,11 +32,15 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
       assetUrl(listing.thumbnail.url ?? listing.thumbnail.thumbUrl),
     );
 
-  // Title format is "<brand> <model>"; derive the model by stripping the brand.
-  const model =
-    listing.brand && listing.title.toLowerCase().startsWith(listing.brand.toLowerCase())
-      ? listing.title.slice(listing.brand.length).trim()
-      : "";
+  // Row title is "<brand> <model>" (matches the grid card); `title` is the model
+  // name, so prefix the brand unless it's already part of the title.
+  const rowTitle =
+    listing.brand &&
+    !listing.title.toLowerCase().startsWith(listing.brand.toLowerCase())
+      ? `${listing.brand} ${listing.title}`
+      : listing.title;
+  // Eyebrow shows the subcategory (fall back to the main category).
+  const eyebrow = listing.subCategory ?? listing.category ?? null;
 
   const locationName =
     listing.location.township ??
@@ -71,7 +75,7 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
         {photo ? (
           <Image
             src={photo}
-            alt={listing.title}
+            alt={rowTitle}
             fill
             sizes="(max-width: 768px) 220px, 280px"
             style={{ objectFit: "cover", objectPosition: focalPosition(img.focalX, img.focalY) }}
@@ -93,15 +97,10 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
         ) : null}
       </div>
 
-      <Link href={href} className="lrow-body" aria-label={listing.title}>
+      <Link href={href} className="lrow-body" aria-label={rowTitle}>
         <div className="lrow-head">
-          {listing.category ? <div className="lrow-cat">{listing.category}</div> : null}
-          <h3 className="lrow-title">{listing.title}</h3>
-          <div className="lrow-meta">
-            {listing.brand ? <span>{listing.brand}</span> : null}
-            {listing.brand && model ? <span className="dot">·</span> : null}
-            {model ? <span className="lrow-model">{model}</span> : null}
-          </div>
+          {eyebrow ? <div className="lrow-cat">{eyebrow}</div> : null}
+          <h3 className="lrow-title">{rowTitle}</h3>
         </div>
 
         <div className="lrow-foot">
