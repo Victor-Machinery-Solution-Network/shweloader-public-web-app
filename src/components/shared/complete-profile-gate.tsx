@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/use-auth";
+import { useAuthUI } from "@/components/providers/auth-ui";
 import { useI18n } from "@/components/providers/language-provider";
 import { SignUpStep3, EMPTY_SIGNUP, type SignUpData } from "@/components/shared/auth-modal";
 // The reused Step-3 form is styled by these stylesheets (also imported by the
@@ -31,6 +32,9 @@ import "@/styles/pages/profile.css";
  */
 export function CompleteProfileGate() {
   const { signedIn, user, refresh } = useAuth();
+  // While the auth modal is open, IT owns the business-details step (signup
+  // step 3) — don't double up with this gate. The gate takes over once it closes.
+  const { mode } = useAuthUI();
   const { locale } = useI18n();
   const t = (en: string, my: string) => (locale === "my" ? my : en);
   const pathname = usePathname();
@@ -66,7 +70,7 @@ export function CompleteProfileGate() {
     return () => window.removeEventListener("keydown", onKey);
   }, [incomplete, dismissed]);
 
-  if (!incomplete || dismissed) return null;
+  if (!incomplete || dismissed || mode !== "closed") return null;
 
   return (
     <div
