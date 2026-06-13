@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/assets";
 import { formatMoney } from "@/lib/format";
+import { listingSlug } from "@/lib/slug";
 import { Lightbox } from "./Lightbox";
 import { SeenTick } from "./SeenTick";
 import type { ChatMessage, ChatAttachment, ProductRef } from "./types";
@@ -78,9 +79,19 @@ function ProductCard({ product }: { product: ProductRef }) {
   if (product.customId) subParts.push(product.customId);
   const sub = subParts.join(" · ");
 
-  // The product page is keyed on product_list id (the slug's trailing id), so
-  // link by productListId — NOT the sale/rent listing id.
-  const linkId = product.productListId ?? product.saleListingId ?? product.rentListingId ?? null;
+  // Link by the canonical slug (`{brand-model}-{id}`) — the exact URL the product
+  // page prerenders — NOT a bare `/product/<id>`, which only resolves via an
+  // on-demand redirect. productName/brandName come from the same worker source the
+  // page uses to build its slug, so this reproduces the canonical URL (→ a
+  // prerendered 200, no redirect). No link if the product_list id is absent.
+  const href =
+    product.productListId != null
+      ? `/product/${listingSlug({
+          id: product.productListId,
+          title: product.productName,
+          brand: product.brandName,
+        })}`
+      : null;
 
   const inner = (
     <>
@@ -110,8 +121,8 @@ function ProductCard({ product }: { product: ProductRef }) {
     </>
   );
 
-  return linkId != null ? (
-    <Link href={`/product/${linkId}`} className="chat-product-card" aria-label={`View ${product.productName ?? "product"}`}>
+  return href != null ? (
+    <Link href={href} className="chat-product-card" aria-label={`View ${product.productName ?? "product"}`}>
       {inner}
     </Link>
   ) : (

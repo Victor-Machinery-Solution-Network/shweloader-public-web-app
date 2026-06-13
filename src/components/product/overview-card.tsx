@@ -110,6 +110,10 @@ export function productRefFromListing(
   const usePrice = price?.ccy === "USD";
 
   return {
+    // The product_list id (the product page's key) — so the in-chat card links
+    // by canonical slug. Distinct from the sale/rent listing ids below, which
+    // attach the enquiry to the correct listing.
+    productListId: listing.id,
     productName: listing.title,
     productThumbnail: assetUrl(listing.thumbnail?.thumbUrl ?? listing.thumbnail?.url),
     brandName: listing.brand,
