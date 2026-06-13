@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useChatStore, nextTempId } from "./store";
 import { fromServerMessage, messageKey } from "./mappers";
 import { startNewSession } from "./refresh-sessions";
-import type { ChatAttachment, ChatMessage, ServerMessage } from "./types";
+import type { ChatAttachment, ChatMessage, ProductRef, ServerMessage } from "./types";
 
 async function postJson(url: string, body: unknown): Promise<Response> {
   return fetch(url, {
@@ -52,6 +52,7 @@ export function useChatSync(sessionId: number | null) {
       text: string,
       attachments?: ChatAttachment[],
       listing?: { saleListingId?: number; rentListingId?: number },
+      product?: ProductRef | null,
     ) => {
       if (!sessionId) return;
       const trimmed = text.trim();
@@ -81,7 +82,9 @@ export function useChatSync(sessionId: number | null) {
         senderName: null,
         text: trimmed || null,
         attachments: attachments ?? [],
-        product: null,
+        // Show the enquiry's product card immediately (mobile parity) instead of
+        // waiting for the server echo / history reload to attach it.
+        product: product ?? null,
         createdAt: new Date().toISOString(),
         status: "sending",
       };

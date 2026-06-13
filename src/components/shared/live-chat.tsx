@@ -250,6 +250,9 @@ export function LiveChat() {
               rentListingId: pendingProduct.rentListingId ?? undefined,
             }
           : undefined,
+        // Carry the product so its card renders on the optimistic message
+        // immediately (not only after the server echo / history reload).
+        pendingProduct ?? undefined,
       );
       setPendingProduct(null);
     },
@@ -295,10 +298,15 @@ export function LiveChat() {
     const product = pendingProduct;
     setPendingMessage(null);
     setPendingProduct(null);
-    send(text, undefined, {
-      saleListingId: product.saleListingId ?? undefined,
-      rentListingId: product.rentListingId ?? undefined,
-    });
+    send(
+      text,
+      undefined,
+      {
+        saleListingId: product.saleListingId ?? undefined,
+        rentListingId: product.rentListingId ?? undefined,
+      },
+      product, // optimistic product card
+    );
   }, [activeSessionId, signedIn, pendingMessage, pendingProduct, send]);
 
   // Don't render the floating launcher on the full chat page (avoids a second
