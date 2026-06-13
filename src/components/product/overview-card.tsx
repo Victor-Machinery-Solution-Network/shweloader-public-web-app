@@ -111,8 +111,11 @@ export function productRefFromListing(listing: Listing): ProductRef {
     usdPrice: price && usePrice ? side?.usd ?? null : null,
     displayCurrency: price ? price.ccy : null,
     listingType,
-    saleListingId: listingType === "sale" ? listing.id : null,
-    rentListingId: listingType === "rent" ? listing.id : null,
+    // Use the real sale/rent listing row id (side.listingId), NOT listing.id
+    // (the product_list id) — chat_message.sale_listing_id FKs sale_listing(id),
+    // so sending the product_list id 502s the message.
+    saleListingId: listingType === "sale" ? side?.listingId ?? null : null,
+    rentListingId: listingType === "rent" ? side?.listingId ?? null : null,
   };
 }
 

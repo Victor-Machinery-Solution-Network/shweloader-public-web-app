@@ -184,6 +184,9 @@ export interface CustomField {
 }
 
 export interface ListingPrice {
+  /** The sale_listing / rent_listing row id (NOT product_list id) — used to
+   *  attach the listing to a chat message. Null if the API omitted it. */
+  listingId: number | null;
   mmk: number | null;
   usd: number | null;
   hide: boolean;

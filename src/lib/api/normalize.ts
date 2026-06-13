@@ -121,6 +121,10 @@ export function normalizeListing(r: ApiListing): Listing {
     isRent: hasRent,
     sale: hasSale
       ? {
+          // The actual sale_listing row id (NOT product_list id `r.id`) — needed
+          // to attach this listing to a chat message (chat_message.sale_listing_id
+          // FKs sale_listing(id)).
+          listingId: (r.sale_listing_id as number | null) ?? null,
           mmk: r.sale_mmk_price ?? null,
           usd: r.sale_usd_price ?? null,
           hide: !!r.sale_hide_price,
@@ -130,6 +134,7 @@ export function normalizeListing(r: ApiListing): Listing {
       : null,
     rent: hasRent
       ? {
+          listingId: (r.rent_listing_id as number | null) ?? null,
           mmk: r.rent_mmk_price ?? null,
           usd: r.rent_usd_price ?? null,
           hide: !!r.rent_hide_price,

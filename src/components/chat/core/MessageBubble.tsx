@@ -78,8 +78,9 @@ function ProductCard({ product }: { product: ProductRef }) {
   if (product.customId) subParts.push(product.customId);
   const sub = subParts.join(" · ");
 
-  const linkId =
-    product.saleListingId ?? product.rentListingId ?? product.productListId ?? null;
+  // The product page is keyed on product_list id (the slug's trailing id), so
+  // link by productListId — NOT the sale/rent listing id.
+  const linkId = product.productListId ?? product.saleListingId ?? product.rentListingId ?? null;
 
   const inner = (
     <>
