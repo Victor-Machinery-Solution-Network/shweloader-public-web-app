@@ -338,48 +338,24 @@ export function LiveChat() {
       >
         <div className="lc-head">
           <div className="lc-head-avatar" aria-hidden="true">
-            <svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <clipPath id="lcAvatarClip">
-                  <circle cx="20" cy="20" r="20" />
-                </clipPath>
-              </defs>
-              <g clipPath="url(#lcAvatarClip)">
-                <rect width="40" height="40" fill="#f1d9a8" />
-                {/* shoulders / shirt */}
-                <path d="M2 40 C 6 30, 14 27, 20 27 C 26 27, 34 30, 38 40 Z" fill="#2a2a2a" />
-                <path d="M14 28 L 20 33 L 26 28 L 26 30 L 20 35 L 14 30 Z" fill="#fff" opacity="0.92" />
-                {/* neck */}
-                <rect x="17.5" y="22" width="5" height="6" fill="#d9b07a" />
-                {/* head */}
-                <circle cx="20" cy="17" r="8" fill="#e8c290" />
-                {/* hair */}
-                <path d="M12 16 C 12 9, 28 9, 28 16 C 28 13, 26 11, 23 11 C 21 11, 19 12, 17 12 C 14 12, 12 13, 12 16 Z" fill="#2a1f15" />
-                {/* eyes */}
-                <circle cx="17" cy="17" r="0.9" fill="#2a1f15" />
-                <circle cx="23" cy="17" r="0.9" fill="#2a1f15" />
-                {/* smile */}
-                <path d="M17.5 20 Q 20 22, 22.5 20" stroke="#7a4a2a" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-              </g>
-            </svg>
+            {/* Same headset icon as the FAB bubble (and the /chat header), in a
+                gold-soft circle — mirrors the mobile SupportHeader avatar. */}
+            <HeadsetIcon />
             <span className="lc-pulse" aria-hidden="true" />
           </div>
           <div className="lc-head-meta">
             <div className="lc-head-title">{t("chat.supportName")}</div>
             <div className="lc-head-sub">
-              {/* When presence is enabled show a live dot; otherwise keep the
-                  static always-green dot so the UI is unchanged today. */}
-              {PRESENCE_ENABLED ? (
-                supportOnline ? (
-                  <>
-                    <span className="lc-dot" /> {t("chat.status")}
-                  </>
-                ) : (
-                  <span className="lc-dot lc-dot--away" />
-                )
+              {/* Mirror the mobile SupportHeader: "Online" + live dot, or the
+                  offline message when presence is on and the admin is away.
+                  Presence off (no Firebase config) keeps the static online look. */}
+              {PRESENCE_ENABLED && !supportOnline ? (
+                <>
+                  <span className="lc-dot lc-dot--away" /> {t("chat.offline")}
+                </>
               ) : (
                 <>
-                  <span className="lc-dot" /> {t("chat.status")}
+                  <span className="lc-dot" /> {t("chat.online")}
                 </>
               )}
             </div>

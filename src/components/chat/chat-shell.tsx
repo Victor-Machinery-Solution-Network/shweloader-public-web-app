@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, Headset, Phone, Search } from "lucide-react";
+import { ChevronLeft, Phone, Search } from "lucide-react";
+import { HeadsetIcon } from "@/components/shared/icons/headset-icon";
 
 import { cn } from "@/lib/utils";
 import { useChatStore } from "./core/store";
@@ -34,8 +35,6 @@ interface ChatShellProps {
   /** Phone number for the "call support" affordance. */
   supportPhone?: string;
 }
-
-const SUPPORT_NAME = "ShweLoader Support";
 
 /** Format a nullable ISO timestamp as a short time string for the session row. */
 function fmtSessionTime(iso: string | null): string {
@@ -211,12 +210,12 @@ export function ChatShell({
               aria-label={`Support chat — ${s.status === "resolved" ? "closed" : s.status}${s.unreadUserCount > 0 ? `, ${s.unreadUserCount} unread` : ""}`}
             >
               <span className="sess-av" aria-hidden="true">
-                <Headset />
+                <HeadsetIcon />
                 {s.status !== "resolved" && <span className="sess-on" />}
               </span>
               <span className="sess-main">
                 <span className="sess-top">
-                  <span className="sess-name">{SUPPORT_NAME}</span>
+                  <span className="sess-name">{t("chat.supportName")}</span>
                   <span className="sess-time">{fmtSessionTime(s.lastMessageAt)}</span>
                 </span>
                 <span className="sess-prev">{s.lastMessagePreview ?? ""}</span>
@@ -252,22 +251,20 @@ export function ChatShell({
             <ChevronLeft />
           </button>
           <span className="chat-id-av" aria-hidden="true">
-            <Headset />
+            <HeadsetIcon />
             {active && active.status !== "resolved" && (
               <span className="chat-id-on" />
             )}
           </span>
           <div className="chat-id-meta">
-            <div className="chat-id-name">{SUPPORT_NAME}</div>
+            <div className="chat-id-name">{t("chat.supportName")}</div>
             {active && active.status !== "resolved" ? (
               <div className="chat-id-status">
-                {/* When presence is enabled show live admin status; otherwise
-                    keep the existing static "Active now" text unchanged. */}
-                {PRESENCE_ENABLED
-                  ? supportOnline
-                    ? "Support online"
-                    : "Support away"
-                  : "Active now"}
+                {/* Mirror the mobile SupportHeader: "Online" / offline message
+                    by admin presence; presence off keeps the static online label. */}
+                {PRESENCE_ENABLED && !supportOnline
+                  ? t("chat.offline")
+                  : t("chat.online")}
               </div>
             ) : (
               <div className="chat-id-status is-closed">Session closed</div>
