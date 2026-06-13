@@ -100,6 +100,16 @@ export function LiveChat() {
     open && signedIn ? activeSessionId : null,
   );
 
+  // Reconcile the persisted store with the signed-in user BEFORE bootstrap/sync/
+  // auto-send run. Without this, a previous account's cached activeSessionId
+  // (localStorage) survives a login and the enquiry auto-sends to a session this
+  // user doesn't own → 502 "Failed to send message".
+  useEffect(() => {
+    if (signedIn && user?.id != null) {
+      useChatStore.getState().ensureOwner(Number(user.id));
+    }
+  }, [signedIn, user?.id]);
+
   // Mirror mobile's focus-based chat sync: refresh sessions on tab focus (keeps
   // the FAB unread badge fresh + surfaces admin-started/closed sessions), and
   // also whenever the panel is opened.

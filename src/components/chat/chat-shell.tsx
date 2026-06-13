@@ -62,6 +62,13 @@ export function ChatShell({
     setActive,
   } = useChatStore();
 
+  // Clear a previous account's persisted chat before seeding/selecting, so a
+  // shared browser never shows or sends to another user's session. Runs before
+  // the seed effect below.
+  useEffect(() => {
+    if (user?.id != null) useChatStore.getState().ensureOwner(Number(user.id));
+  }, [user?.id]);
+
   // Phase 3: live admin presence via Firebase RTDB.
   // The /chat page is always "active" — the user is signed in to reach it.
   const numericUserId = user?.id != null ? Number(user.id) : null;

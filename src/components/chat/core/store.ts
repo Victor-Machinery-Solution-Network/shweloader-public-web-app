@@ -10,9 +10,17 @@ interface ChatState {
   activeSessionId: number | null;
   /** admin last-read ISO per session (for "Seen"). */
   adminReadAt: Record<number, string | null>;
+  /** The app_user_id this persisted store belongs to — guards against one user's
+   *  cached sessions/activeSessionId leaking to the next account on a shared
+   *  browser (which made the launcher auto-send to a session the new user
+   *  doesn't own → 502). */
+  ownerUserId: number | null;
 
   setSessions: (s: ChatSession[]) => void;
   setActive: (id: number | null) => void;
+  /** Reconcile the persisted store with the signed-in user: if it belongs to a
+   *  different (or no) user, wipe per-user state so nothing leaks across logins. */
+  ensureOwner: (userId: number) => void;
   setMessages: (sessionId: number, msgs: ChatMessage[]) => void;
   /** Returns false if a message with the same key already exists (deduped). */
   addMessage: (sessionId: number, m: ChatMessage) => boolean;
@@ -36,6 +44,7 @@ export const useChatStore = create<ChatState>()(
       messages: {},
       activeSessionId: null,
       adminReadAt: {},
+      ownerUserId: null,
 
       setSessions: (s) =>
         // Seed the "Seen" tick state from each session's admin_last_read_at so
@@ -52,6 +61,23 @@ export const useChatStore = create<ChatState>()(
           },
         })),
       setActive: (id) => set({ activeSessionId: id }),
+
+      ensureOwner: (userId) =>
+        set((st) =>
+          st.ownerUserId === userId
+            ? st
+            : {
+                // Different (or first) user on this browser — drop the previous
+                // account's persisted chat so a stale activeSessionId/sessions/
+                // messages can't leak across logins.
+                ownerUserId: userId,
+                sessions: [],
+                messages: {},
+                activeSessionId: null,
+                adminReadAt: {},
+              },
+        ),
+
       setMessages: (sessionId, msgs) =>
         set((st) => ({ messages: { ...st.messages, [sessionId]: msgs } })),
 
@@ -145,6 +171,7 @@ export const useChatStore = create<ChatState>()(
         messages: st.messages,
         adminReadAt: st.adminReadAt,
         activeSessionId: st.activeSessionId,
+        ownerUserId: st.ownerUserId,
       }),
     },
   ),
