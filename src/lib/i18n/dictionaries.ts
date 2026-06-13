@@ -210,6 +210,8 @@ export const en = {
     gateSub: "Sign in to get started.",
     newHere: "New here?",
     createAccount: "Create a free account",
+    closedNote: "This conversation was closed.",
+    startNew: "Start new conversation",
   },
   notifications: { title: "Notifications", empty: "You're all caught up" },
   common: {
@@ -431,6 +433,8 @@ export const my: Dictionary = {
     gateSub: "စတင်ရန် အကောင့်ဝင်ပါ။",
     newHere: "အကောင့်မရှိသေးဘူးလား?",
     createAccount: "အခမဲ့ အကောင့်ဖွင့်ရန်",
+    closedNote: "ဤစကားဝိုင်းကို ပိတ်လိုက်ပါပြီ။",
+    startNew: "စကားဝိုင်းအသစ် စတင်ရန်",
   },
   notifications: { title: "အသိပေးချက်များ", empty: "အသစ်မရှိတော့ပါ" },
   common: {

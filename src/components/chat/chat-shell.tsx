@@ -11,8 +11,10 @@ import { useChatSync } from "./core/use-chat-sync";
 import { usePresence } from "./core/use-presence";
 import { Thread } from "./core/Thread";
 import { Composer } from "./core/Composer";
+import { ClosedNotice } from "./core/ClosedNotice";
 import type { ChatSession } from "./core/types";
 import { useAuth } from "@/lib/auth/use-auth";
+import { useI18n } from "@/components/providers/language-provider";
 import { PRESENCE_ENABLED, WEB_PUSH_ENABLED } from "@/lib/env";
 import { useWebPush } from "./core/use-web-push";
 import { useSessionRefresh } from "./core/refresh-sessions";
@@ -52,6 +54,7 @@ export function ChatShell({
   supportPhone = "+95977123456",
 }: ChatShellProps) {
   const { user } = useAuth();
+  const { t } = useI18n();
 
   const {
     sessions,
@@ -306,17 +309,16 @@ export function ChatShell({
           adminTyping={adminTyping}
         />
 
-        {active?.status === "resolved" && (
-          <div className="chat-reopen-note" role="status">
-            This conversation was closed — send a message to start a new one.
-          </div>
+        {active?.status === "resolved" ? (
+          <ClosedNotice note={t("chat.closedNote")} action={t("chat.startNew")} />
+        ) : (
+          <Composer
+            onSend={send}
+            onTyping={notifyTyping}
+            disabled={false}
+            sessionId={activeId ?? null}
+          />
         )}
-        <Composer
-          onSend={send}
-          onTyping={notifyTyping}
-          disabled={false}
-          sessionId={activeId ?? null}
-        />
       </section>
     </div>
   );

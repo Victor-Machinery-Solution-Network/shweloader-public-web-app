@@ -16,6 +16,7 @@ import { usePresence } from "@/components/chat/core/use-presence";
 import { resetPusher } from "@/components/chat/core/pusher-client";
 import { Thread } from "@/components/chat/core/Thread";
 import { Composer } from "@/components/chat/core/Composer";
+import { ClosedNotice } from "@/components/chat/core/ClosedNotice";
 import type { ChatAttachment, ChatSession, ProductRef } from "@/components/chat/core/types";
 import { PRESENCE_ENABLED, WEB_PUSH_ENABLED } from "@/lib/env";
 import { useWebPush } from "@/components/chat/core/use-web-push";
@@ -88,6 +89,10 @@ export function LiveChat() {
 
   const { activeSessionId, sessions, adminReadAt, messages, setActive, setSessions } =
     useChatStore();
+  // Total unread across the user's sessions — drives the FAB count badge when the
+  // panel is collapsed. Server-sourced; kept fresh by useSessionRefresh (focus/
+  // visibility) and the on-open refresh below. Same count the user menu shows.
+  const messagesUnread = useChatStore((s) => s.totalUnread());
   const sessionMessages =
     activeSessionId != null ? (messages[activeSessionId] ?? []) : [];
   const sessionAdminReadAt =
@@ -431,19 +436,18 @@ export function LiveChat() {
                 adminTyping={adminTyping}
               />
             )}
-            {activeSession?.status === "resolved" && (
-              <div className="chat-reopen-note" role="status">
-                This conversation was closed — send a message to start a new one.
-              </div>
+            {activeSession?.status === "resolved" ? (
+              <ClosedNotice note={t("chat.closedNote")} action={t("chat.startNew")} />
+            ) : (
+              <Composer
+                onSend={handleSend}
+                onTyping={notifyTyping}
+                disabled={bootstrapping || activeSessionId == null}
+                sessionId={activeSessionId ?? null}
+                pendingProduct={pendingProduct}
+                onClearPending={() => setPendingProduct(null)}
+              />
             )}
-            <Composer
-              onSend={handleSend}
-              onTyping={notifyTyping}
-              disabled={bootstrapping || activeSessionId == null}
-              sessionId={activeSessionId ?? null}
-              pendingProduct={pendingProduct}
-              onClearPending={() => setPendingProduct(null)}
-            />
           </>
         ) : (
           <div className="lc-gate" role="region" aria-label="Sign in to chat">
@@ -491,7 +495,13 @@ export function LiveChat() {
           (onProductPage ? " lc-fab--product" : "")
         }
         onClick={() => (open ? setOpen(false) : openPanel())}
-        aria-label={open ? "Close chat" : "Open live chat"}
+        aria-label={
+          open
+            ? "Close chat"
+            : messagesUnread > 0
+              ? `Open live chat, ${messagesUnread} unread message${messagesUnread === 1 ? "" : "s"}`
+              : "Open live chat"
+        }
         aria-expanded={open}
         aria-controls="lc-chat-panel"
       >
@@ -499,6 +509,13 @@ export function LiveChat() {
           <HeadsetIcon />
         </span>
         {!open && <span className="lc-fab-status" aria-hidden="true" />}
+        {/* Unread count from admin replies — shown only while collapsed. The count
+            is announced via the button's aria-label, so the badge is decorative. */}
+        {!open && messagesUnread > 0 && (
+          <span className="lc-fab-badge" aria-hidden="true">
+            {messagesUnread > 9 ? "9+" : messagesUnread}
+          </span>
+        )}
         <span className="lc-fab-icon lc-fab-close" aria-hidden="true">
           <X />
         </span>

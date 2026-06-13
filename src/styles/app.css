@@ -2236,7 +2236,7 @@ html, body {
 /* Panel */
 .lc-panel {
   position: fixed; right: 24px; bottom: 96px; z-index: 60;
-  width: 360px; max-width: calc(100vw - 32px);
+  width: 420px; max-width: calc(100vw - 32px);
   height: 520px; max-height: calc(100vh - 140px);
   background: var(--m-bg);
   border: 1px solid var(--m-line);
