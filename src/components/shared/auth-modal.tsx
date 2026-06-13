@@ -321,10 +321,18 @@ function SignInForm({
   t,
   onForgot,
   onSuccess,
+  onNeedOtp,
 }: {
   t: Tr;
   onForgot: () => void;
   onSuccess: () => void | Promise<void>;
+  /** Worker asked for OTP (unverified, or verified but idle > 60 days) — hand
+   *  off to the OTP step with the phone + request id the proxy returned. */
+  onNeedOtp: (info: {
+    phone: string;
+    requestId?: string;
+    remember: boolean;
+  }) => void;
 }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -361,6 +369,20 @@ function SignInForm({
                 t("Sign in failed. Check your details.", "ဝင်ရောက်မှု မအောင်မြင်ပါ။"),
               ),
         );
+        return;
+      }
+      // The worker requires OTP for unverified accounts AND for verified accounts
+      // idle > 60 days. In that case the proxy returns { requiresOtp, phone,
+      // requestId } and sets NO session cookie — so route into the OTP step
+      // instead of treating it as a completed sign-in (the old code called
+      // onSuccess() here, which closed the modal without logging anyone in).
+      const data = (await res.json().catch(() => ({}))) as {
+        requiresOtp?: boolean;
+        phone?: string;
+        requestId?: string;
+      };
+      if (data.requiresOtp && data.phone) {
+        onNeedOtp({ phone: data.phone, requestId: data.requestId, remember });
         return;
       }
       await onSuccess();
@@ -707,16 +729,20 @@ function SignUpStep1({
 // Register — step 2: OTP (centered; promo hidden via .is-solo on .auth-split)
 // ---------------------------------------------------------------------------
 
-function SignUpStep2({
+function OtpStep({
   t,
-  data,
-  onNext,
+  phone,
+  onVerified,
   onBack,
+  extraVerifyFields,
 }: {
   t: Tr;
-  data: SignUpData;
-  onNext: () => void | Promise<void>;
+  phone: string;
+  onVerified: () => void | Promise<void>;
   onBack: () => void;
+  /** Extra fields merged into the /otp/verify body — sign-in sends requestId +
+   *  remember; signup sends nothing (route defaults to a persistent session). */
+  extraVerifyFields?: Record<string, string>;
 }) {
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [secs, setSecs] = useState(45);
@@ -765,7 +791,7 @@ function SignUpStep2({
       const res = await fetch("/api/auth/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: data.phone, code }),
+        body: JSON.stringify({ phone, code, ...(extraVerifyFields ?? {}) }),
       });
       if (!res.ok) {
         toast.error(
@@ -776,7 +802,7 @@ function SignUpStep2({
         );
         return;
       }
-      await onNext();
+      await onVerified();
     } catch {
       toast.error(
         t("Something went wrong. Try again.", "တစ်ခုခုမှားယွင်းနေပါသည်။"),
@@ -793,7 +819,7 @@ function SignUpStep2({
       const res = await fetch("/api/auth/otp/resend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: data.phone }),
+        body: JSON.stringify({ phone }),
       });
       if (!res.ok) {
         toast.error(
@@ -831,7 +857,7 @@ function SignUpStep2({
           "Enter the 6-digit code we sent to ",
           "၆ လုံးပါ ကုဒ်ကို ဤနံပါတ်သို့ ပို့ပြီးပါပြီ ",
         )}
-        <strong>{displayPhone(data.phone) || "+95 9 777 0000"}</strong>
+        <strong>{displayPhone(phone) || "+95 9 777 0000"}</strong>
       </p>
 
       <div className="auth-otp" onPaste={onPaste}>
@@ -1448,6 +1474,12 @@ export function AuthModal() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<SignUpData>(EMPTY_SIGNUP);
   const [done, setDone] = useState(false);
+  // Sign-in OTP sub-step: set when /api/auth/login returns requiresOtp.
+  const [signinOtp, setSigninOtp] = useState<{
+    phone: string;
+    requestId?: string;
+    remember: boolean;
+  } | null>(null);
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -1460,6 +1492,7 @@ export function AuthModal() {
     setStep(1);
     setDone(false);
     setData(EMPTY_SIGNUP);
+    setSigninOtp(null);
   }, [open, mode]);
 
   // Lock body scroll + ESC to close + restore focus on unmount.
@@ -1512,6 +1545,7 @@ export function AuthModal() {
     setTab(to);
     setStep(1);
     setDone(false);
+    setSigninOtp(null);
   };
 
   const finish = useCallback(async () => {
@@ -1525,7 +1559,9 @@ export function AuthModal() {
   // "Solo" = full-width, promo-rail-hidden steps: OTP verify (2) + the
   // form-heavy business-details step (3). Drives the layout AND hides the
   // "Have an account? Sign in" footer (moot once signed in at these steps).
-  const isSolo = tab === "signup" && (step === 2 || step === 3) && !done;
+  const isSolo =
+    (tab === "signup" && (step === 2 || step === 3) && !done) ||
+    (tab === "signin" && signinOtp != null);
 
   return (
     <div
@@ -1602,18 +1638,33 @@ export function AuthModal() {
             </div>
 
             <div className="auth-form-inner">
-              {tab === "signin" && (
-                <>
-                  <h1 className="auth-h1" id={titleId}>
-                    {t("Welcome back", "ပြန်လည်ဆုံတွေ့ရတာ ဝမ်းသာပါတယ်")}
-                  </h1>
-                  <SignInForm
+              {tab === "signin" &&
+                (signinOtp ? (
+                  <OtpStep
                     t={t}
-                    onForgot={() => goTab("forgot")}
-                    onSuccess={finish}
+                    phone={signinOtp.phone}
+                    onVerified={finish}
+                    onBack={() => setSigninOtp(null)}
+                    extraVerifyFields={{
+                      ...(signinOtp.requestId
+                        ? { requestId: signinOtp.requestId }
+                        : {}),
+                      remember: signinOtp.remember ? "true" : "false",
+                    }}
                   />
-                </>
-              )}
+                ) : (
+                  <>
+                    <h1 className="auth-h1" id={titleId}>
+                      {t("Welcome back", "ပြန်လည်ဆုံတွေ့ရတာ ဝမ်းသာပါတယ်")}
+                    </h1>
+                    <SignInForm
+                      t={t}
+                      onForgot={() => goTab("forgot")}
+                      onSuccess={finish}
+                      onNeedOtp={(info) => setSigninOtp(info)}
+                    />
+                  </>
+                ))}
 
               {tab === "forgot" && (
                 <>
@@ -1630,10 +1681,10 @@ export function AuthModal() {
               {tab === "signup" &&
                 !done &&
                 (step === 2 ? (
-                  <SignUpStep2
+                  <OtpStep
                     t={t}
-                    data={data}
-                    onNext={() => setStep(3)}
+                    phone={data.phone}
+                    onVerified={() => setStep(3)}
                     onBack={() => setStep(1)}
                   />
                 ) : (
