@@ -1,93 +1,69 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useI18n } from "@/components/providers/language-provider";
 import { EmptyState } from "@/components/shared/empty-state";
 import { T } from "@/components/t";
 import type { Listing } from "@/lib/api/types";
+import { useSaved } from "@/lib/saved/store";
 import { Results } from "./results";
 import { pushBrowseUrl } from "./navigate";
 import { useBrowseFilters } from "./use-browse-filters";
 import { buildBrowseHref, filterAndSortSaved, PAGE_SIZE } from "./filters";
 
-const SAVED_KEY = "shweloader.saved";
-const SAVED_EVENT = "saved-changed";
 const BASE_PATH = "/saved";
-
-/** Read the saved-listing id array from localStorage (resilient to bad data). */
-function readSavedIds(): number[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(SAVED_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed)
-      ? parsed.filter((x): x is number => typeof x === "number")
-      : [];
-  } catch {
-    return [];
-  }
-}
 
 type Status = "loading" | "ready" | "error";
 
 /**
  * Saved listings rendered through the Browse chrome (sidebar + toolbar provided by
- * `BrowseShell`). Unlike Browse, the listing set is FIXED: it's hydrated once from
- * the localStorage favourites via the same-origin `/api/listings/by-ids`, then
- * filtered/sorted/paginated entirely CLIENT-SIDE off the live URL filters
- * (`useBrowseFilters`) — no API round-trip per filter. Works fully signed-out and
- * re-hydrates when a heart toggles anywhere (or another tab writes).
+ * `BrowseShell`). Unlike Browse, the listing set is FIXED: the saved ids come from
+ * the shared saved-store (`useSaved` — localStorage when signed out, the account
+ * when signed in), their details are fetched via the same-origin
+ * `/api/listings/by-ids`, then filtered/sorted/paginated entirely CLIENT-SIDE off
+ * the live URL filters (`useBrowseFilters`) — no API round-trip per filter.
+ * Re-fetches whenever the saved set changes (heart toggled anywhere, login merge).
  */
 export function SavedView() {
   const { t } = useI18n();
   const filters = useBrowseFilters();
+  const { savedIds } = useSaved();
   const [all, setAll] = useState<Listing[]>([]);
   const [status, setStatus] = useState<Status>("loading");
   // Whether the user has ANY saved ids, independent of fetch success — keeps the
   // "nothing saved" empty state distinct from a network error.
-  const [hasIds, setHasIds] = useState(true);
-
-  const load = useCallback(async (signal?: AbortSignal) => {
-    const ids = readSavedIds();
-    setHasIds(ids.length > 0);
-    if (ids.length === 0) {
-      setAll([]);
-      setStatus("ready");
-      return;
-    }
-    setStatus("loading");
-    try {
-      const res = await fetch(
-        `/api/listings/by-ids?ids=${encodeURIComponent(ids.join(","))}`,
-        { signal },
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: unknown = await res.json();
-      const rows = Array.isArray(data) ? (data as Listing[]) : [];
-      setAll(rows.filter((l) => l && typeof l.id === "number"));
-      setStatus("ready");
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      setStatus("error");
-    }
-  }, []);
+  const hasIds = savedIds.length > 0;
+  // Stable primitive key: refetch only when the actual id set changes.
+  const idsKey = useMemo(() => savedIds.join(","), [savedIds]);
 
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal);
+    void (async () => {
+      const ids = idsKey ? idsKey.split(",") : [];
+      if (ids.length === 0) {
+        setAll([]);
+        setStatus("ready");
+        return;
+      }
+      setStatus("loading");
+      try {
+        const res = await fetch(
+          `/api/listings/by-ids?ids=${encodeURIComponent(ids.join(","))}`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: unknown = await res.json();
+        const rows = Array.isArray(data) ? (data as Listing[]) : [];
+        setAll(rows.filter((l) => l && typeof l.id === "number"));
+        setStatus("ready");
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setStatus("error");
+      }
+    })();
     return () => controller.abort();
-  }, [load]);
-
-  useEffect(() => {
-    const onChange = () => void load();
-    window.addEventListener(SAVED_EVENT, onChange);
-    window.addEventListener("storage", onChange);
-    return () => {
-      window.removeEventListener(SAVED_EVENT, onChange);
-      window.removeEventListener("storage", onChange);
-    };
-  }, [load]);
+  }, [idsKey]);
 
   // Filter + sort off the live URL filters, then page locally.
   const pageListings = useMemo(() => {

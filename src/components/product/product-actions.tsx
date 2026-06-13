@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Heart } from "lucide-react";
 import { toast } from "sonner";
@@ -9,23 +9,13 @@ import { useI18n } from "@/components/providers/language-provider";
 import { ShareIcon } from "@/components/shared/icons/share-icon";
 import { IconButton } from "@/components/shared/icon-button";
 import { SaveButton } from "@/components/shared/save-button";
-
-const SAVED_KEY = "shweloader.saved";
-const SAVED_EVENT = "saved-changed";
-
-function readSaved(): number[] {
-  try {
-    const a = JSON.parse(localStorage.getItem(SAVED_KEY) || "[]");
-    return Array.isArray(a) ? a.filter((x): x is number => typeof x === "number") : [];
-  } catch {
-    return [];
-  }
-}
+import { useSaved } from "@/lib/saved/store";
 
 /**
  * Product page action row: Back to results · Share · Save.
- * (The design uses this in place of a breadcrumb.) Save toggles the same
- * `shweloader.saved` localStorage list the card hearts + /saved page use.
+ * (The design uses this in place of a breadcrumb.) Save goes through the shared
+ * saved-store (`useSaved`) — localStorage when signed out, the account when
+ * signed in — same as the card hearts + /saved page.
  */
 export function ProductActions({
   listingId,
@@ -44,28 +34,8 @@ export function ProductActions({
 }) {
   const { t } = useI18n();
   const router = useRouter();
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    const sync = () => setSaved(readSaved().includes(listingId));
-    sync();
-    window.addEventListener(SAVED_EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(SAVED_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, [listingId]);
-
-  const toggleSave = useCallback(() => {
-    const list = readSaved();
-    const next = list.includes(listingId)
-      ? list.filter((x) => x !== listingId)
-      : [...list, listingId];
-    localStorage.setItem(SAVED_KEY, JSON.stringify(next));
-    window.dispatchEvent(new Event(SAVED_EVENT));
-    setSaved(next.includes(listingId));
-  }, [listingId]);
+  const { isSaved, toggle } = useSaved();
+  const saved = isSaved(listingId);
 
   const goBack = useCallback(() => {
     if (typeof window !== "undefined" && window.history.length > 1) router.back();
@@ -118,7 +88,7 @@ export function ProductActions({
       <button
         type="button"
         className={"pdp-btn" + (saved ? " is-on" : "")}
-        onClick={toggleSave}
+        onClick={() => toggle(listingId)}
         aria-pressed={saved}
       >
         <Heart

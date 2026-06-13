@@ -7,6 +7,7 @@ import { AuthUIProvider } from "./auth-ui";
 import { AuthIntent } from "./auth-intent";
 import { AuthProvider } from "@/lib/auth/use-auth";
 import { SuspensionOverlay } from "@/components/shared/suspension-overlay";
+import { SavedSync } from "@/lib/saved/saved-sync";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <AuthUIProvider>
             <AuthIntent />
+            <SavedSync />
             {children}
             <SuspensionOverlay />
           </AuthUIProvider>
