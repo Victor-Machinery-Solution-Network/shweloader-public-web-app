@@ -1004,21 +1004,6 @@
   width: 100%;
 }
 
-/* "Chat about this" — secondary action above the gold enquiry CTA. Opens the
-   floating chat launcher pre-loaded with the listing (mobile EnquirySheet parity). */
-.cc-chat-btn {
-  width: 100%;
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 12px 16px; border-radius: 12px;
-  background: var(--m-bg); border: 1px solid var(--m-line-2);
-  color: var(--m-ink); font-family: var(--font-sans);
-  font-size: 14px; font-weight: 500; cursor: pointer;
-  margin-bottom: 10px;
-  transition: background .15s, border-color .15s, color .15s;
-}
-.cc-chat-btn:hover { background: var(--m-gold-soft); border-color: var(--m-gold); color: var(--m-gold-ink); }
-.cc-chat-btn svg { color: var(--m-gold-ink); }
-
 .cc-send {
   position: relative; overflow: hidden;
   background: linear-gradient(135deg, #fdd968 0%, var(--m-gold) 100%); color: var(--m-on-gold);
@@ -1304,17 +1289,6 @@
   }
   .pdp-mbar-call svg { width: 21px; height: 21px; }
   .pdp-mbar-call:active { background: var(--m-bg-2); }
-  /* "Chat about this" — icon button mirroring the call button's geometry. */
-  .pdp-mbar-chat {
-    width: 48px; flex: 0 0 auto;
-    border-radius: 12px;
-    border: 1px solid var(--m-line-2);
-    background: var(--m-bg);
-    color: var(--m-gold-ink);
-    display: inline-flex; align-items: center; justify-content: center;
-  }
-  .pdp-mbar-chat svg { width: 21px; height: 21px; }
-  .pdp-mbar-chat:active { background: var(--m-gold-soft); }
   .pdp-mbar-cta {
     flex: 0 0 auto;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
