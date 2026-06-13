@@ -5,7 +5,7 @@ import { Phone, X } from "lucide-react";
 
 import { EnquiryForm } from "@/components/product/enquiry-form";
 import { useI18n } from "@/components/providers/language-provider";
-import type { ProductRef } from "@/components/chat/core/types";
+import type { Listing } from "@/lib/api/types";
 
 /** i18n keys for the kind tag, keyed by listing mode. */
 const KIND_KEY = {
@@ -25,9 +25,9 @@ export interface MobileBarProps {
   kind: "sale" | "rent" | "both";
   /** Visible dealer phone (masking honoured by caller), or null. */
   phone: string | null;
-  /** Serializable listing reference — attached to the first chat message when
-   *  the enquiry sheet routes into the live chat. */
-  product: ProductRef;
+  /** The normalized listing — forwarded to the enquiry form so the For-sale /
+   *  For-rent picker can attach the correct side's listing id. */
+  listing: Listing;
 }
 
 /**
@@ -42,7 +42,7 @@ export function MobileBar({
   priceOnRequest,
   kind,
   phone,
-  product,
+  listing,
 }: MobileBarProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -135,7 +135,7 @@ export function MobileBar({
             <EnquiryForm
               title={title}
               phone={phone}
-              product={product}
+              listing={listing}
             />
           </div>
         </div>

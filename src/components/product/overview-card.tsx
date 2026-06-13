@@ -89,14 +89,21 @@ function priceParts(
 /**
  * Build a serializable {@link ProductRef} from a normalized listing, for the
  * "Send enquiry" → chat entry point. Picks the sale OR rent listing id based on the
- * listing's type (defaulting to sale when it's both), and resolves a single
- * display price + currency using the same precedence as the price card. Plain
- * object only — it's handed to a CustomEvent and read by the chat composer chip.
+ * listing's type, and resolves a single display price + currency using the same
+ * precedence as the price card. Plain object only — it's handed to a CustomEvent
+ * and read by the chat composer chip.
+ *
+ * `type` forces the sale/rent side (used by the For-sale/For-rent picker on
+ * "both" listings — no guessing). When omitted it defaults to sale unless the
+ * listing is rent-only (mirrors the mobile EnquirySheet default).
  */
-export function productRefFromListing(listing: Listing): ProductRef {
+export function productRefFromListing(
+  listing: Listing,
+  type?: "sale" | "rent",
+): ProductRef {
   const mode = listingMode(listing);
-  // "both" defaults to sale (mirrors the mobile EnquirySheet default).
-  const listingType: "sale" | "rent" = mode === "rent" ? "rent" : "sale";
+  const listingType: "sale" | "rent" =
+    type ?? (mode === "rent" ? "rent" : "sale");
   const side = listingType === "rent" ? listing.rent : listing.sale;
 
   const price = side ? priceParts(side.mmk, side.usd, side.currency, !!side.hide) : null;
@@ -290,7 +297,7 @@ export function ContactCard({ listing }: { listing: Listing }) {
         <EnquiryForm
           title={listing.title}
           phone={seller?.phone ?? null}
-          product={productRefFromListing(listing)}
+          listing={listing}
         />
       </div>
     </div>

@@ -966,6 +966,31 @@
 .cc-field input::placeholder,
 .cc-field textarea::placeholder { color: var(--m-fg-3); }
 
+/* For-sale / For-rent segmented toggle — shown only when a listing is BOTH for
+   sale and for rent, so the enquiry attaches the side the user picks (no guessing).
+   Two pills in a tracked container; the active pill is gold, the other muted. */
+.cc-seg {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  padding: 4px; margin-bottom: 12px;
+  background: var(--m-bg-2); border: 1px solid var(--m-line);
+  border-radius: 12px;
+}
+.cc-seg-pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 10px; border-radius: 9px;
+  border: 1px solid transparent; background: transparent;
+  font-family: var(--font-sans); font-size: 14px; font-weight: 500;
+  color: var(--m-fg-2); cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.cc-seg-pill svg { width: 15px; height: 15px; }
+.cc-seg-pill:hover { color: var(--m-ink); }
+.cc-seg-pill.is-active {
+  background: var(--m-gold-soft); border-color: var(--m-gold);
+  color: var(--m-gold-ink);
+}
+.cc-seg-pill.is-active:hover { color: var(--m-gold-ink); }
+
 /* Overview aside — message field sits above the Send enquiry CTA */
 .ov-msg-field { margin-bottom: 4px; gap: 10px; }
 .ov-msg-field textarea {
