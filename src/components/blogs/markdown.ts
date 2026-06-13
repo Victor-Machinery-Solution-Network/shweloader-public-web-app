@@ -4,9 +4,9 @@
  * Blog `content` comes from the admin as Markdown. We render it to HTML that
  * reuses the design system's reading-view class names (`.bp-p`, `.bp-h2`,
  * `.bp-quote`, `.bp-list`, …) so the prototype's `blog.css` styles it exactly —
- * no new styling is authored here. The output is sanitized by the caller with
- * `isomorphic-dompurify` before being injected, so this function only needs to
- * produce well-formed, escaped HTML for the supported subset.
+ * no new styling is authored here. Raw HTML in the source is escaped and link/
+ * image URLs are scheme-allowlisted (see `safeUrl`), so the output is safe to
+ * inject directly — no downstream HTML sanitizer (DOMPurify/jsdom) is required.
  *
  * Supported: ATX headings (#–######), unordered + ordered lists, blockquotes,
  * fenced + indented code, horizontal rules, paragraphs, and inline emphasis /
@@ -22,6 +22,24 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/**
+ * Allowlist a link/image URL by scheme. Raw HTML is already escaped by the time
+ * we get here, so URLs in `href`/`src` are the ONLY remaining injection vector
+ * (e.g. `[x](javascript:alert(1))`). Permit http(s)/mailto/tel and scheme-less
+ * (relative, #anchor, //host) URLs; neutralize everything else (javascript:,
+ * data:, vbscript:, …) to "#". This makes the renderer's output safe by
+ * construction — no DOM-based sanitizer needed downstream.
+ */
+function safeUrl(url: string): string {
+  const u = url.trim();
+  if (/^(https?:|mailto:|tel:)/i.test(u)) return u; // allowed absolute schemes
+  const colon = u.indexOf(":");
+  const sep = u.search(/[/?#]/);
+  // No colon, or the colon comes after a path separator → no scheme → relative.
+  if (colon === -1 || (sep !== -1 && colon > sep)) return u;
+  return "#"; // a disallowed scheme (everything not allowlisted above)
+}
+
 /** Inline spans — emphasis, code, links, images. Input is already block text. */
 function renderInline(src: string): string {
   let out = escapeHtml(src);
@@ -33,14 +51,14 @@ function renderInline(src: string): string {
   out = out.replace(
     /!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;[^&]*&quot;)?\)/g,
     (_m, alt: string, url: string) =>
-      `<img src="${url}" alt="${alt}" loading="lazy" />`,
+      `<img src="${safeUrl(url)}" alt="${alt}" loading="lazy" />`,
   );
 
   // links: [text](url)
   out = out.replace(
     /\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;[^&]*&quot;)?\)/g,
     (_m, text: string, url: string) =>
-      `<a href="${url}" rel="nofollow noopener" target="_blank">${text}</a>`,
+      `<a href="${safeUrl(url)}" rel="nofollow noopener" target="_blank">${text}</a>`,
   );
 
   // bold then italic
@@ -90,11 +108,10 @@ function parseBlocks(md: string): Block[] {
     if (fence) {
       const marker = fence[1][0];
       const codeLines: string[] = [];
+      // Hardcoded close patterns (no dynamic RegExp) — `marker` is only ever ` or ~.
+      const closeFence = marker === "`" ? /^\s*`{3,}\s*$/ : /^\s*~{3,}\s*$/;
       i++;
-      while (
-        i < lines.length &&
-        !new RegExp(`^\\s*${marker}{3,}\\s*$`).test(lines[i])
-      ) {
+      while (i < lines.length && !closeFence.test(lines[i])) {
         codeLines.push(lines[i]);
         i++;
       }

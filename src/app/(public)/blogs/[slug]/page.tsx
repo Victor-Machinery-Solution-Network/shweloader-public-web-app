@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, User, Calendar, Clock } from "lucide-react";
-import DOMPurify from "isomorphic-dompurify";
 import type { Metadata } from "next";
 
 import "@/styles/pages/blog.css";
@@ -21,7 +20,7 @@ import {
 } from "@/lib/seo/jsonld";
 import type { BlogPost } from "@/lib/api/types";
 
-import { markdownToHtml } from "@/components/blogs/markdown";
+import { renderMarkdown } from "@/lib/markdown";
 import { BlogShare } from "@/components/blog/blog-share";
 import { T } from "@/components/t";
 
@@ -51,16 +50,6 @@ export async function generateStaticParams() {
   } catch {
     return [{ slug: "_" }];
   }
-}
-
-/** Markdown → sanitized HTML, cached so DOMPurify/jsdom's internal `new Date()`
- *  doesn't trip the Cache Components static-prerender guard. */
-async function renderBody(content: string): Promise<string> {
-  "use cache";
-  return DOMPurify.sanitize(markdownToHtml(content), {
-    USE_PROFILES: { html: true },
-    ADD_ATTR: ["target", "loading"],
-  });
 }
 
 export async function generateMetadata({
@@ -101,7 +90,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
   const related = await getRelatedBlogs(post, 3);
 
   const cover = assetUrl(post.cover.url);
-  const bodyHtml = await renderBody(post.content);
+  const bodyHtml = await renderMarkdown(post.content);
 
   const byline = [
     post.author,

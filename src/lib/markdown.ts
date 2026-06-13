@@ -1,23 +1,20 @@
-import DOMPurify from "isomorphic-dompurify";
-
 import { markdownToHtml } from "@/components/blogs/markdown";
 
 /**
- * Markdown → sanitized HTML for admin-authored content (blog bodies AND product
+ * Markdown → safe HTML for admin-authored content (blog bodies AND product
  * descriptions). Server-only by design: the dependency-free `markdownToHtml`
- * renderer + isomorphic-dompurify run here, so no markdown/sanitizer code ships
- * in the client bundle (the rendered HTML string is passed to client components).
+ * renderer runs here, so no markdown code ships in the client bundle (the HTML
+ * string is passed to client components).
  *
- * `"use cache"`: DOMPurify/jsdom call `new Date()` internally, which trips the
- * Cache Components static-prerender guard unless the work is cached.
+ * No DOM-based sanitizer: `markdownToHtml` escapes all raw HTML and allowlists
+ * link/image URL schemes (see its `safeUrl`), so the output is safe by
+ * construction. That removes the old `isomorphic-dompurify`/jsdom dependency —
+ * which also crashed Vercel's on-demand render functions (jsdom can't be bundled
+ * into them), 500-ing any product/blog page that rendered live.
  */
 export async function renderMarkdown(
   content: string | null | undefined,
 ): Promise<string> {
-  "use cache";
   if (!content?.trim()) return "";
-  return DOMPurify.sanitize(markdownToHtml(content), {
-    USE_PROFILES: { html: true },
-    ADD_ATTR: ["target", "loading"],
-  });
+  return markdownToHtml(content);
 }
