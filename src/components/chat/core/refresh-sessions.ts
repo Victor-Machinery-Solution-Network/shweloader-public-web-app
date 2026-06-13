@@ -90,7 +90,9 @@ export async function startNewSession(): Promise<number | null> {
     if (!res.ok) return null;
     const data = (await res.json()) as { sessionId?: number };
     const id = data?.sessionId;
-    if (typeof id !== "number") return null;
+    // Reject non-numbers AND 0 — a 0 id (historically returned by the worker's
+    // last_insert_rowid bug) is not a real session; sending to it 400s.
+    if (typeof id !== "number" || id <= 0) return null;
     const store = useChatStore.getState();
     if (!store.sessions.some((s) => s.id === id)) {
       store.setSessions([
