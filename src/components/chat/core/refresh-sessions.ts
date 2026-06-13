@@ -72,6 +72,47 @@ export async function refreshSessions(minIntervalMs = 4000): Promise<void> {
 }
 
 /**
+ * Create-or-get the user's OPEN session, add it to the store, make it active,
+ * and return its id (null on failure). Used when the current conversation was
+ * closed by an admin: a new message must start a FRESH session (mobile parity)
+ * rather than reopen the resolved one. `POST /chat/sessions` returns the
+ * existing non-resolved session or creates a new one — so a resolved active
+ * session always yields a fresh id here. The closed session stays in the store
+ * (read-only history); only `activeSessionId` moves to the new one.
+ */
+export async function startNewSession(): Promise<number | null> {
+  try {
+    const res = await fetch("/api/chat/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { sessionId?: number };
+    const id = data?.sessionId;
+    if (typeof id !== "number") return null;
+    const store = useChatStore.getState();
+    if (!store.sessions.some((s) => s.id === id)) {
+      store.setSessions([
+        ...store.sessions,
+        {
+          id,
+          status: "active",
+          unreadUserCount: 0,
+          lastMessageAt: null,
+          lastMessagePreview: null,
+          adminLastReadAt: null,
+        },
+      ]);
+    }
+    store.setActive(id);
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Refresh sessions whenever the tab regains focus / becomes visible (while
  * `enabled`). Mirrors mobile's focus-based chat sync so admin-started sessions,
  * cross-session messages, and resolves/reopens on non-active sessions show up

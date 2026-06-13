@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useChatStore, nextTempId } from "./store";
 import { fromServerMessage, messageKey } from "./mappers";
+import { startNewSession } from "./refresh-sessions";
 import type { ChatAttachment, ChatMessage, ServerMessage } from "./types";
 
 async function postJson(url: string, body: unknown): Promise<Response> {
@@ -56,6 +57,22 @@ export function useChatSync(sessionId: number | null) {
       const trimmed = text.trim();
       // Allow sending if there's text, attachments, or a listing reference.
       if (!trimmed && !(attachments?.length) && !listing) return;
+
+      // If the active conversation was closed by an admin, a new message starts
+      // a FRESH session (mobile parity) — we never reopen the resolved one. Spin
+      // up a new session and target it; the closed thread stays as read-only
+      // history. Bail if creating one failed (don't silently reopen the closed
+      // session via the worker's reopen-on-send path).
+      let targetId = sessionId;
+      const current = useChatStore
+        .getState()
+        .sessions.find((s) => s.id === sessionId);
+      if (current?.status === "resolved") {
+        const fresh = await startNewSession();
+        if (fresh == null) return;
+        targetId = fresh;
+      }
+
       const tempId = nextTempId();
       const optimistic: ChatMessage = {
         id: tempId,
@@ -68,10 +85,10 @@ export function useChatSync(sessionId: number | null) {
         createdAt: new Date().toISOString(),
         status: "sending",
       };
-      addOptimistic(sessionId, optimistic);
+      addOptimistic(targetId, optimistic);
       try {
         const res = await postJson("/api/chat/send", {
-          sessionId,
+          sessionId: targetId,
           text: trimmed,
           attachments: attachments?.length ? attachments : undefined,
           saleListingId: listing?.saleListingId,
@@ -79,9 +96,9 @@ export function useChatSync(sessionId: number | null) {
         });
         if (res.ok) {
           const { messageId } = (await res.json()) as { messageId: number };
-          confirmOptimistic(sessionId, tempId, messageId);
+          confirmOptimistic(targetId, tempId, messageId);
         } else {
-          setStatus(sessionId, tempId, "failed");
+          setStatus(targetId, tempId, "failed");
           if (res.status === 403) {
             const d = (await res.json().catch(() => ({}))) as { error?: string; reason?: string };
             if (d.error === "ACCOUNT_BLACKLISTED") {
@@ -90,7 +107,7 @@ export function useChatSync(sessionId: number | null) {
           }
         }
       } catch {
-        setStatus(sessionId, tempId, "failed");
+        setStatus(targetId, tempId, "failed");
       }
     },
     [sessionId, addOptimistic, confirmOptimistic, setStatus],

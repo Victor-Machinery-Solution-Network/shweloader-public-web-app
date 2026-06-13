@@ -415,7 +415,7 @@ export function LiveChat() {
             )}
             {activeSession?.status === "resolved" && (
               <div className="chat-reopen-note" role="status">
-                This conversation was closed — send a message to reopen.
+                This conversation was closed — send a message to start a new one.
               </div>
             )}
             <Composer
