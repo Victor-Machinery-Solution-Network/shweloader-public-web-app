@@ -68,7 +68,16 @@ export function ListingCard({
   const isOnRequest = rawPrice === PRICE_ON_REQUEST;
   const price = isOnRequest ? t("product.priceOnRequest") : rawPrice;
   const location = locationLabel(listing);
-  const eyebrow = listing.category ?? listing.brand ?? null;
+  // Eyebrow shows the subcategory (finer-grained than the top-level category);
+  // fall back to the main category, then brand, so it's never empty.
+  const eyebrow = listing.subCategory ?? listing.category ?? listing.brand ?? null;
+  // Card title is "<brand> <model>" — `title` is the model name, so prefix the
+  // brand unless it's already part of the title.
+  const cardTitle =
+    listing.brand &&
+    !listing.title.toLowerCase().startsWith(listing.brand.toLowerCase())
+      ? `${listing.brand} ${listing.title}`
+      : listing.title;
 
   return (
     <Link
@@ -85,7 +94,7 @@ export function ListingCard({
         {photo ? (
           <Image
             src={photo}
-            alt={listing.title}
+            alt={cardTitle}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             // Fill the card edge-to-edge (matches the mobile app); the focal
@@ -123,7 +132,7 @@ export function ListingCard({
 
       <div className="body">
         {eyebrow && <div className="feat-cat">{eyebrow}</div>}
-        <div className="ti">{listing.title}</div>
+        <div className="ti">{cardTitle}</div>
         <div className="feat-sale tnum">
           <span className={"big" + (isOnRequest ? " is-request" : "")}>{price}</span>
           {location && <span className="sub">{location}</span>}
