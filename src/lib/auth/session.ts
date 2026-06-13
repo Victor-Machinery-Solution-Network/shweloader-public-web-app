@@ -71,6 +71,10 @@ export async function refreshUserCookie(accessToken: string): Promise<void> {
       // Worker returns partner_status ('Approved'|'Pending'|...) — not a boolean.
       partner: u.partner_status === "Approved",
       businessType: u.business_type,
+      // IDs drive the client-side CompleteProfileGate: a signed-in user missing
+      // either is force-prompted to finish their business details (mobile parity).
+      businessTypeId: u.business_type_id ?? null,
+      townshipId: u.township_id ?? null,
     };
     // Lifetime tracks the session: persistent (7d) when "Remember me" is on,
     // otherwise a session cookie. Either way it never outlives the sl_token gate.

@@ -25,6 +25,9 @@ export interface WebUser {
   company?: string;
   partner?: boolean;
   businessType?: string;
+  /** Numeric IDs (null when unset) — drive the CompleteProfileGate. */
+  businessTypeId?: number | null;
+  townshipId?: number | null;
   memberSince?: string;
 }
 

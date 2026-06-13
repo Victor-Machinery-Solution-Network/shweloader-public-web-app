@@ -7,6 +7,7 @@ import { AuthUIProvider } from "./auth-ui";
 import { AuthIntent } from "./auth-intent";
 import { AuthProvider } from "@/lib/auth/use-auth";
 import { SuspensionOverlay } from "@/components/shared/suspension-overlay";
+import { CompleteProfileGate } from "@/components/shared/complete-profile-gate";
 import { SavedSync } from "@/lib/saved/saved-sync";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <SavedSync />
             {children}
             <SuspensionOverlay />
+            <CompleteProfileGate />
           </AuthUIProvider>
         </AuthProvider>
         <Toaster

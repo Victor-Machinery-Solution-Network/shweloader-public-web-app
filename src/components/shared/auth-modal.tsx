@@ -44,7 +44,7 @@ type Tab = "signin" | "signup" | "forgot";
  *  routes through the worker's `custom_business_type` path. */
 const OTHER_BUSINESS = -1;
 
-interface SignUpData {
+export interface SignUpData {
   name: string;
   username: string;
   email: string;
@@ -62,7 +62,7 @@ interface SignUpData {
   partnerType: number | null; // required when partner === "yes"
 }
 
-const EMPTY_SIGNUP: SignUpData = {
+export const EMPTY_SIGNUP: SignUpData = {
   name: "",
   username: "",
   email: "",
@@ -926,7 +926,10 @@ function OtpStep({
  * set — it submits via the authenticated `PUT /api/account` (→ worker PUT /me),
  * the same payload the mobile app sends.
  */
-function SignUpStep3({
+// Exported so the CompleteProfileGate can reuse the exact same business-details
+// form (DRY). The gate passes a throwaway SignUpData (only the business fields are
+// read here) and an onSubmit that closes the gate + refreshes auth.
+export function SignUpStep3({
   t,
   data,
   setData,
