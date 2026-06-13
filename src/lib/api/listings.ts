@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
-import { apiFetch, apiFetchOrNull } from "./client";
+import { apiFetch, apiFetchOrNull, apiFetchList } from "./client";
 import { normalizeListing } from "./normalize";
 import { CACHE_TAGS, listingTag } from "./cache-tags";
 import type { ApiListing, Listing, ListingQuery } from "./types";
@@ -36,14 +36,20 @@ export async function getRentListings(
   return data.map(normalizeListing);
 }
 
-/** Combined browse query across sale + rent based on `mode`. */
+/** Combined browse query across sale + rent based on `mode`. Returns the page of
+ *  listings plus the total matching count (for numbered pagination). */
 export async function browseListings(opts: {
   mode?: "sale" | "rent";
   query?: ListingQuery;
-}): Promise<Listing[]> {
-  return opts.mode === "rent"
-    ? getRentListings(opts.query)
-    : getSaleListings(opts.query);
+}): Promise<{ listings: Listing[]; total: number }> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.listings);
+  const path = opts.mode === "rent" ? "/listings/rent" : "/listings/sale";
+  const { data, total } = await apiFetchList<ApiListing>(path, {
+    query: { limit: 24, ...(opts.query ?? {}) },
+  });
+  return { listings: data.map(normalizeListing), total };
 }
 
 export async function getListing(id: number): Promise<Listing | null> {

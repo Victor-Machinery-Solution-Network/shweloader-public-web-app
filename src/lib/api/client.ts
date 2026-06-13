@@ -123,6 +123,42 @@ export async function apiFetch<T>(
   return (await res.json()) as T;
 }
 
+/**
+ * Public list GET that also returns the worker's `X-Total-Count` (total matching
+ * rows, ignoring paging) so the UI can render numbered pagination. Falls back to
+ * the page length when the header is absent (older worker). No auth/bookmark —
+ * listings are public reads.
+ */
+export async function apiFetchList<T>(
+  path: string,
+  opts: ApiFetchOptions = {},
+): Promise<{ data: T[]; total: number }> {
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path, opts.query), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: opts.signal,
+    });
+  } catch (err) {
+    throw new ApiError(err instanceof Error ? err.message : "Network error", 0);
+  }
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
+    try {
+      const d = (await res.json()) as { error?: string };
+      if (d?.error) message = d.error;
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new ApiError(message, res.status);
+  }
+  const data = (await res.json()) as T[];
+  const header = res.headers.get("x-total-count");
+  const parsed = header != null ? Number(header) : NaN;
+  return { data, total: Number.isFinite(parsed) ? parsed : data.length };
+}
+
 /** Returns null on 404 instead of throwing — for detail lookups. */
 export async function apiFetchOrNull<T>(
   path: string,

@@ -8,20 +8,22 @@ import { buildBrowseHref, PAGE_SIZE, type BrowseFilters } from "./filters";
 
 /**
  * Results region: grid of `ListingCard`s or list of `ListingRow`s per `view`, an
- * `EmptyState` when nothing matches, and a `Pagination` control. No public grand
- * total — `hasNext` is inferred from a full page of results
- * (`length === PAGE_SIZE`).
+ * `EmptyState` when nothing matches, and numbered `Pagination` derived from the
+ * `total` matching count (the API's X-Total-Count, or matched length on Saved).
  *
  * `onNavigate`, when provided (by the client ListingsView), makes pagination
  * update the URL shallowly + fetch client-side instead of a full navigation.
  */
 export function Results({
   listings,
+  total,
   filters,
   onNavigate,
   basePath,
 }: {
   listings: Listing[];
+  /** Total matching listings across all pages — drives numbered pagination. */
+  total: number;
   filters: BrowseFilters;
   onNavigate?: (page: number) => void;
   /** Route the pagination links target — defaults to /browse; Saved passes /saved. */
@@ -38,8 +40,7 @@ export function Results({
     );
   }
 
-  const hasNext = listings.length === PAGE_SIZE;
-  const hasPrev = filters.page > 1;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <>
@@ -59,8 +60,7 @@ export function Results({
 
       <Pagination
         page={filters.page}
-        hasPrev={hasPrev}
-        hasNext={hasNext}
+        totalPages={totalPages}
         hrefForPage={(p) => buildBrowseHref({ ...filters, page: p }, basePath)}
         onNavigate={onNavigate}
       />

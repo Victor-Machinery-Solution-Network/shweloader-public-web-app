@@ -41,10 +41,12 @@ export interface ListingsViewCatalogs {
  */
 export function ListingsView({
   initialListings,
+  initialTotal,
   initialFilters,
   catalogs,
 }: {
   initialListings: Listing[];
+  initialTotal: number;
   initialFilters: BrowseFilters;
   catalogs: ListingsViewCatalogs;
 }) {
@@ -65,6 +67,7 @@ export function ListingsView({
   );
 
   const [listings, setListings] = useState<Listing[]>(initialListings);
+  const [total, setTotal] = useState<number>(initialTotal);
   const [loading, setLoading] = useState(false);
   const [errored, setErrored] = useState(false);
 
@@ -74,6 +77,7 @@ export function ListingsView({
     // Default query → reuse the prerendered listings, no network.
     if (queryKey === defaultKey.current) {
       setListings(initialListings);
+      setTotal(initialTotal);
       setLoading(false);
       return;
     }
@@ -81,8 +85,9 @@ export function ListingsView({
     const controller = new AbortController();
     setLoading(true);
     fetchBrowseListings(filters.mode, toListingQuery(filters, catalogs), controller.signal)
-      .then((rows) => {
+      .then(({ listings: rows, total: count }) => {
         setListings(rows);
+        setTotal(count);
         setLoading(false);
       })
       .catch((err: unknown) => {
@@ -109,6 +114,7 @@ export function ListingsView({
   return (
     <Results
       listings={listings}
+      total={total}
       filters={filters}
       onNavigate={(page) =>
         pushBrowseUrl(buildBrowseHref({ ...filters, page }), { scrollTop: true })

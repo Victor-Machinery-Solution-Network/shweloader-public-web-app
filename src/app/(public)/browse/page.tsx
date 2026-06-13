@@ -113,7 +113,7 @@ export default async function BrowsePage() {
     conditionTypes,
     locations,
   };
-  const initialListings = await browseListings({
+  const { listings: initialListings, total: initialTotal } = await browseListings({
     mode: DEFAULT_FILTERS.mode,
     query: toListingQuery(DEFAULT_FILTERS, catalogs),
   });
@@ -150,6 +150,7 @@ export default async function BrowsePage() {
       >
         <ListingsView
           initialListings={initialListings}
+          initialTotal={initialTotal}
           initialFilters={DEFAULT_FILTERS}
           catalogs={catalogs}
         />

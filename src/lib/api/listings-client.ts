@@ -15,7 +15,7 @@ export async function fetchBrowseListings(
   mode: "sale" | "rent",
   query: ListingQuery,
   signal?: AbortSignal,
-): Promise<Listing[]> {
+): Promise<{ listings: Listing[]; total: number }> {
   const params = new URLSearchParams();
   params.set("mode", mode === "rent" ? "rent" : "sale");
   const all: Record<string, unknown> = { limit: 24, ...query };
@@ -33,5 +33,9 @@ export async function fetchBrowseListings(
   if (!res.ok) {
     throw new Error(`Listings request failed: HTTP ${res.status}`);
   }
-  return (await res.json()) as Listing[];
+  const body = (await res.json()) as { listings: Listing[]; total: number };
+  return {
+    listings: body.listings ?? [],
+    total: body.total ?? body.listings?.length ?? 0,
+  };
 }

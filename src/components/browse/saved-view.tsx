@@ -66,10 +66,13 @@ export function SavedView() {
   }, [idsKey]);
 
   // Filter + sort off the live URL filters, then page locally.
-  const pageListings = useMemo(() => {
+  const { pageListings, total } = useMemo(() => {
     const matched = filterAndSortSaved(all, filters);
     const start = (filters.page - 1) * PAGE_SIZE;
-    return matched.slice(start, start + PAGE_SIZE);
+    return {
+      pageListings: matched.slice(start, start + PAGE_SIZE),
+      total: matched.length,
+    };
   }, [all, filters]);
 
   if (status === "loading") {
@@ -111,6 +114,7 @@ export function SavedView() {
   return (
     <Results
       listings={pageListings}
+      total={total}
       filters={filters}
       basePath={BASE_PATH}
       onNavigate={(page) =>

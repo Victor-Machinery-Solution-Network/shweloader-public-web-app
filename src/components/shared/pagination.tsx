@@ -7,10 +7,8 @@ import { cn } from "@/lib/utils";
 export interface PaginationProps {
   /** Current 1-based page. */
   page: number;
-  /** Whether a previous page exists. */
-  hasPrev: boolean;
-  /** Whether a next page exists. */
-  hasNext: boolean;
+  /** Total number of pages (≥1). */
+  totalPages: number;
   /** Build the real `href` for a target page (kept for crawlers + middle-click).
    *  Provided by the caller so this component reads no `useSearchParams` — that
    *  would pull the whole browse subtree out of the static prerender. */
@@ -24,20 +22,43 @@ export interface PaginationProps {
 }
 
 /**
- * Prev / current-page / Next control for Browse-style listings.
- *
- * The upstream API exposes no total count, so there is no last page and no
- * numbered range — we only know whether a previous and next page exist. Markup
- * reuses the design's `.pgn` / `.pgn-btn` / `.pgn-list` / `.pgn-num`.
+ * Page numbers to render: always the first and last page, plus a window around
+ * the current one, with "…" filling any gap. e.g. page 5 of 10 →
+ * [1, …, 4, 5, 6, …, 10]; ≤7 pages shows them all with no ellipsis.
+ */
+function pageItems(page: number, totalPages: number): (number | "ellipsis")[] {
+  const WINDOW = 1; // pages shown on each side of the current page
+  const out: (number | "ellipsis")[] = [];
+  let prev = 0;
+  for (let p = 1; p <= totalPages; p++) {
+    if (
+      p === 1 ||
+      p === totalPages ||
+      (p >= page - WINDOW && p <= page + WINDOW)
+    ) {
+      if (prev && p - prev > 1) out.push("ellipsis");
+      out.push(p);
+      prev = p;
+    }
+  }
+  return out;
+}
+
+/**
+ * Numbered Prev · 1 2 … N · Next control for Browse-style listings. The total
+ * page count comes from the API's `X-Total-Count` (Saved: matched length), so we
+ * can render real page numbers, not just prev/next.
  */
 export function Pagination({
   page,
-  hasPrev,
-  hasNext,
+  totalPages,
   hrefForPage,
   onNavigate,
 }: PaginationProps) {
-  if (!hasPrev && !hasNext) return null;
+  if (totalPages <= 1) return null;
+
+  const hasPrev = page > 1;
+  const hasNext = page < totalPages;
 
   // Intercept only plain left-clicks so modifier-clicks / middle-click still
   // open in a new tab via the real href.
@@ -88,9 +109,27 @@ export function Pagination({
       )}
 
       <div className="pgn-list">
-        <span className={cn("pgn-num", "is-on")} aria-current="page">
-          {page}
-        </span>
+        {pageItems(page, totalPages).map((it, i) =>
+          it === "ellipsis" ? (
+            <span key={`e${i}`} className="pgn-ell" aria-hidden="true">
+              …
+            </span>
+          ) : it === page ? (
+            <span key={it} className={cn("pgn-num", "is-on")} aria-current="page">
+              {it}
+            </span>
+          ) : (
+            <Link
+              key={it}
+              className="pgn-num"
+              href={hrefForPage(it)}
+              aria-label={`Page ${it}`}
+              onClick={handleClick(it)}
+            >
+              {it}
+            </Link>
+          ),
+        )}
       </div>
 
       {hasNext ? (

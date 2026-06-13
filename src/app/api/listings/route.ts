@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { apiFetch } from "@/lib/api/client";
+import { apiFetchList } from "@/lib/api/client";
 import { normalizeListing } from "@/lib/api/normalize";
 import type { ApiListing } from "@/lib/api/types";
 
@@ -48,9 +48,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const data = await apiFetch<ApiListing[]>(`/listings/${mode}`, { query });
+    const { data, total } = await apiFetchList<ApiListing>(`/listings/${mode}`, { query });
     const listings = data.map(normalizeListing);
-    return Response.json(listings, {
+    return Response.json({ listings, total }, {
       headers: {
         // Edge-cache per unique query; stale-while-revalidate so a popular filter
         // serves from the CDN instead of re-invoking the function.
