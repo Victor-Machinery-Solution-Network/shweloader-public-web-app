@@ -54,7 +54,6 @@ export function EnquiryForm({ title, phone, listing }: EnquiryFormProps) {
 
   const [type, setType] = useState<"sale" | "rent">(defaultType);
   const [message, setMessage] = useState(() => messageForType(t, defaultType, title));
-  const [opening, setOpening] = useState(false);
 
   function selectType(next: "sale" | "rent") {
     if (next === type) return;
@@ -77,8 +76,9 @@ export function EnquiryForm({ title, phone, listing }: EnquiryFormProps) {
       open("signin");
       return;
     }
-    // Brief "Opening chat…" affordance; the launcher takes over from here.
-    setOpening(true);
+    // Open the chat and send the enquiry. No disabled/loading latch — like the
+    // mobile EnquirySheet, a user can enquire about the same product any number
+    // of times.
     window.dispatchEvent(
       new CustomEvent("shwe:open-chat", { detail: { product, message: text } }),
     );
@@ -127,9 +127,8 @@ export function EnquiryForm({ title, phone, listing }: EnquiryFormProps) {
         type="button"
         className="cc-send"
         onClick={handleSend}
-        disabled={opening}
       >
-        {opening ? t("product.enquiryOpening") : t("actions.enquire")}
+        {t("actions.enquire")}
         <ArrowRight className="icon-sm" aria-hidden="true" />
       </button>
       {phone && (
