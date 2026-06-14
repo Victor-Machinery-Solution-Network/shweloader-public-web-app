@@ -67,6 +67,9 @@ function renderInline(src: string): string {
   out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
   out = out.replace(/(^|[^_])_([^_\n]+)_/g, "$1<em>$2</em>");
 
+  // Unescape CommonMark backslash-escapes left after parsing (e.g. "\*" → "*").
+  out = out.replace(/\\([\\`*_{}[\]()#+\-.!>~|])/g, "$1");
+
   return out;
 }
 
@@ -90,7 +93,15 @@ interface Block {
 }
 
 function parseBlocks(md: string): Block[] {
-  const lines = md.replace(/\r\n?/g, "\n").split("\n");
+  const lines = md
+    .replace(/\r\n?/g, "\n")
+    // The admin editor emits CommonMark hard breaks as a trailing backslash on
+    // every line, and a lone "\" for the blank lines between paragraphs. Drop
+    // that trailing backslash so those lone-"\" lines become real blank lines
+    // (paragraph breaks) — otherwise the whole post collapses into one block
+    // peppered with literal "\ \" runs instead of separated, formatted text.
+    .replace(/\\[ \t]*(?=\n|$)/g, "")
+    .split("\n");
   const blocks: Block[] = [];
   let i = 0;
 
