@@ -187,6 +187,7 @@ export function normalizeCategory(r: ApiCategory): Category {
       parentId: s.parent_id,
       name: s.name,
       image: assetUrl(s.image_url),
+      displayOrder: s.display_order ?? null,
     })),
   };
 }

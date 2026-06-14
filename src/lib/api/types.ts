@@ -257,6 +257,8 @@ export interface Category {
     parentId: number;
     name: string;
     image: string | null;
+    /** TEXT display order ("0","1",…). Present for attachment tag groups. */
+    displayOrder?: string | null;
   }[];
 }
 
@@ -358,6 +360,8 @@ export interface ListingQuery {
   type?: "equipment" | "attachment";
   category_id?: number;
   sub_category_id?: number;
+  /** Attachment listings tagged to this equipment sub_category_id (2-level filter). */
+  attachment_sub_category_id?: number | string;
   /** Single id, or comma-separated ids for multi-select (worker does `IN (…)`). */
   model_id?: number | string;
   brand_id?: number | string;
