@@ -34,6 +34,8 @@ export interface BrowseFilters {
   category: string;
   /** Selected sub-category name. */
   sub: string;
+  /** Selected attachment sub-category name (2-level attachment filter). */
+  attachmentSub: string;
   /** Selected brand names. */
   brands: string[];
   /** Selected model ids (as strings), from the per-brand model sub-filter. */
@@ -98,6 +100,7 @@ export function parseFilters(sp: RawSearchParams): BrowseFilters {
     type,
     category: one(sp.category),
     sub: one(sp.sub),
+    attachmentSub: one(sp.attsub),
     brands: many(sp.brand),
     models: many(sp.model),
     conditions: many(sp.condition),
@@ -130,6 +133,7 @@ export function buildBrowseHref(
   if (f.type) p.set("type", f.type);
   if (f.category) p.set("category", f.category);
   if (f.sub) p.set("sub", f.sub);
+  if (f.attachmentSub) p.set("attsub", f.attachmentSub);
   if (f.brands && f.brands.length) p.set("brand", f.brands.join(","));
   if (f.models && f.models.length) p.set("model", f.models.join(","));
   if (f.conditions && f.conditions.length) p.set("condition", f.conditions.join(","));
@@ -224,18 +228,32 @@ export function toListingQuery(
   // worker applies directly.
   if (f.type) query.type = f.type;
 
-  // Sub-category wins over category (and pins its parent).
-  const sub = findSubCategory(f.sub, catalogs.categories, catalogs.attachmentCategories);
-  if (sub) {
-    query.sub_category_id = sub.subId;
-    query.category_id = sub.parentId;
-  } else {
-    const catId = findCategoryId(
-      f.category,
+  // Attachment sub-category (2-level attachment filter) takes precedence: filter
+  // attachment listings tagged to this equipment sub-category.
+  if (f.attachmentSub) {
+    const asub = findSubCategory(
+      f.attachmentSub,
       catalogs.categories,
       catalogs.attachmentCategories,
     );
-    if (catId != null) query.category_id = catId;
+    if (asub) {
+      query.attachment_sub_category_id = asub.subId;
+      query.type = "attachment";
+    }
+  } else {
+    // Sub-category wins over category (and pins its parent).
+    const sub = findSubCategory(f.sub, catalogs.categories, catalogs.attachmentCategories);
+    if (sub) {
+      query.sub_category_id = sub.subId;
+      query.category_id = sub.parentId;
+    } else {
+      const catId = findCategoryId(
+        f.category,
+        catalogs.categories,
+        catalogs.attachmentCategories,
+      );
+      if (catId != null) query.category_id = catId;
+    }
   }
 
   // Brand + model are one facet: resolve every selected brand name to its id and
