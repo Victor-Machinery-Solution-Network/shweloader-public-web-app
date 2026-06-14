@@ -130,6 +130,9 @@ export default async function ProductPage({ params }: PageProps) {
     listing.brand ||
     null;
 
+  // "<brand> <model>" — shared with the browse card; used for the H1 + breadcrumb.
+  const displayTitle = listingDisplayTitle(listing);
+
   const crumbs = [
     { name: "Home", path: "/" },
     {
@@ -139,7 +142,7 @@ export default async function ProductPage({ params }: PageProps) {
     ...(listing.category
       ? [{ name: listing.category, path: "/browse" }]
       : []),
-    { name: listing.title, path: `/product/${canonicalSlug}` },
+    { name: displayTitle, path: `/product/${canonicalSlug}` },
   ];
 
   return (
@@ -166,7 +169,7 @@ export default async function ProductPage({ params }: PageProps) {
             </>
           )}
           <span className="pdp-crumbs-sep" aria-hidden="true">/</span>
-          <span className="cur">{listing.title}</span>
+          <span className="cur">{displayTitle}</span>
         </nav>
 
         {/* Full-width gallery on top (PropertyGuru-style). */}
@@ -199,7 +202,7 @@ export default async function ProductPage({ params }: PageProps) {
                     <StatusPill variant="new" />
                   </div>
                 )}
-                <h1 className="t-h">{listingDisplayTitle(listing)}</h1>
+                <h1 className="t-h">{displayTitle}</h1>
                 {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
               </div>
               {/* Tablet-only Save/Share (desktop uses the side-column row; phones
