@@ -26,31 +26,23 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   images: {
-    // Vercel Image Optimization is DISABLED — we kept hitting the Hobby plan's
-    // 5k/month transformation limit. Source images in R2 are already stored as
-    // WebP, so the only thing we lose by skipping the optimizer is server-side
-    // *resizing* (responsive widths): the full-resolution WebP is now served
-    // regardless of display size. Watch payload on the browse grid + product
-    // gallery (esp. mobile); if it's too heavy, the fix is a Cloudflare Image
-    // Transformations loader (assets already live behind asset.shweloader.com.mm)
-    // rather than re-enabling Vercel's metered optimizer.
-    //
-    // To revert: delete `unoptimized` below. remotePatterns/formats/minimumCacheTTL
-    // are kept (no-ops while unoptimized) so re-enabling is a one-line change.
+    // Vercel Image Optimization is OFF. We kept hitting the Hobby plan's 5k/month
+    // transformation limit, and since R2 already stores every source as WebP the
+    // optimizer was only re-compressing WebP→WebP — pure latency for no payoff.
+    // Serving the R2 originals straight from Cloudflare's edge is measurably faster.
+    // The optimizer-only settings (formats, minimumCacheTTL) were removed with it.
+    // If the browse grid / product gallery ever gets too heavy without server-side
+    // resizing, add a Cloudflare Image Transformations loader rather than
+    // re-enabling Vercel's metered optimizer.
     unoptimized: true,
 
-    // Explicit R2 asset hosts only (prod + staging) — NOT a `**` wildcard, which
-    // would let the image optimizer proxy-fetch from the authenticated API
-    // subdomains (api./app-api.) too — an SSRF surface.
+    // Security allowlist of hosts next/image may load (and what the optimizer would
+    // be restricted to if it were ever re-enabled). NOT a `**` wildcard — that would
+    // expose the authenticated api./app-api. subdomains (an SSRF surface).
     remotePatterns: [
       { protocol: "https", hostname: "asset.shweloader.com.mm" },
       { protocol: "https", hostname: "asset-staging.shweloader.com.mm" },
     ],
-    formats: ["image/avif", "image/webp"],
-    // Keep optimized images (incl. the hero LCP) warm in Vercel's cache for a year
-    // so first-time visitors don't pay the on-demand re-optimize cold start. Safe
-    // because R2 asset URLs are timestamped — content changes change the URL.
-    minimumCacheTTL: 31536000,
   },
 
   // Trim client bundles for icon-heavy imports.
@@ -63,7 +55,9 @@ const nextConfig: NextConfig = {
     inlineCss: true,
   },
 
-  // Use the native sharp pipeline for next/image optimization.
+  // sharp runs server-side for OG-image transcoding (src/lib/seo/og.tsx) and
+  // blurhash placeholders (src/lib/blurhash.ts) — keep it external (unbundled).
+  // (No longer tied to next/image, which is now unoptimized.)
   serverExternalPackages: ["sharp"],
 
   async headers() {
