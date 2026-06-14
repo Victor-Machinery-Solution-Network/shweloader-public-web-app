@@ -3200,6 +3200,9 @@ html, body {
 .loc-modal-col {
   display: flex; flex-direction: column;
   min-width: 0;
+  /* Let the column shrink to the cascade's fixed height so its <ul> can scroll
+     (without this the list grows to content height and gets clipped). */
+  min-height: 0;
   border-right: 1px solid var(--m-line);
 }
 .loc-modal-col:last-child { border-right: 0; }
@@ -3218,6 +3221,7 @@ html, body {
   padding: 6px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 .loc-modal-row {
   width: 100%;
