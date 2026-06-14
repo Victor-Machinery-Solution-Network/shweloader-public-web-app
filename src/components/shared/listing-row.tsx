@@ -8,7 +8,7 @@ import { SaveButton } from "@/components/shared/save-button";
 import { useI18n } from "@/components/providers/language-provider";
 import { assetUrl, focalPosition } from "@/lib/assets";
 import { preloadHeroImage } from "@/lib/hero-image";
-import { formatMoney, rentalUnitLabel } from "@/lib/format";
+import { formatMoney, listingDisplayTitle, rentalUnitLabel } from "@/lib/format";
 import { listingSlug } from "@/lib/slug";
 import { cn } from "@/lib/utils";
 import type { Listing } from "@/lib/api/types";
@@ -32,13 +32,8 @@ export function ListingRow({ listing, mode = "sale" }: ListingRowProps) {
       assetUrl(listing.thumbnail.url ?? listing.thumbnail.thumbUrl),
     );
 
-  // Row title is "<brand> <model>" (matches the grid card); `title` is the model
-  // name, so prefix the brand unless it's already part of the title.
-  const rowTitle =
-    listing.brand &&
-    !listing.title.toLowerCase().startsWith(listing.brand.toLowerCase())
-      ? `${listing.brand} ${listing.title}`
-      : listing.title;
+  // Row title is "<brand> <model>" (shared with the grid card + product page).
+  const rowTitle = listingDisplayTitle(listing);
   // Eyebrow shows the subcategory (fall back to the main category).
   const eyebrow = listing.subCategory ?? listing.category ?? null;
 

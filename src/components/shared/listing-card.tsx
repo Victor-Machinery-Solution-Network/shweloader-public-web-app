@@ -10,6 +10,7 @@ import { assetUrl, focalPosition } from "@/lib/assets";
 import { preloadHeroImage } from "@/lib/hero-image";
 import {
   formatListingPrice,
+  listingDisplayTitle,
   PRICE_ON_REQUEST,
   type ListingPriceFields,
 } from "@/lib/format";
@@ -71,13 +72,8 @@ export function ListingCard({
   // Eyebrow shows the subcategory (finer-grained than the top-level category);
   // fall back to the main category, then brand, so it's never empty.
   const eyebrow = listing.subCategory ?? listing.category ?? listing.brand ?? null;
-  // Card title is "<brand> <model>" — `title` is the model name, so prefix the
-  // brand unless it's already part of the title.
-  const cardTitle =
-    listing.brand &&
-    !listing.title.toLowerCase().startsWith(listing.brand.toLowerCase())
-      ? `${listing.brand} ${listing.title}`
-      : listing.title;
+  // Card title is "<brand> <model>" (shared with the row + product page).
+  const cardTitle = listingDisplayTitle(listing);
 
   return (
     <Link

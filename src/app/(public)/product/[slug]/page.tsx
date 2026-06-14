@@ -30,7 +30,7 @@ import {
   productSchema,
   breadcrumbSchema,
 } from "@/lib/seo/jsonld";
-import { formatListingPrice, PRICE_ON_REQUEST } from "@/lib/format";
+import { formatListingPrice, listingDisplayTitle, PRICE_ON_REQUEST } from "@/lib/format";
 import { parseIdFromSlug, listingSlug } from "@/lib/slug";
 import { toPlainText, truncate } from "@/lib/utils";
 import { renderMarkdown } from "@/lib/markdown";
@@ -199,7 +199,7 @@ export default async function ProductPage({ params }: PageProps) {
                     <StatusPill variant="new" />
                   </div>
                 )}
-                <h1 className="t-h">{listing.title}</h1>
+                <h1 className="t-h">{listingDisplayTitle(listing)}</h1>
                 {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
               </div>
               {/* Tablet-only Save/Share (desktop uses the side-column row; phones

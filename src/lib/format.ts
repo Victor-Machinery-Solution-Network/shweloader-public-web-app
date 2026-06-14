@@ -14,6 +14,21 @@ export function formatInt(n: number | null | undefined): string {
   return GROUP.format(Math.round(n));
 }
 
+/**
+ * Display title for a listing — "<brand> <model>" (the listing's `title` is the
+ * model name), unless the model already starts with the brand. Shared by the
+ * grid card, the list/row view, and the product detail page so they all match.
+ */
+export function listingDisplayTitle(listing: {
+  brand?: string | null;
+  title: string;
+}): string {
+  return listing.brand &&
+    !listing.title.toLowerCase().startsWith(listing.brand.toLowerCase())
+    ? `${listing.brand} ${listing.title}`
+    : listing.title;
+}
+
 export function formatMMK(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return "";
   return `MMK ${GROUP.format(Math.round(n))}`;

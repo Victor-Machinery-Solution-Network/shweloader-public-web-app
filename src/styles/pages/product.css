@@ -952,7 +952,6 @@
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 14px; color: var(--m-fg-2); font-weight: 500;
 }
-.ov-msg-i { width: 16px; height: 16px; color: var(--m-fg-2); flex: 0 0 auto; }
 .cc-field input,
 .cc-field textarea {
   font-family: var(--font-sans); font-size: 15px; color: var(--m-ink);
