@@ -158,6 +158,8 @@ interface CatSearchResult {
   label: string;
   hint: string;
   commit: string;
+  /** Parent category name when `commit` is a sub-category; undefined for a top-level category. */
+  parent?: string;
 }
 
 function CategoryPicker({
@@ -168,7 +170,7 @@ function CategoryPicker({
 }: {
   tree: CatNode[];
   value: string;
-  onChange: (v: string) => void;
+  onChange: (v: string, parent?: string) => void;
   label: string;
 }) {
   const { t } = useI18n();
@@ -262,8 +264,8 @@ function CategoryPicker({
   }, [open, value, tree]);
 
   const pick = useCallback(
-    (label: string) => {
-      onChange(label);
+    (label: string, parent?: string) => {
+      onChange(label, parent);
       setOpen(false);
       setQ("");
     },
@@ -282,7 +284,7 @@ function CategoryPicker({
       }
       for (const s of c.subs) {
         if (s.toLowerCase().includes(needle)) {
-          out.push({ label: s, hint: c.label, commit: s });
+          out.push({ label: s, hint: c.label, commit: s, parent: c.label });
         }
       }
     }
@@ -351,7 +353,7 @@ function CategoryPicker({
               <button
                 type="button"
                 className={cn("cat-opt", s === value && "is-active")}
-                onClick={() => pick(s)}
+                onClick={() => pick(s, hovered.label)}
               >
                 <span>{s}</span>
                 {s === value && (
@@ -441,7 +443,7 @@ function CategoryPicker({
                       key={`${r.commit}-${i}`}
                       type="button"
                       className="cat-modal-result"
-                      onClick={() => pick(r.commit)}
+                      onClick={() => pick(r.commit, r.parent)}
                     >
                       <Search className="icon-sm" aria-hidden="true" />
                       <span className="cat-modal-result-l">{r.label}</span>
@@ -872,6 +874,8 @@ export function SearchCard({
   const [mode, setMode] = useState<"buy" | "rent">("buy");
   const [q, setQ] = useState("");
   const [cat, setCat] = useState(ALL_CATEGORIES);
+  // Parent category name when `cat` is a sub-category; null for a top-level category.
+  const [catParent, setCatParent] = useState<string | null>(null);
   const [city, setCity] = useState(ALL_MYANMAR);
 
   const tree = useMemo(
@@ -885,11 +889,21 @@ export function SearchCard({
       const params = new URLSearchParams({ mode });
       const trimmed = q.trim();
       if (trimmed) params.set("q", trimmed);
-      if (cat && cat !== ALL_CATEGORIES) params.set("category", cat);
+      if (cat && cat !== ALL_CATEGORIES) {
+        // A sub-category must carry its parent so /browse can resolve it to a
+        // sub_category_id (category=<parent>&sub=<name>); a top-level category
+        // goes straight into category=<name>.
+        if (catParent) {
+          params.set("category", catParent);
+          params.set("sub", cat);
+        } else {
+          params.set("category", cat);
+        }
+      }
       if (city && city !== ALL_MYANMAR) params.set("location", city);
       router.push(`/browse?${params.toString()}`);
     },
-    [router, mode, q, cat, city],
+    [router, mode, q, cat, catParent, city],
   );
 
   return (
@@ -922,7 +936,10 @@ export function SearchCard({
       <CategoryPicker
         tree={tree}
         value={cat}
-        onChange={setCat}
+        onChange={(v, parent) => {
+          setCat(v);
+          setCatParent(parent ?? null);
+        }}
         label={t("search.category")}
       />
       <LocationPicker
