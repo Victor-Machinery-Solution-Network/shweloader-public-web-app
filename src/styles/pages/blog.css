@@ -275,6 +275,13 @@
 @media (max-width: 640px) {
   .bx-grid > .bx-story { padding: 0 0 28px; }
   .bx-grid > .bx-story:not(:last-child) { margin-bottom: 28px; }
+  /* Divider sits BELOW the author/date byline on mobile, not above it. */
+  .bx-grid > .bx-story .bx-story-foot {
+    border-top: 0;
+    padding-top: 0;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--m-line);
+  }
 }
 
 .bx-story {
