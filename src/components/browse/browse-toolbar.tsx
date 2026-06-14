@@ -182,11 +182,18 @@ function ActiveFilters({
     chips.push({
       key: "cat",
       label: filters.category,
-      remove: () => push({ category: "", sub: "" }),
+      remove: () => push({ category: "", sub: "", type: "" }),
     });
   }
   if (filters.sub) {
     chips.push({ key: "sub", label: filters.sub, remove: () => push({ sub: "" }) });
+  }
+  if (filters.attachmentSub) {
+    chips.push({
+      key: "attsub",
+      label: filters.attachmentSub,
+      remove: () => push({ attachmentSub: "", type: "" }),
+    });
   }
   filters.brands.forEach((b) =>
     chips.push({
@@ -323,6 +330,7 @@ export function BrowseToolbar({
   const activeCount =
     (filters.category ? 1 : 0) +
     (filters.sub ? 1 : 0) +
+    (filters.attachmentSub ? 1 : 0) +
     filters.brands.length +
     filters.models.length +
     filters.conditions.length +

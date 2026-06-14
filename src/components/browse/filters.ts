@@ -231,11 +231,10 @@ export function toListingQuery(
   // Attachment sub-category (2-level attachment filter) takes precedence: filter
   // attachment listings tagged to this equipment sub-category.
   if (f.attachmentSub) {
-    const asub = findSubCategory(
-      f.attachmentSub,
-      catalogs.categories,
-      catalogs.attachmentCategories,
-    );
+    // attachmentSub is always an EQUIPMENT sub-category name (the attachment tree
+    // groups attachment categories under equipment subs), so resolve against the
+    // equipment catalog only — avoids any cross-catalog name ambiguity.
+    const asub = findSubCategory(f.attachmentSub, catalogs.categories, []);
     if (asub) {
       query.attachment_sub_category_id = asub.subId;
       query.type = "attachment";
