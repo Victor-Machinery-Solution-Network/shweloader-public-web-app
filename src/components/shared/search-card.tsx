@@ -319,8 +319,14 @@ function CategoryPicker({
               onMouseEnter={() => setHoverId(c.id)}
               onFocus={() => setHoverId(c.id)}
               onClick={() => {
-                if (c.subs.length === 0) pick(c.label);
-                else setHoverId(c.id);
+                if (c.subs.length === 0) {
+                  pick(c.label);
+                } else {
+                  // Select the whole category right away (so "Search" filters by
+                  // it) while keeping the menu open to optionally refine to a sub.
+                  setHoverId(c.id);
+                  onChange(c.label);
+                }
               }}
             >
               <span>{c.label}</span>
@@ -578,7 +584,7 @@ function LocationPicker({
               label: t.name,
               sub: t.nameMy,
               hint: `${d.name} · ${s.name}`,
-              commit: `${t.name}, ${s.name}`,
+              commit: t.name,
             });
           }
         }
@@ -753,9 +759,9 @@ function LocationPicker({
                             type="button"
                             className={cn(
                               "loc-modal-row is-shortcut",
-                              value === `All ${stateObj.name}` && "is-active",
+                              value === stateObj.name && "is-active",
                             )}
-                            onClick={() => pick(`All ${stateObj.name}`)}
+                            onClick={() => pick(stateObj.name)}
                           >
                             <span>All {stateObj.name.toLowerCase()}</span>
                           </button>
@@ -793,9 +799,9 @@ function LocationPicker({
                     <div className="loc-modal-col-h">{t("search.townships")}</div>
                     <ul>
                       {districtObj?.townships.map((t) => {
-                        const commit = stateObj
-                          ? `${t.name}, ${stateObj.name}`
-                          : t.name;
+                        // Emit the plain township name — Browse's findLocation
+                        // matches one level by name and can't parse "Twp, State".
+                        const commit = t.name;
                         return (
                           <li key={t.id}>
                             <button
