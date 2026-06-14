@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 /** Auto-advance interval for the message reel (ms). */
 const ANN_DURATION = 5000;
-const MSG_HEIGHT = 22; // px — must match `.mh-ann-msg`/`.mh-ann-stage` height in the design CSS.
+const MSG_HEIGHT = 30; // px — must match `.mh-ann-msg`/`.mh-ann-stage` height in the design CSS.
 
 /** CSS custom properties used to drive the marquee on an overflowing message. */
 type MarqueeVars = CSSProperties & {
