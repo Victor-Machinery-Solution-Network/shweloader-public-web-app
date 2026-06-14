@@ -23,6 +23,7 @@ import {
   type BrowseFilters,
   type Currency,
 } from "./filters";
+import { groupAttachmentsBySubcategory } from "@/lib/api/group-attachments";
 
 /* ── Reusable group shell ───────────────────────────────────── */
 function SidebarGroup({
@@ -127,6 +128,7 @@ function CategoryGroup({
 }) {
   const { t } = useI18n();
   const [open, setOpen] = useState<Set<number>>(() => new Set());
+  const [openAtt, setOpenAtt] = useState<Set<number>>(() => new Set());
   const toggleOpen = (id: number) =>
     setOpen((s) => {
       const n = new Set(s);
@@ -134,16 +136,52 @@ function CategoryGroup({
       else n.add(id);
       return n;
     });
+  const toggleOpenAtt = (id: number) =>
+    setOpenAtt((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
-  const selectedCount = (filters.category ? 1 : 0) + (filters.sub ? 1 : 0);
+  const attachmentGroups = useMemo(
+    () => groupAttachmentsBySubcategory(attachmentCategories),
+    [attachmentCategories],
+  );
 
+  const selectedCount =
+    (filters.category ? 1 : 0) +
+    (filters.sub ? 1 : 0) +
+    (filters.attachmentSub ? 1 : 0);
+
+  // Equipment picks clear any attachment selection (single-select across the
+  // whole category facet) and reset the catalog split.
   const pickCategory = (name: string) =>
-    apply({ category: filters.category === name ? "" : name, sub: "" });
+    apply({
+      category: filters.category === name ? "" : name,
+      sub: "",
+      attachmentSub: "",
+      type: "",
+    });
   const pickSub = (name: string, parentName: string) =>
     apply(
       filters.sub === name
         ? { sub: "" }
-        : { sub: name, category: parentName },
+        : { sub: name, category: parentName, attachmentSub: "", type: "" },
+    );
+  // Attachment picks force type=attachment (clean results; avoids the
+  // category_id cross-table id collision). Single-select with equipment.
+  const pickAttachmentSub = (name: string) =>
+    apply(
+      filters.attachmentSub === name
+        ? { attachmentSub: "", type: "" }
+        : { attachmentSub: name, category: "", sub: "", type: "attachment" },
+    );
+  const pickAttachmentCategory = (name: string) =>
+    apply(
+      filters.category === name && filters.type === "attachment"
+        ? { category: "", type: "" }
+        : { category: name, attachmentSub: "", sub: "", type: "attachment" },
     );
 
   return (
@@ -155,7 +193,7 @@ function CategoryGroup({
           <button
             type="button"
             className="bsb-group-clear"
-            onClick={() => apply({ category: "", sub: "" })}
+            onClick={() => apply({ category: "", sub: "", attachmentSub: "", type: "" })}
           >
             {t("actions.reset")}
           </button>
@@ -167,7 +205,8 @@ function CategoryGroup({
         <div className="bsb-tree">
           {categories.map((c) => {
             const expanded = open.has(c.id);
-            const parentSel = filters.category === c.name && !filters.sub;
+            const parentSel =
+              filters.category === c.name && !filters.sub && filters.type !== "attachment";
             const someChildSel =
               filters.sub.length > 0 &&
               c.subCategories.some((s) => s.name === filters.sub);
@@ -206,19 +245,53 @@ function CategoryGroup({
         </div>
       </div>
 
-      {attachmentCategories.length > 0 && (
+      {attachmentGroups.length > 0 && (
         <div className="bsb-tree-section">
           <div className="bsb-tree-section-h">{t("home.attachments")}</div>
           <div className="bsb-tree">
-            {attachmentCategories.map((a) => (
-              <TreeRow
-                key={a.id}
-                label={a.name}
-                on={filters.category === a.name && !filters.sub}
-                depth={0}
-                onToggle={() => pickCategory(a.name)}
-              />
-            ))}
+            {attachmentGroups.map((g) => {
+              const expanded = openAtt.has(g.sub.id);
+              const subSel = filters.attachmentSub === g.sub.name;
+              const someChildSel =
+                filters.type === "attachment" &&
+                !!filters.category &&
+                g.attachments.some((a) => a.name === filters.category);
+              return (
+                <Fragment key={`asub-${g.sub.id}`}>
+                  <TreeRow
+                    label={g.sub.name}
+                    on={subSel}
+                    indeterminate={!subSel && someChildSel}
+                    depth={0}
+                    hasChildren={g.attachments.length > 0}
+                    expanded={expanded}
+                    onToggle={() => pickAttachmentSub(g.sub.name)}
+                    onExpand={() => toggleOpenAtt(g.sub.id)}
+                  />
+                  {expanded && g.attachments.length > 0 && (
+                    <div
+                      className="bsb-tree-subs"
+                      role="group"
+                      aria-label={`${g.sub.name} attachments`}
+                    >
+                      {g.attachments.map((a) => (
+                        <TreeRow
+                          key={a.id}
+                          label={a.name}
+                          on={
+                            filters.type === "attachment" &&
+                            filters.category === a.name &&
+                            !filters.sub
+                          }
+                          depth={1}
+                          onToggle={() => pickAttachmentCategory(a.name)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </Fragment>
+              );
+            })}
           </div>
         </div>
       )}
@@ -916,6 +989,7 @@ export function BrowseSidebar({
   const activeCount =
     (filters.category ? 1 : 0) +
     (filters.sub ? 1 : 0) +
+    (filters.attachmentSub ? 1 : 0) +
     filters.brands.length +
     filters.conditions.length +
     (filters.location ? 1 : 0) +
@@ -925,6 +999,8 @@ export function BrowseSidebar({
     apply({
       category: "",
       sub: "",
+      attachmentSub: "",
+      type: "",
       brands: [],
       conditions: [],
       location: "",
