@@ -327,6 +327,10 @@ export function toListingQuery(
 export function filterAndSortSaved(
   listings: Listing[],
   f: BrowseFilters,
+  opts?: {
+    /** Lowercased attachment-category names tagged to f.attachmentSub. */
+    attachmentSubNames?: Set<string>;
+  },
 ): Listing[] {
   const lc = (s: string | null | undefined) => (s ?? "").toLowerCase();
   const usd = f.currency === "USD";
@@ -347,7 +351,12 @@ export function filterAndSortSaved(
     if (f.mode === "rent" && !l.isRent) return false;
     if (f.type && l.type !== f.type) return false;
 
-    if (f.sub) {
+    if (f.attachmentSub) {
+      // Attachment listings whose attachment category is tagged to the sub.
+      const allowed = opts?.attachmentSubNames;
+      if (l.type !== "attachment") return false;
+      if (!allowed || !allowed.has(lc(l.category))) return false;
+    } else if (f.sub) {
       if (lc(l.subCategory) !== f.sub.toLowerCase()) return false;
     } else if (f.category) {
       if (lc(l.category) !== f.category.toLowerCase()) return false;

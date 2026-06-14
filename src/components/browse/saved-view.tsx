@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/providers/language-provider";
 import { EmptyState } from "@/components/shared/empty-state";
 import { T } from "@/components/t";
-import type { Listing } from "@/lib/api/types";
+import type { Category, Listing } from "@/lib/api/types";
 import { useSaved } from "@/lib/saved/store";
 import { Results } from "./results";
 import { pushBrowseUrl } from "./navigate";
@@ -25,7 +25,11 @@ type Status = "loading" | "ready" | "error";
  * the live URL filters (`useBrowseFilters`) — no API round-trip per filter.
  * Re-fetches whenever the saved set changes (heart toggled anywhere, login merge).
  */
-export function SavedView() {
+export function SavedView({
+  attachmentCategories,
+}: {
+  attachmentCategories: Category[];
+}) {
   const { t } = useI18n();
   const filters = useBrowseFilters();
   const { savedIds } = useSaved();
@@ -67,13 +71,25 @@ export function SavedView() {
 
   // Filter + sort off the live URL filters, then page locally.
   const { pageListings, total } = useMemo(() => {
-    const matched = filterAndSortSaved(all, filters);
+    const attachmentSubNames = filters.attachmentSub
+      ? new Set(
+          attachmentCategories
+            .filter((ac) =>
+              ac.subCategories.some(
+                (s) =>
+                  s.name.toLowerCase() === filters.attachmentSub.toLowerCase(),
+              ),
+            )
+            .map((ac) => ac.name.toLowerCase()),
+        )
+      : undefined;
+    const matched = filterAndSortSaved(all, filters, { attachmentSubNames });
     const start = (filters.page - 1) * PAGE_SIZE;
     return {
       pageListings: matched.slice(start, start + PAGE_SIZE),
       total: matched.length,
     };
-  }, [all, filters]);
+  }, [all, filters, attachmentCategories]);
 
   if (status === "loading") {
     return (

@@ -42,7 +42,7 @@ export default async function SavedPage() {
       crumbKey="actions.saved"
       screenLabel="Saved"
     >
-      <SavedView />
+      <SavedView attachmentCategories={attachmentCategories} />
     </BrowseShell>
   );
 }
