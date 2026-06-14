@@ -9,12 +9,15 @@ import { assetUrl } from "@/lib/assets";
 import { useI18n } from "@/components/providers/language-provider";
 import type { Category } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { groupAttachmentsBySubcategory } from "@/lib/api/group-attachments";
 
 type TabId = "equipment" | "attachments";
 
 interface CatGroup {
   id: string;
   name: string;
+  /** When set, the group heading is a link (attachment tab → /browse?attsub=). */
+  headingHref?: string;
   items: { id: string; name: string; image: string | null; href: string }[];
 }
 
@@ -79,8 +82,22 @@ export function CategoriesV2({
     () => toGroups(equipmentCategories),
     [equipmentCategories],
   );
-  const attachmentGroups = useMemo(
-    () => toGroups(attachmentCategories),
+  // Attachment tab: group attachment categories under the equipment sub-category
+  // they're tagged to. Heading links to "all attachments for that sub"; each tile
+  // links to its attachment category. (Equipment tab still uses toGroups.)
+  const attachmentGroups = useMemo<CatGroup[]>(
+    () =>
+      groupAttachmentsBySubcategory(attachmentCategories).map((g) => ({
+        id: `sub-${g.sub.id}`,
+        name: g.sub.name,
+        headingHref: `/browse?type=attachment&attsub=${encodeURIComponent(g.sub.name)}`,
+        items: g.attachments.map((a) => ({
+          id: `a-${a.id}`,
+          name: a.name,
+          image: a.image,
+          href: `/browse?type=attachment&category=${encodeURIComponent(a.name)}`,
+        })),
+      })),
     [attachmentCategories],
   );
 
@@ -137,7 +154,18 @@ export function CategoriesV2({
             <div key={group.id} className="cat-v2-group">
               <div className="cat-v2-group-head">
                 <span className="cat-v2-rule" aria-hidden="true" />
-                <h3 className="cat-v2-group-title">{group.name}</h3>
+                <h3 className="cat-v2-group-title">
+                  {group.headingHref ? (
+                    <Link
+                      href={group.headingHref}
+                      style={{ color: "inherit", textDecoration: "none" }}
+                    >
+                      {group.name}
+                    </Link>
+                  ) : (
+                    group.name
+                  )}
+                </h3>
                 <span className="cat-v2-rule" aria-hidden="true" />
               </div>
               <div className="cat-v2-grid">
