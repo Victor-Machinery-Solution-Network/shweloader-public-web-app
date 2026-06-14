@@ -469,13 +469,12 @@ function CategoryPicker({
 }
 
 /* ------------------------------------------------------------------ *
- * 3-layer location picker (state → district → township) in a modal,
- * with EN + Burmese (nameMy) labels and live search.
+ * 3-layer location picker (state → district → township) in a modal.
+ * Names render in the active locale only; search still matches EN + Burmese.
  * ------------------------------------------------------------------ */
 interface LocSearchResult {
   id: string;
   label: string;
-  sub: string | null;
   hint: string;
   commit: string;
 }
@@ -493,7 +492,11 @@ function LocationPicker({
   onChange: (v: string) => void;
   label: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  // Show location names in the active language only — never EN + Burmese together.
+  const my = locale === "my";
+  const locName = (n: { name: string; nameMy: string | null }) =>
+    my ? (n.nameMy ?? n.name) : n.name;
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [hoverStateId, setHoverStateId] = useState<number | null>(
@@ -561,8 +564,7 @@ function LocationPicker({
       if (matches(s.name, s.nameMy)) {
         out.push({
           id: `state:${s.id}`,
-          label: s.name,
-          sub: s.nameMy,
+          label: locName(s),
           hint: t("search.stateRegionHint"),
           commit: s.name,
         });
@@ -571,9 +573,8 @@ function LocationPicker({
         if (matches(d.name, d.nameMy)) {
           out.push({
             id: `d:${d.id}`,
-            label: d.name,
-            sub: d.nameMy,
-            hint: s.name,
+            label: locName(d),
+            hint: locName(s),
             commit: d.name,
           });
         }
@@ -581,9 +582,8 @@ function LocationPicker({
           if (matches(t.name, t.nameMy)) {
             out.push({
               id: `t:${t.id}`,
-              label: t.name,
-              sub: t.nameMy,
-              hint: `${d.name} · ${s.name}`,
+              label: locName(t),
+              hint: `${locName(d)} · ${locName(s)}`,
               commit: t.name,
             });
           }
@@ -672,12 +672,7 @@ function LocationPicker({
                       onClick={() => pick(r.commit)}
                     >
                       <MapPin className="icon-sm" aria-hidden="true" />
-                      <span className="loc-modal-result-l">
-                        {r.label}
-                        {r.sub && (
-                          <span className="loc-name-my"> {r.sub}</span>
-                        )}
-                      </span>
+                      <span className="loc-modal-result-l">{r.label}</span>
                       <span className="loc-modal-result-h">{r.hint}</span>
                     </button>
                   ))
@@ -708,7 +703,7 @@ function LocationPicker({
                         )}
                         onClick={() => pick(s.name)}
                       >
-                        {s.name}
+                        {locName(s)}
                       </button>
                     ))}
                   </div>
@@ -737,12 +732,7 @@ function LocationPicker({
                               setLevel("districts");
                             }}
                           >
-                            <span>
-                              {s.name}
-                              {s.nameMy && (
-                                <span className="loc-name-my"> {s.nameMy}</span>
-                              )}
-                            </span>
+                            <span>{locName(s)}</span>
                             <ChevronRight className="icon-sm" aria-hidden="true" />
                           </button>
                         </li>
@@ -782,12 +772,7 @@ function LocationPicker({
                               setLevel("townships");
                             }}
                           >
-                            <span>
-                              {d.name}
-                              {d.nameMy && (
-                                <span className="loc-name-my"> {d.nameMy}</span>
-                              )}
-                            </span>
+                            <span>{locName(d)}</span>
                             <ChevronRight className="icon-sm" aria-hidden="true" />
                           </button>
                         </li>
@@ -812,12 +797,7 @@ function LocationPicker({
                               )}
                               onClick={() => pick(commit)}
                             >
-                              <span>
-                                {t.name}
-                                {t.nameMy && (
-                                  <span className="loc-name-my"> {t.nameMy}</span>
-                                )}
-                              </span>
+                              <span>{locName(t)}</span>
                               {value === commit && (
                                 <Check className="icon-sm" aria-hidden="true" />
                               )}
