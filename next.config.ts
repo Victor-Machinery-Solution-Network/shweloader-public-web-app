@@ -26,6 +26,19 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   images: {
+    // Vercel Image Optimization is DISABLED — we kept hitting the Hobby plan's
+    // 5k/month transformation limit. Source images in R2 are already stored as
+    // WebP, so the only thing we lose by skipping the optimizer is server-side
+    // *resizing* (responsive widths): the full-resolution WebP is now served
+    // regardless of display size. Watch payload on the browse grid + product
+    // gallery (esp. mobile); if it's too heavy, the fix is a Cloudflare Image
+    // Transformations loader (assets already live behind asset.shweloader.com.mm)
+    // rather than re-enabling Vercel's metered optimizer.
+    //
+    // To revert: delete `unoptimized` below. remotePatterns/formats/minimumCacheTTL
+    // are kept (no-ops while unoptimized) so re-enabling is a one-line change.
+    unoptimized: true,
+
     // Explicit R2 asset hosts only (prod + staging) — NOT a `**` wildcard, which
     // would let the image optimizer proxy-fetch from the authenticated API
     // subdomains (api./app-api.) too — an SSRF surface.
