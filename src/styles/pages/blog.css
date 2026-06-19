@@ -743,6 +743,12 @@
   margin: 0 0 24px;
   padding: 0 0 0 20px;
 }
+/* Tailwind v4 Preflight resets ol/ul to list-style:none. The markdown renderer
+   uses the same .bp-list class for both list types, so restore markers by tag:
+   numbered lists must show 1./2./3., bulleted lists show •. Without this the
+   .bp-list li::marker rule below has no marker to color. */
+ul.bp-list { list-style: disc; }
+ol.bp-list { list-style: decimal; }
 .bp-list li {
   font-size: 16px;
   line-height: 1.7;
