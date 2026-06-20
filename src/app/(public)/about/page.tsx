@@ -67,34 +67,6 @@ const MARQUEE_DARK = [
 ];
 
 // ── SVG art ────────────────────────────────────────────────────────────────
-function TruckSVG() {
-  return (
-    <svg
-      viewBox="0 0 240 140"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ width: "100%" }}
-    >
-      <line
-        x1="0"
-        y1="100"
-        x2="240"
-        y2="100"
-        stroke="rgba(255,255,255,0.18)"
-        strokeWidth="0.6"
-      />
-      <g fill="rgba(251,205,74,0.78)">
-        <rect x="36" y="58" width="100" height="36" rx="2" />
-        <path d="M138 70 L172 70 L184 82 L184 94 L138 94 Z" />
-        <rect x="146" y="74" width="22" height="12" fill="rgba(15,11,6,0.7)" />
-      </g>
-      <circle cx="64" cy="98" r="10" fill="#0c0a07" stroke="rgba(251,205,74,0.5)" />
-      <circle cx="116" cy="98" r="10" fill="#0c0a07" stroke="rgba(251,205,74,0.5)" />
-      <circle cx="166" cy="98" r="10" fill="#0c0a07" stroke="rgba(251,205,74,0.5)" />
-    </svg>
-  );
-}
-
 const GLYPH_PATHS: Record<Glyph, ReactNode> = {
   shield: <path d="M12 2L4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3zM9 12l2 2 4-4" />,
   spark: (
@@ -215,19 +187,6 @@ export default function AboutPage() {
             </Reveal>
             <Reveal delay={120}>
               <p className="ax-body-lg">{STORY[0]}</p>
-            </Reveal>
-            <Reveal delay={200}>
-              <div className="ax-story-photo">
-                <div className="ax-photo ax-photo-wide">
-                  <span className="ax-ph-tag">
-                    <span className="ax-dot" />
-                    On the yard
-                  </span>
-                  <div className="ax-ph-art">
-                    <TruckSVG />
-                  </div>
-                </div>
-              </div>
             </Reveal>
             <Reveal delay={120}>
               <p className="ax-body-lg">{STORY[1]}</p>
