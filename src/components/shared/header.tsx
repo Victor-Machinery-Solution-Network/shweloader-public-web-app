@@ -98,6 +98,14 @@ export function Header() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            src="/brand/loader.png"
+            width={305}
+            height={256}
+            style={{ height: 30, width: "auto", marginRight: 8 }}
+            alt=""
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/brand/logo_dark_with_slogan.svg"
             className="sl-logo-light"
             width={1300}
