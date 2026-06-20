@@ -175,17 +175,24 @@ function parseBlocks(md: string): Block[] {
       continue;
     }
 
-    // ordered list
-    const olStart = line.match(/^\s*(\d+)[.)]\s+/);
+    // ordered list. The marker dot may be backslash-escaped ("1\.") — the admin
+    // editor (tiptap-markdown) escapes the leading number-dot of a paragraph it
+    // serialized from a list item that wasn't part of the <ol> node, so the very
+    // first item of a typed "1…10" list often arrives as "1\." while 2…10 stay
+    // "2.". Treating the escaped form as a real marker folds that stray first
+    // item back into the list instead of leaving it as a flush-left paragraph
+    // above an indented <ol> (visible misalignment). ORDERED matches both forms.
+    const ORDERED = /^\s*(\d+)\\?[.)]\s+/;
+    const olStart = line.match(ORDERED);
     if (olStart) {
       const items: string[] = [];
       const start = parseInt(olStart[1], 10);
       // The number the next item must have to be part of THIS same list.
       let expected = start;
       while (i < lines.length) {
-        const m = lines[i].match(/^\s*(\d+)[.)]\s+/);
+        const m = lines[i].match(ORDERED);
         if (m) {
-          items.push(lines[i].replace(/^\s*\d+[.)]\s+/, ""));
+          items.push(lines[i].replace(ORDERED, ""));
           expected = parseInt(m[1], 10) + 1;
           i++;
           continue;
@@ -198,7 +205,7 @@ function parseBlocks(md: string): Block[] {
         if (!lines[i].trim()) {
           let j = i;
           while (j < lines.length && !lines[j].trim()) j++;
-          const next = j < lines.length ? lines[j].match(/^\s*(\d+)[.)]\s+/) : null;
+          const next = j < lines.length ? lines[j].match(ORDERED) : null;
           if (next && parseInt(next[1], 10) === expected) {
             i = j; // skip the blank gap and continue the same list
             continue;
@@ -218,7 +225,7 @@ function parseBlocks(md: string): Block[] {
         /^\s*(#{1,6})\s+/.test(l) ||
         /^\s*>/.test(l) ||
         /^\s*[-*+]\s+/.test(l) ||
-        /^\s*\d+[.)]\s+/.test(l) ||
+        /^\s*\d+\\?[.)]\s+/.test(l) ||
         /^\s*(```+|~~~+)/.test(l) ||
         /^\s*([-*_])(\s*\1){2,}\s*$/.test(l)
       ) {
