@@ -53,12 +53,15 @@ export function EnquiryForm({ title, phone, listing }: EnquiryFormProps) {
   const defaultType: "sale" | "rent" = hasRent && !hasSale ? "rent" : "sale";
 
   const [type, setType] = useState<"sale" | "rent">(defaultType);
-  const [message, setMessage] = useState(() => messageForType(t, defaultType, title));
+  // null = untouched, so the pre-fill follows the live language + side; once the
+  // user edits, their text wins. Deriving (not seeding state) keeps it locale-reactive.
+  const [custom, setCustom] = useState<string | null>(null);
+  const message = custom ?? messageForType(t, type, title);
 
   function selectType(next: "sale" | "rent") {
     if (next === type) return;
     setType(next);
-    setMessage(messageForType(t, next, title));
+    setCustom(null); // reset to the new side's default pre-fill
   }
 
   function handleSend(e: React.MouseEvent<HTMLButtonElement>) {
@@ -117,7 +120,7 @@ export function EnquiryForm({ title, phone, listing }: EnquiryFormProps) {
         <textarea
           rows={3}
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => setCustom(e.target.value)}
         />
       </label>
       <button
