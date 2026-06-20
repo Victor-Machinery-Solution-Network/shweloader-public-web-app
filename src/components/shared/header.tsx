@@ -101,7 +101,7 @@ export function Header() {
             src="/brand/loader.png"
             width={305}
             height={256}
-            style={{ height: 30, width: "auto", marginRight: 8 }}
+            style={{ height: 38, width: "auto", marginRight: 8 }}
             alt=""
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
