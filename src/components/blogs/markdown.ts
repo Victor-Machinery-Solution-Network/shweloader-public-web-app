@@ -90,6 +90,9 @@ interface Block {
   text?: string;
   items?: string[];
   code?: string;
+  /** First item's number for ordered lists (so an `<ol start>` keeps the
+   *  author's real numbering instead of always restarting at 1). */
+  start?: number;
 }
 
 function parseBlocks(md: string): Block[] {
@@ -173,13 +176,37 @@ function parseBlocks(md: string): Block[] {
     }
 
     // ordered list
-    if (/^\s*\d+[.)]\s+/.test(line)) {
+    const olStart = line.match(/^\s*(\d+)[.)]\s+/);
+    if (olStart) {
       const items: string[] = [];
-      while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) {
-        items.push(lines[i].replace(/^\s*\d+[.)]\s+/, ""));
-        i++;
+      const start = parseInt(olStart[1], 10);
+      // The number the next item must have to be part of THIS same list.
+      let expected = start;
+      while (i < lines.length) {
+        const m = lines[i].match(/^\s*(\d+)[.)]\s+/);
+        if (m) {
+          items.push(lines[i].replace(/^\s*\d+[.)]\s+/, ""));
+          expected = parseInt(m[1], 10) + 1;
+          i++;
+          continue;
+        }
+        // The admin editor can emit a blank line between list items (e.g. when
+        // an item was authored as its own paragraph). A plain split here would
+        // start a SECOND <ol> that restarts at 1 — turning "1…10" into
+        // "1" + "1…9". So look past blank lines: if the list resumes with the
+        // very next expected number, it's a continuation — keep one list.
+        if (!lines[i].trim()) {
+          let j = i;
+          while (j < lines.length && !lines[j].trim()) j++;
+          const next = j < lines.length ? lines[j].match(/^\s*(\d+)[.)]\s+/) : null;
+          if (next && parseInt(next[1], 10) === expected) {
+            i = j; // skip the blank gap and continue the same list
+            continue;
+          }
+        }
+        break;
       }
-      blocks.push({ type: "ol", items });
+      blocks.push({ type: "ol", items, start });
       continue;
     }
 
@@ -231,10 +258,15 @@ export function markdownToHtml(md: string | null | undefined): string {
           return `<ul class="bp-list">${(b.items ?? [])
             .map((it) => `<li>${renderInline(it)}</li>`)
             .join("")}</ul>`;
-        case "ol":
-          return `<ol class="bp-list">${(b.items ?? [])
+        case "ol": {
+          // Preserve the author's first number so a list that doesn't start at
+          // 1 (or was split and resumed) still shows the correct numbering.
+          const startAttr =
+            b.start && b.start !== 1 ? ` start="${b.start}"` : "";
+          return `<ol class="bp-list"${startAttr}>${(b.items ?? [])
             .map((it) => `<li>${renderInline(it)}</li>`)
             .join("")}</ol>`;
+        }
         case "code":
           return `<pre class="bp-pre"><code>${escapeHtml(
             b.code ?? "",
