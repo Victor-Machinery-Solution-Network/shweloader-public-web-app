@@ -69,7 +69,7 @@ export function PhoneChange({ phone }: { phone: string }) {
       }
       setRequestId(data.requestId ?? null);
       setDigits(["", "", "", "", "", ""]);
-      setSecs(45);
+      setSecs(90);
       setStep("otp");
     } catch {
       setError(t("Could not reach the server.", "ဆာဗာသို့ မချိတ်ဆက်နိုင်ပါ။"));

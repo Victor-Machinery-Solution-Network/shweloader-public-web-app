@@ -43,6 +43,9 @@ type Tab = "signin" | "signup" | "forgot";
 /** "Other" sentinel for the business-type picker — mirrors the mobile app and
  *  routes through the worker's `custom_business_type` path. */
 const OTHER_BUSINESS = -1;
+// OTP resend cooldown (seconds). Server caps OTP at 8/60s per phone, so this is
+// purely UX. Keep in sync with the mobile app's COUNTDOWN_SECONDS.
+const OTP_RESEND_SECONDS = 90;
 
 export interface SignUpData {
   name: string;
@@ -748,7 +751,7 @@ function OtpStep({
   initialRequestId?: string;
 }) {
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
-  const [secs, setSecs] = useState(45);
+  const [secs, setSecs] = useState(OTP_RESEND_SECONDS);
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
   const [reqId, setReqId] = useState(initialRequestId);
@@ -845,7 +848,7 @@ function OtpStep({
       };
       if (data.requestId) setReqId(data.requestId);
       toast.success(t("Code sent", "ကုဒ် ပြန်ပို့ပြီးပါပြီ"));
-      setSecs(45);
+      setSecs(OTP_RESEND_SECONDS);
       setDigits(["", "", "", "", "", ""]);
       refs.current[0]?.focus();
     } catch {
