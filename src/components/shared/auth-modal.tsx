@@ -450,7 +450,7 @@ function SignUpStep1({
   t: Tr;
   data: SignUpData;
   setData: React.Dispatch<React.SetStateAction<SignUpData>>;
-  onNext: () => void | Promise<void>;
+  onNext: (requestId?: string) => void | Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -570,7 +570,8 @@ function SignUpStep1({
         );
         return;
       }
-      await onNext();
+      const d = (await res.json().catch(() => ({}))) as { requestId?: string };
+      await onNext(d.requestId);
     } catch {
       toast.error(
         t("Something went wrong. Try again.", "တစ်ခုခုမှားယွင်းနေပါသည်။"),
@@ -735,19 +736,22 @@ function OtpStep({
   onVerified,
   onBack,
   extraVerifyFields,
+  initialRequestId,
 }: {
   t: Tr;
   phone: string;
   onVerified: () => void | Promise<void>;
   onBack: () => void;
-  /** Extra fields merged into the /otp/verify body — sign-in sends requestId +
-   *  remember; signup sends nothing (route defaults to a persistent session). */
+  /** Extra fields merged into the /otp/verify body — sign-in sends remember. */
   extraVerifyFields?: Record<string, string>;
+  /** SMSPoh request_id from the send/login response; refreshed on resend. */
+  initialRequestId?: string;
 }) {
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [secs, setSecs] = useState(45);
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
+  const [reqId, setReqId] = useState(initialRequestId);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -791,7 +795,12 @@ function OtpStep({
       const res = await fetch("/api/auth/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, code, ...(extraVerifyFields ?? {}) }),
+        body: JSON.stringify({
+          phone,
+          code,
+          ...(reqId ? { requestId: reqId } : {}),
+          ...(extraVerifyFields ?? {}),
+        }),
       });
       if (!res.ok) {
         toast.error(
@@ -830,6 +839,11 @@ function OtpStep({
         );
         return;
       }
+      // Resend issues a NEW request_id; verify must use the latest one.
+      const data = (await res.json().catch(() => ({}))) as {
+        requestId?: string;
+      };
+      if (data.requestId) setReqId(data.requestId);
       toast.success(t("Code sent", "ကုဒ် ပြန်ပို့ပြီးပါပြီ"));
       setSecs(45);
       setDigits(["", "", "", "", "", ""]);
@@ -1483,6 +1497,10 @@ export function AuthModal() {
     requestId?: string;
     remember: boolean;
   } | null>(null);
+  // SMSPoh request_id from /api/auth/register, echoed back by the signup OTP step.
+  const [signupRequestId, setSignupRequestId] = useState<string | undefined>(
+    undefined,
+  );
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -1496,6 +1514,7 @@ export function AuthModal() {
     setDone(false);
     setData(EMPTY_SIGNUP);
     setSigninOtp(null);
+    setSignupRequestId(undefined);
   }, [open, mode]);
 
   // Lock body scroll + ESC to close + restore focus on unmount.
@@ -1549,6 +1568,7 @@ export function AuthModal() {
     setStep(1);
     setDone(false);
     setSigninOtp(null);
+    setSignupRequestId(undefined);
   };
 
   const finish = useCallback(async () => {
@@ -1648,10 +1668,8 @@ export function AuthModal() {
                     phone={signinOtp.phone}
                     onVerified={finish}
                     onBack={() => setSigninOtp(null)}
+                    initialRequestId={signinOtp.requestId}
                     extraVerifyFields={{
-                      ...(signinOtp.requestId
-                        ? { requestId: signinOtp.requestId }
-                        : {}),
                       remember: signinOtp.remember ? "true" : "false",
                     }}
                   />
@@ -1689,6 +1707,7 @@ export function AuthModal() {
                     phone={data.phone}
                     onVerified={() => setStep(3)}
                     onBack={() => setStep(1)}
+                    initialRequestId={signupRequestId}
                   />
                 ) : (
                   <>
@@ -1703,7 +1722,10 @@ export function AuthModal() {
                         t={t}
                         data={data}
                         setData={setData}
-                        onNext={() => setStep(2)}
+                        onNext={(rid) => {
+                          setSignupRequestId(rid);
+                          setStep(2);
+                        }}
                       />
                     )}
                     {step === 3 && (

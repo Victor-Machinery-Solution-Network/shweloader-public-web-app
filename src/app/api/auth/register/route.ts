@@ -26,12 +26,20 @@ export async function POST(req: Request) {
     );
   }
 
-  // Account created — trigger the OTP that verify-otp will consume.
-  await fetch(`${API_BASE_URL}/auth/send-otp`, {
+  // Account created — trigger the OTP that verify-otp will consume. Keep the
+  // request_id: SMSPoh verifies by it, so the OTP step must echo it back.
+  const otp = (await fetch(`${API_BASE_URL}/auth/send-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone: b.phone }),
-  }).catch(() => {});
+  })
+    .then((r) => r.json())
+    .catch(() => ({}))) as { request_id?: string };
 
-  return NextResponse.json({ ok: true, requiresOtp: true, phone: b.phone });
+  return NextResponse.json({
+    ok: true,
+    requiresOtp: true,
+    phone: b.phone,
+    requestId: otp.request_id,
+  });
 }
