@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { ArrowRight, Heart } from "lucide-react";
 import { useI18n } from "@/components/providers/language-provider";
 import { useAuth } from "@/lib/auth/use-auth";
@@ -24,6 +25,18 @@ const LINKS: NavLink[] = [
   { id: "about", labelKey: "nav.about", href: "/about" },
 ];
 
+// "Get App" deep-link targets. On Android, intent:// opens the installed app,
+// else falls back to Play Store natively (no setTimeout race). iOS App Store
+// isn't live yet, so iOS taps just show a "coming soon" toast — swap in the
+// App Store URL here when it ships.
+// ponytail: intent:// covers Chrome/Samsung Internet (the Android majority);
+// rarer Android browsers that ignore it simply won't deep-link.
+const ANDROID_PACKAGE = "com.shweloaderbyvmsn.app";
+const PLAY_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
+const ANDROID_INTENT =
+  `intent://#Intent;scheme=shweloader;package=${ANDROID_PACKAGE};` +
+  `S.browser_fallback_url=${encodeURIComponent(PLAY_URL)};end`;
+
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(href + "/");
@@ -40,6 +53,18 @@ export function Header() {
   const { signedIn } = useAuth();
   const pathname = usePathname() || "/";
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Open the app if installed, else the store (mobile-only "Get App" CTA).
+  const openApp = () => {
+    const ua = navigator.userAgent || "";
+    if (/iphone|ipad|ipod/i.test(ua)) {
+      toast(t("actions.getAppSoon")); // iOS App Store listing not live yet
+    } else if (/android/i.test(ua)) {
+      window.location.href = ANDROID_INTENT;
+    } else {
+      window.open(PLAY_URL, "_blank", "noopener");
+    }
+  };
 
   // Close the drawer on Escape and when the viewport grows past the breakpoint.
   useEffect(() => {
@@ -158,6 +183,11 @@ export function Header() {
           <span className="mh-divider" />
           {signedIn ? <UserMenu /> : <AuthButtons />}
         </div>
+
+        {/* Get App — mobile only, sits beside the hamburger */}
+        <button type="button" className="mh-getapp" onClick={openApp}>
+          {t("actions.getApp")}
+        </button>
 
         {/* Hamburger — visible mobile only */}
         <button

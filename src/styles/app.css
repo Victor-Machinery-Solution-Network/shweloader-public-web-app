@@ -319,6 +319,30 @@ html, body {
   .mh-burger:hover { background: var(--m-bg-2); }
 }
 .mh-burger:active { background: var(--m-bg-2); }
+
+/* "Get App" CTA — only beside the hamburger on mobile (shown in the ≤1024px
+   block below). search-go's gold gradient, but a full pill and text-only. */
+.mh-getapp {
+  display: none;
+  align-items: center;
+  background: linear-gradient(135deg, #fdd968 0%, var(--m-gold) 100%);
+  color: var(--m-on-gold);
+  border: 0;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.45) inset, 0 2px 6px -2px rgba(251,184,17,0.55);
+  transition: filter .2s ease, transform .2s ease;
+}
+@media (hover: hover) {
+  .mh-getapp:hover { filter: brightness(1.04); transform: translateY(-1px); }
+}
+.mh-getapp:active { transform: translateY(0); }
+
 .mh-burger span {
   display: block;
   width: 20px; height: 2px;
@@ -584,6 +608,7 @@ html, body {
      hide every other action — they live in the drawer. */
   .mh-actions { display: flex !important; margin-left: auto; }
   .mh-actions > *:not(.mh-user) { display: none !important; }
+  .mh-getapp { display: inline-flex; }
   .mh-burger { display: inline-flex; margin-left: 8px; }
   .mh-drawer { display: block; }
   .mh-drawer-backdrop { display: block; }
