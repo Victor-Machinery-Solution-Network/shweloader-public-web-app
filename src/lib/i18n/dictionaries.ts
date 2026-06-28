@@ -180,7 +180,7 @@ export const en = {
     marketplace: "Marketplace",
     company: "Company",
     legal: "Legal",
-    follow: "Follow us",
+    follow: "Stay Connected",
     terms: "Terms of Service",
     privacy: "Privacy Policy",
     rights: "All rights reserved.",
