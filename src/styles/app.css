@@ -2206,15 +2206,22 @@ html, body {
 .lc-fab-status::after {
   content: ''; position: absolute; inset: 0;
   border-radius: inherit;
-  box-shadow: 0 0 0 2px rgba(46, 170, 107, 0.55);
-  opacity: 0;
-  animation: lcStatusPulse 2.4s cubic-bezier(.2,.7,.2,1) infinite;
-  will-change: transform, opacity;
+  background: inherit;
+  animation: lcStatusPulse 3s ease-in-out infinite;
+  z-index: -1;
+  will-change: box-shadow;
 }
 @keyframes lcStatusPulse {
-  0%   { opacity: 0.5; transform: scale(1); }
-  70%  { opacity: 0;   transform: scale(2.1); }
-  100% { opacity: 0;   transform: scale(2.1); }
+  0%, 100% {
+    box-shadow: 
+      0 0 4px 0px rgba(46, 170, 107, 0.5),
+      0 0 8px 0px rgba(46, 170, 107, 0.25);
+  }
+  50% {
+    box-shadow: 
+      0 0 8px 0px rgba(46, 170, 107, 0.8),
+      0 0 16px 0px rgba(46, 170, 107, 0.4);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
