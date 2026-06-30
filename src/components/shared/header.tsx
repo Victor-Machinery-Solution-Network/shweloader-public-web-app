@@ -123,28 +123,10 @@ export function Header() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/loader.png"
-            width={305}
-            height={256}
-            style={{ height: 38, width: "auto", marginRight: 8 }}
-            alt=""
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/logo_dark_with_slogan.svg"
-            className="sl-logo-light"
-            width={1300}
-            height={256}
-            style={{ height: 30, width: "auto" }}
-            alt="ShweLoader"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/logo_white_with_slogan.svg"
-            className="sl-logo-dark"
-            width={975}
-            height={192}
-            style={{ height: 30, width: "auto", display: "none" }}
+            src="/brand/logo_full.svg"
+            width={360}
+            height={86}
+            style={{ height: 42, width: "auto" }}
             alt="ShweLoader"
           />
         </Link>
