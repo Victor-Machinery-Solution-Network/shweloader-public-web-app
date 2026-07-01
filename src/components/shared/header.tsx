@@ -123,10 +123,10 @@ export function Header() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/logo_full.svg"
-            width={351}
-            height={75}
-            style={{ height: 42, width: "auto" }}
+            src="/brand/logo_full.png"
+            width={257}
+            height={140}
+            style={{ height: 46, width: "auto" }}
             alt="ShweLoader"
           />
         </Link>
