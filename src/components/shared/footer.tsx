@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Phone, Mail } from "lucide-react";
 
 import { T } from "@/components/t";
+import { getContactEmails } from "@/lib/api/settings";
 
 /**
  * Site footer — dark warm-charcoal in both themes (the design CSS keeps the
@@ -13,7 +14,6 @@ import { T } from "@/components/t";
 
 const HOTLINE_DISPLAY = "+95 9 940 475 000";
 const HOTLINE_TEL = "+959940475000";
-const SALES_EMAIL = "sales@shweloader.com";
 
 // Stable, code-level links only — no admin-editable (CRUD) category names, so a
 // rename in the catalog can never break these. `type` is the equipment/attachment
@@ -65,7 +65,8 @@ function TikTokIcon() {
   );
 }
 
-export function Footer() {
+export async function Footer() {
+  const { sales: SALES_EMAIL } = await getContactEmails();
   return (
     <footer className="sl-footer">
       <div className="container sl-footer-grid">

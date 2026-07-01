@@ -11,6 +11,7 @@ export const CACHE_TAGS = {
   partnerTypes: "partner-types",
   carousel: "carousel",
   announcements: "announcements",
+  appSettings: "app-settings",
 } as const;
 
 export function listingTag(id: number | string): string {

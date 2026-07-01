@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LegalView } from "@/components/legal/legal-view";
+import { getContactEmails } from "@/lib/api/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 import "@/styles/pages/legal.css";
@@ -12,6 +13,7 @@ export const metadata: Metadata = buildMetadata({
   path: "/legal",
 });
 
-export default function LegalPage() {
-  return <LegalView />;
+export default async function LegalPage() {
+  const { privacy } = await getContactEmails();
+  return <LegalView privacyEmail={privacy} />;
 }

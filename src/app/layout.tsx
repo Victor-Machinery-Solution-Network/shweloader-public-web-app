@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { fontVariables } from "./fonts";
 import { Providers } from "@/components/providers";
+import { getContactEmails } from "@/lib/api/settings";
 import { baseMetadata } from "@/lib/seo/metadata";
 import "./globals.css";
 
@@ -17,18 +18,19 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { support: supportEmail } = await getContactEmails();
   return (
     <html lang="en" suppressHydrationWarning className={fontVariables}>
       <body>
         <a href="#main" className="skip-link">
           Skip to main content
         </a>
-        <Providers>{children}</Providers>
+        <Providers supportEmail={supportEmail}>{children}</Providers>
         <Analytics />
         <SpeedInsights />
       </body>

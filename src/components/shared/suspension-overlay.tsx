@@ -14,7 +14,7 @@ import { useI18n } from "@/components/providers/language-provider";
  * with an sl_user cookie present), so it can't be dismissed by editing the URL.
  * Any reason text comes from the in-page event only and is rendered as text.
  */
-export function SuspensionOverlay() {
+export function SuspensionOverlay({ supportEmail }: { supportEmail: string }) {
   const { locale } = useI18n();
   const t = (en: string, my: string) => (locale === "my" ? my : en);
   const [shown, setShown] = useState(false);
@@ -103,6 +103,12 @@ export function SuspensionOverlay() {
             "Your account has been suspended and you've been signed out. Please contact support if you think this is a mistake.",
             "သင့်အကောင့်ကို ဆိုင်းငံ့ထားပြီး ထွက်ခွာပြီးဖြစ်ပါသည်။ မှားယွင်းမှုဟု ထင်ပါက ဝန်ဆောင်မှုသို့ ဆက်သွယ်ပါ။",
           )}
+        </p>
+        <p style={{ margin: "0 0 8px", color: "var(--m-ink-2)", lineHeight: 1.5 }}>
+          {t("Email us at ", "ကျွန်ုပ်တို့ထံ ဆက်သွယ်ရန် - ")}
+          <a href={`mailto:${supportEmail}`} style={{ color: "var(--m-accent, #c0392b)", fontWeight: 600 }}>
+            {supportEmail}
+          </a>
         </p>
         {reason ? (
           <p style={{ margin: "0 0 18px", color: "var(--m-fg-2)", fontSize: 13 }}>

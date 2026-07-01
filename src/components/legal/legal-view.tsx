@@ -318,12 +318,14 @@ const CHROME: Record<Locale, { home: string; legal: string }> = {
   my: { home: "ပင်မ", legal: "ဥပဒေဆိုင်ရာ" },
 };
 
-function LegalSection({ s }: { s: LegalSectionData }) {
+function LegalSection({ s, privacyEmail }: { s: LegalSectionData; privacyEmail: string }) {
   return (
     <section className="lg-section" id={s.id} data-lg-section={s.id}>
       <h2 className="lg-section-h">{s.h}</h2>
       {s.body.map((p, i) => (
-        <p key={i}>{p}</p>
+        // The privacy address is admin-editable; the copy ships the default
+        // literal, so this is a no-op unless admin set a different value.
+        <p key={i}>{p.replace("privacy@shweloader.com", privacyEmail)}</p>
       ))}
       {s.bullets ? (
         <ul>
@@ -336,7 +338,7 @@ function LegalSection({ s }: { s: LegalSectionData }) {
   );
 }
 
-export function LegalView() {
+export function LegalView({ privacyEmail }: { privacyEmail: string }) {
   const { locale } = useI18n();
   const docs = LEGAL[locale] ?? LEGAL.en;
   const chrome = CHROME[locale] ?? CHROME.en;
@@ -435,7 +437,7 @@ export function LegalView() {
         <div className="lg-grid">
           <div className="lg-content">
             {data.sections.map((s) => (
-              <LegalSection key={doc + s.id} s={s} />
+              <LegalSection key={doc + s.id} s={s} privacyEmail={privacyEmail} />
             ))}
           </div>
         </div>

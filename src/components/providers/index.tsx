@@ -10,7 +10,13 @@ import { SuspensionOverlay } from "@/components/shared/suspension-overlay";
 import { CompleteProfileGate } from "@/components/shared/complete-profile-gate";
 import { SavedSync } from "@/lib/saved/saved-sync";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  supportEmail,
+}: {
+  children: React.ReactNode;
+  supportEmail: string;
+}) {
   return (
     <ThemeProvider>
       <LanguageProvider>
@@ -19,7 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <AuthIntent />
             <SavedSync />
             {children}
-            <SuspensionOverlay />
+            <SuspensionOverlay supportEmail={supportEmail} />
             <CompleteProfileGate />
           </AuthUIProvider>
         </AuthProvider>

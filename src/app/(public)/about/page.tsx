@@ -5,6 +5,7 @@ import Link from "next/link";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { JsonLd, aboutPageSchema } from "@/lib/seo/jsonld";
 import { Reveal } from "@/components/about/reveal";
+import { getContactEmails } from "@/lib/api/settings";
 
 import "@/styles/pages/about.css";
 
@@ -14,8 +15,6 @@ export const metadata: Metadata = buildMetadata({
     "Shwe Loader is an emerging one-stop online marketplace for machinery, commercial trucks, spare parts, services, and rentals in Myanmar — founded by Victor Machinery Solution Network (VMSN) in 2018.",
   path: "/about",
 });
-
-const SALES_EMAIL = "sales@shweloader.com";
 
 // ── Static editorial content (from the design source) ──────────────────────
 type Glyph = "shield" | "spark" | "value" | "grow";
@@ -114,7 +113,9 @@ function Marquee({ items, dark = false }: { items: string[]; dark?: boolean }) {
 }
 
 // ── Page ───────────────────────────────────────────────────────────────────
-export default function AboutPage() {
+export default async function AboutPage() {
+  // General-inquiries address (Admin → Settings → Contact Emails: "info").
+  const { info: SALES_EMAIL } = await getContactEmails();
   return (
     <div className="ax-page">
       <JsonLd data={aboutPageSchema()} />
