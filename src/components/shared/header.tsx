@@ -48,11 +48,14 @@ function isActive(pathname: string, href: string): boolean {
  * (signed-out buttons or the signed-in user menu). On mobile the nav collapses
  * into a hamburger drawer with a slide-down preferences + account panel.
  */
-export function Header() {
+export function Header({ showBlogs = true }: { showBlogs?: boolean }) {
   const { t } = useI18n();
   const { signedIn } = useAuth();
   const pathname = usePathname() || "/";
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Admin → Settings → Articles toggle: drop the Blog entry when disabled.
+  const links = showBlogs ? LINKS : LINKS.filter((l) => l.id !== "blogs");
 
   // Open the app if installed, else the store (mobile-only "Get App" CTA).
   const openApp = () => {
@@ -138,7 +141,7 @@ export function Header() {
           style={{ display: "flex", gap: 28, alignItems: "center" }}
           aria-label="Primary"
         >
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.id}
               href={l.href}
@@ -192,7 +195,7 @@ export function Header() {
         inert={!menuOpen}
       >
         <nav className="mh-drawer-nav" aria-label="Mobile">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.id}
               href={l.href}

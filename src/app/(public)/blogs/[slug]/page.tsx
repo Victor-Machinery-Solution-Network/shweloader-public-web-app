@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import "@/styles/pages/blog.css";
 
 import { getBlog, getRelatedBlogs, getBlogs } from "@/lib/api/blogs";
+import { getSiteSettings } from "@/lib/api/settings";
 import { blogSlug, parseIdFromSlug } from "@/lib/slug";
 import { assetUrl, focalPosition } from "@/lib/assets";
 import { absoluteUrl } from "@/lib/env";
@@ -76,6 +77,10 @@ export async function generateMetadata({
 
 export default async function BlogPostPage({ params }: { params: Params }) {
   const { slug } = await params;
+
+  // Admin → Settings → Articles toggle: the whole section 404s when disabled.
+  const { articlesEnabled } = await getSiteSettings();
+  if (!articlesEnabled) notFound();
 
   const id = parseIdFromSlug(slug);
   if (!id) notFound();

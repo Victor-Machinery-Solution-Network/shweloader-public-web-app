@@ -6,6 +6,7 @@ import {
   getEquipmentCategories,
   getAttachmentCategories,
 } from "@/lib/api/taxonomy";
+import { getSiteSettings } from "@/lib/api/settings";
 import { listingSlug, blogSlug } from "@/lib/slug";
 
 function asDate(value: string | null | undefined): Date | undefined {
@@ -16,10 +17,24 @@ function asDate(value: string | null | undefined): Date | undefined {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Articles toggle (Admin → Settings): blog routes 404 while disabled, so
+  // they must drop out of the sitemap too. Default to enabled on API failure.
+  const { articlesEnabled } = await getSiteSettings().catch(() => ({
+    articlesEnabled: true,
+  }));
+
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), changeFrequency: "daily", priority: 1 },
     { url: absoluteUrl("/browse"), changeFrequency: "hourly", priority: 0.9 },
-    { url: absoluteUrl("/blogs"), changeFrequency: "weekly", priority: 0.7 },
+    ...(articlesEnabled
+      ? [
+          {
+            url: absoluteUrl("/blogs"),
+            changeFrequency: "weekly",
+            priority: 0.7,
+          } as const,
+        ]
+      : []),
     { url: absoluteUrl("/about"), changeFrequency: "monthly", priority: 0.5 },
     { url: absoluteUrl("/legal"), changeFrequency: "yearly", priority: 0.3 },
   ];
@@ -27,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Tolerate API outages — a partial sitemap beats a 500.
   const [listings, posts, equipCats, attachCats] = await Promise.all([
     getAllListingsForSitemap().catch(() => []),
-    getBlogs({ limit: 200 }).catch(() => []),
+    articlesEnabled ? getBlogs({ limit: 200 }).catch(() => []) : [],
     getEquipmentCategories().catch(() => []),
     getAttachmentCategories().catch(() => []),
   ]);

@@ -49,3 +49,50 @@ export async function getContactEmails(): Promise<ContactEmails> {
     privacy: pick("contact_email_privacy", FALLBACK.privacy),
   };
 }
+
+/**
+ * Admin-editable site toggles + contact phone (Admin portal → Settings).
+ * Same `app_setting` source and cache policy as the emails above. The mobile
+ * app already honors all of these; this brings the website to parity.
+ */
+export interface SiteSettings {
+  /** Show the homepage image carousel. */
+  carouselEnabled: boolean;
+  /** Show the scrolling announcement bar. */
+  announcementBarEnabled: boolean;
+  /** Show the blog/articles section (nav, footer, home, /blogs routes). */
+  articlesEnabled: boolean;
+  /** Hotline shown in the footer and chat "call support" links. */
+  contactPhone: string;
+}
+
+// Historical static hotline — used when contact_phone is unset in D1 or the
+// API is unreachable, so the footer never renders blank.
+const PHONE_FALLBACK = "+95 9 940 475 000";
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CACHE_TAGS.appSettings);
+
+  let settings: Record<string, unknown> = {};
+  try {
+    settings = await apiFetch<Record<string, unknown>>("/app-settings");
+  } catch {
+    // Global chrome (header/footer/home) — an API hiccup must never break the
+    // site; defaults below (everything enabled, static phone) take over.
+  }
+
+  // Admin stores String(boolean); anything but an explicit "false" means ON,
+  // so an unset key keeps the feature visible (same default as mobile).
+  const flag = (key: string) => settings[key] !== "false";
+  const phone = settings.contact_phone;
+
+  return {
+    carouselEnabled: flag("carousel_enabled"),
+    announcementBarEnabled: flag("announcement_bar_enabled"),
+    articlesEnabled: flag("articles_enabled"),
+    contactPhone:
+      typeof phone === "string" && phone.trim() ? phone.trim() : PHONE_FALLBACK,
+  };
+}

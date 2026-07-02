@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { BlogIndex } from "@/components/blog/blog-index";
 import { T } from "@/components/t";
 import { getBlogs, getBlogCategories } from "@/lib/api/blogs";
+import { getSiteSettings } from "@/lib/api/settings";
 import { JsonLd, breadcrumbSchema } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
 
@@ -17,6 +19,10 @@ export const metadata = buildMetadata({ title: "Blog", path: "/blogs" });
  * grid of `BlogCard`. No lead/featured story, no newsletter strip.
  */
 export default async function BlogsPage() {
+  // Admin → Settings → Articles toggle: the whole section 404s when disabled.
+  const { articlesEnabled } = await getSiteSettings();
+  if (!articlesEnabled) notFound();
+
   const [posts, categories] = await Promise.all([
     getBlogs(),
     getBlogCategories(),

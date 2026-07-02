@@ -50,7 +50,7 @@ function fmtSessionTime(iso: string | null): string {
 
 export function ChatShell({
   sessions: initial,
-  supportPhone = "+95977123456",
+  supportPhone = "+959940475000",
 }: ChatShellProps) {
   const { user } = useAuth();
   const { t } = useI18n();

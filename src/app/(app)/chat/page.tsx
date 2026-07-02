@@ -6,6 +6,7 @@ import { noindexMetadata } from "@/lib/seo/metadata";
 import { getToken } from "@/lib/auth/session";
 import { apiFetch } from "@/lib/api/client";
 import { redirectIfBlacklisted } from "@/lib/auth/blacklist-redirect";
+import { getSiteSettings } from "@/lib/api/settings";
 import { ChatShell } from "@/components/chat/chat-shell";
 import { ChatSignedOut } from "@/components/chat/chat-signed-out";
 import type { ChatSession } from "@/components/chat/core/types";
@@ -85,7 +86,10 @@ async function Content() {
     return <ChatSignedOut />;
   }
 
-  const sessions = await loadSessions(token);
+  const [sessions, { contactPhone }] = await Promise.all([
+    loadSessions(token),
+    getSiteSettings(),
+  ]);
 
   if (sessions.length === 0) {
     // No existing sessions — get-or-create a REAL session so the user can
@@ -118,10 +122,10 @@ async function Content() {
     }
     // `fresh` carries the created session on success, or stays [] (read-only
     // empty state) when creation failed.
-    return <ChatShell sessions={fresh} />;
+    return <ChatShell sessions={fresh} supportPhone={contactPhone} />;
   }
 
-  return <ChatShell sessions={sessions} />;
+  return <ChatShell sessions={sessions} supportPhone={contactPhone} />;
 }
 
 export default function ChatPage() {

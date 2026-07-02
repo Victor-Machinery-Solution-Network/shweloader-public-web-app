@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/taxonomy";
 import { getFeaturedListings } from "@/lib/api/listings";
 import { getLocations } from "@/lib/api/locations";
+import { getSiteSettings } from "@/lib/api/settings";
 
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -32,6 +33,7 @@ export const metadata: Metadata = buildMetadata({ path: "/" });
  */
 export default async function HomePage() {
   const [
+    settings,
     slides,
     announcements,
     equipmentCategories,
@@ -39,6 +41,7 @@ export default async function HomePage() {
     featured,
     locations,
   ] = await Promise.all([
+    getSiteSettings(),
     getCarousel(),
     getAnnouncements(),
     getEquipmentCategories(),
@@ -55,11 +58,16 @@ export default async function HomePage() {
       </h1>
       <JsonLd data={[organizationSchema(), websiteSchema()]} />
 
-      <AnnouncementBar announcements={announcements} />
+      {/* Admin kill-switches (Admin → Settings) — same behavior as mobile. */}
+      {settings.announcementBarEnabled && (
+        <AnnouncementBar announcements={announcements} />
+      )}
 
-      <div className="container" style={{ paddingTop: 20 }}>
-        <Hero slides={slides} />
-      </div>
+      {settings.carouselEnabled && (
+        <div className="container" style={{ paddingTop: 20 }}>
+          <Hero slides={slides} />
+        </div>
+      )}
 
       <section style={{ padding: "24px 0 0" }}>
         <div className="container">

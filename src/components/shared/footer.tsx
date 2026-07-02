@@ -3,17 +3,15 @@ import Link from "next/link";
 import { Phone, Mail } from "lucide-react";
 
 import { T } from "@/components/t";
-import { getContactEmails } from "@/lib/api/settings";
+import { getContactEmails, getSiteSettings } from "@/lib/api/settings";
 
 /**
  * Site footer — dark warm-charcoal in both themes (the design CSS keeps the
  * white logo + dark background regardless of `[data-theme]`). Server component:
  * static markup, no interactivity. Headings are translatable via <T>; link
  * labels stay EN (chrome) and category links deep-link into /browse.
+ * The hotline comes from Admin → Settings → Contact Phone (getSiteSettings).
  */
-
-const HOTLINE_DISPLAY = "+95 9 940 475 000";
-const HOTLINE_TEL = "+959940475000";
 
 // Stable, code-level links only — no admin-editable (CRUD) category names, so a
 // rename in the catalog can never break these. `type` is the equipment/attachment
@@ -66,7 +64,14 @@ function TikTokIcon() {
 }
 
 export async function Footer() {
-  const { sales: SALES_EMAIL } = await getContactEmails();
+  const [{ sales: SALES_EMAIL }, { contactPhone, articlesEnabled }] =
+    await Promise.all([getContactEmails(), getSiteSettings()]);
+  // Display as stored ("+95 9 940 475 000"); strip spaces for tel:/Viber/Telegram.
+  const HOTLINE_DISPLAY = contactPhone;
+  const HOTLINE_TEL = contactPhone.replace(/\s+/g, "");
+  const companyLinks = articlesEnabled
+    ? COMPANY_LINKS
+    : COMPANY_LINKS.filter((l) => l.href !== "/blogs");
   return (
     <footer className="sl-footer">
       <div className="container sl-footer-grid">
@@ -122,7 +127,7 @@ export async function Footer() {
             <T path="footer.company" />
           </div>
           <ul className="sl-footer-col-list">
-            {COMPANY_LINKS.map((link) => (
+            {companyLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href}>{link.label}</Link>
               </li>
