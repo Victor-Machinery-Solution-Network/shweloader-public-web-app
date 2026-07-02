@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { Phone, MessageCircle } from "lucide-react";
 
 import { buildMetadata } from "@/lib/seo/metadata";
 import { JsonLd, aboutPageSchema } from "@/lib/seo/jsonld";
 import { Reveal } from "@/components/about/reveal";
-import { getContactEmails } from "@/lib/api/settings";
+import { ContactForm } from "@/components/about/contact-form";
+import { getContactEmails, getSiteSettings } from "@/lib/api/settings";
 
 import "@/styles/pages/about.css";
 
@@ -114,8 +115,12 @@ function Marquee({ items, dark = false }: { items: string[]; dark?: boolean }) {
 
 // ── Page ───────────────────────────────────────────────────────────────────
 export default async function AboutPage() {
-  // General-inquiries address (Admin → Settings → Contact Emails: "info").
-  const { info: SALES_EMAIL } = await getContactEmails();
+  // Admin-editable contact points (Admin → Settings): sales email + hotline.
+  const [{ sales: SALES_EMAIL }, { contactPhone }] = await Promise.all([
+    getContactEmails(),
+    getSiteSettings(),
+  ]);
+  const PHONE_TEL = contactPhone.replace(/\s+/g, "");
   return (
     <div className="ax-page">
       <JsonLd data={aboutPageSchema()} />
@@ -309,26 +314,55 @@ export default async function AboutPage() {
 
       <Marquee items={MARQUEE_DARK} dark />
 
-      {/* CTA */}
-      <section className="ax-cta">
-        <div className="ax-cta-card">
-          <div>
-            <div className="ax-eye">Get in touch</div>
-            <h2 className="ax-cta-line">
-              Have a listing, question, or partnership in mind?
-            </h2>
-            <p className="ax-cta-sub">
-              We reply within one business day — in English or Myanmar.
-            </p>
+      {/* GET IN TOUCH — contact form posting to the worker's /feedback */}
+      <section className="ax-gt">
+        <div className="ax-gt-grid">
+          <div className="ax-gt-intro">
+            <Reveal>
+              <div className="ax-eye">Get in touch</div>
+              <h2 className="ax-gt-title">Talk to the Shwe Loader team.</h2>
+              <p className="ax-gt-sub">
+                Have a listing, question, or partnership in mind? Send us a note
+                and we&rsquo;ll reply within one business day — in English or
+                Myanmar.
+              </p>
+            </Reveal>
+            <Reveal delay={120}>
+              <ul className="ax-gt-channels">
+                <li>
+                  <a
+                    href={`tel:${PHONE_TEL}`}
+                    aria-label={`Call us ${contactPhone}`}
+                  >
+                    <Phone size={22} strokeWidth={1.75} aria-hidden="true" />
+                    <span>
+                      <span className="ax-gt-ch-k">Call us</span>
+                      <span className="ax-gt-ch-v">{contactPhone}</span>
+                    </span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={`mailto:${SALES_EMAIL}`}
+                    aria-label={`Email us ${SALES_EMAIL}`}
+                  >
+                    <MessageCircle
+                      size={22}
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                    />
+                    <span>
+                      <span className="ax-gt-ch-k">Email</span>
+                      <span className="ax-gt-ch-v">{SALES_EMAIL}</span>
+                    </span>
+                  </a>
+                </li>
+              </ul>
+            </Reveal>
           </div>
-          <div className="ax-cta-actions">
-            <a className="ax-btn ax-btn-ink" href={`mailto:${SALES_EMAIL}`}>
-              Contact Shwe Loader →
-            </a>
-            <Link className="ax-btn ax-btn-ghost" href="/browse">
-              Browse marketplace
-            </Link>
-          </div>
+          <Reveal delay={160}>
+            <ContactForm />
+          </Reveal>
         </div>
       </section>
     </div>

@@ -31,6 +31,15 @@ export const API_BASE_URL =
 
 export const REVALIDATE_SECRET = process.env.REVALIDATE_SECRET || "";
 
+/** App REST API base for BROWSER calls (feedback form). The worker's CORS
+ * allowlist (ALLOWED_ORIGINS) admits the site origins, and calling it directly
+ * from the browser preserves the real client IP for the feedback rate limiter —
+ * a server-side proxy would funnel every visitor through one Vercel egress IP
+ * and trip the per-IP caps globally. Defaults to PROD like API_BASE_URL. */
+export const PUBLIC_API_BASE_URL =
+  clean(process.env.NEXT_PUBLIC_APP_API_BASE_URL) ||
+  "https://app-api.shweloader.com.mm";
+
 // ---------------------------------------------------------------------------
 // Firebase (Realtime Database presence) — Phase 3 web chat presence
 // All values are NEXT_PUBLIC_* (browser-side). When apiKey is absent the
