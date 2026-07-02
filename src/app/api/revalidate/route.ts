@@ -13,6 +13,7 @@ function secretMatches(provided: string | null): boolean {
 
 const ALL_TAGS = [
   "listings",
+  "listing-details",
   "featured-listings",
   "blogs",
   "blog-categories",
@@ -21,6 +22,9 @@ const ALL_TAGS = [
   "locations",
   "carousel",
   "announcements",
+  "business-types",
+  "partner-types",
+  "app-settings",
 ];
 
 /**

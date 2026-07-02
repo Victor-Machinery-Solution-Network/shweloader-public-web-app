@@ -56,7 +56,14 @@ export async function apiFetch<T>(
   path: string,
   opts: ApiFetchOptions = {},
 ): Promise<T> {
-  const headers: Record<string, string> = { Accept: "application/json" };
+  // Skip the worker's edge cache: our own Data Cache ("use cache" + cacheTag)
+  // sits in front with hours-long TTLs, so an edge HIT here can only hurt — a
+  // refetch right after an admin-triggered revalidation could re-capture a
+  // stale (≤TTL) edge copy and pin it for the full cacheLife.
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "X-Edge-Cache-Bypass": "1",
+  };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
 

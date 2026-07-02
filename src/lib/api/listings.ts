@@ -55,11 +55,14 @@ export async function browseListings(opts: {
 export async function getListing(id: number): Promise<Listing | null> {
   "use cache";
   cacheLife("hours");
-  // Per-item tag ONLY (not the broad `listings` collection tag). This lets an
+  // Per-item tag (NOT the broad `listings` collection tag). This lets an
   // admin edit bust just THIS product page via `listing:<id>` while every other
   // product page stays warm. Collection views (browse/featured/related) carry
   // the broad `listings` tag and refresh independently.
-  cacheTag(listingTag(id));
+  // `listing-details` is the platform-wide channel: fired only on changes that
+  // touch EVERY detail page at once (exchange-rate change, brand/model/location/
+  // partner/condition renames) — never on ordinary per-listing edits.
+  cacheTag(listingTag(id), CACHE_TAGS.listingDetails);
   const data = await apiFetchOrNull<ApiListing>(`/listings/${id}`);
   return data ? normalizeListing(data) : null;
 }

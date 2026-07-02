@@ -1,6 +1,8 @@
 /** Cache tags for on-demand ISR revalidation (POST /api/revalidate). */
 export const CACHE_TAGS = {
   listings: "listings",
+  /** ALL product detail pages at once — platform-wide changes only (see getListing). */
+  listingDetails: "listing-details",
   featured: "featured-listings",
   blogs: "blogs",
   blogCategories: "blog-categories",
