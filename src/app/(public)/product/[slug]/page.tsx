@@ -218,7 +218,7 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
 
             <ProductOverviewList listing={listing} />
-            <Description html={descriptionHtml} pdfUrl={pdfUrl} />
+            <Description html={descriptionHtml} pdfUrl={pdfUrl} pdfName={listing.title} />
           </div>
 
           <aside className="pdp-side">

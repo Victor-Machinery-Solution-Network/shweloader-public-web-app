@@ -15,12 +15,14 @@ export interface DescriptionProps {
   html: string;
   /** Resolved absolute URL to the spec PDF, or null. */
   pdfUrl: string | null;
+  /** Filename for the downloaded PDF (e.g. the product title). */
+  pdfName?: string;
 }
 
 /** Description prose (Markdown → sanitized HTML, clamped with a smooth show-more
  *  animation) + an optional PDF document card. The HTML is sanitized server-side
  *  (see `renderMarkdown`), so there's no markdown/sanitizer code in this bundle. */
-export function Description({ html, pdfUrl }: DescriptionProps) {
+export function Description({ html, pdfUrl, pdfName }: DescriptionProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -111,12 +113,14 @@ export function Description({ html, pdfUrl }: DescriptionProps) {
             >
               {t("actions.preview")}
             </a>
+            {/* Same-origin proxy (/api/download) — the `download` attribute is
+                ignored on cross-origin links, so linking the R2 asset domain
+                directly would just open a tab like Preview does. */}
             <a
               className="d-btn d-btn-primary"
-              href={pdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
+              href={`/api/download?url=${encodeURIComponent(pdfUrl)}${
+                pdfName ? `&name=${encodeURIComponent(pdfName)}` : ""
+              }`}
             >
               {t("actions.download")}
               <Download className="icon-sm" aria-hidden="true" />
