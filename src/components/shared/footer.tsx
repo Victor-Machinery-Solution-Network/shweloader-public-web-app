@@ -109,8 +109,8 @@ export async function Footer() {
             </li>
           </ul>
           {/* Official store badge artwork (required by Apple/Google guidelines).
-              The Play badge PNG carries ~8% built-in padding, so it renders
-              slightly taller to visually match the Apple badge's 40px. */}
+              The Play PNG is pre-trimmed (sharp .trim()) — Google ships it with
+              heavy transparent padding that made it render visibly smaller. */}
           <div className="sl-footer-badges">
             <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
               <Image
@@ -124,8 +124,8 @@ export async function Footer() {
               <Image
                 src="/brand/google-play-badge.png"
                 alt="Get it on Google Play"
-                width={124}
-                height={48}
+                width={134}
+                height={40}
               />
             </a>
           </div>
