@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import type { BusinessType, StateRegion } from "@/lib/api/types";
+import { useI18n } from "@/components/providers/language-provider";
 import { TownshipCombobox } from "@/components/account/township-combobox";
 import { PhoneChange } from "@/components/account/phone-change";
 
@@ -95,6 +96,11 @@ export function ProfileForm({
   townshipSeedLabel?: string;
 }) {
   const router = useRouter();
+  const { locale } = useI18n();
+  const t = useCallback(
+    (en: string, my: string) => (locale === "my" ? my : en),
+    [locale],
+  );
 
   // Resolve the effective starting state: if /me's business_type_id isn't in the
   // public catalog (a custom/unlisted type), start on "Other" with the name
@@ -172,17 +178,23 @@ export function ProfileForm({
     // Client-side guards that mirror the worker's validation.
     const errs: Record<string, string> = {};
     if (changed.full_name !== undefined && !String(changed.full_name).trim())
-      errs.fullName = "Full name is required";
+      errs.fullName = t("Full name is required", "အမည်အပြည့်အစုံ ထည့်ပါ");
     if (changed.username !== undefined && !String(changed.username).trim())
-      errs.username = "Username is required";
+      errs.username = t("Username is required", "အကောင့်နာမည် ထည့်ပါ");
     if (
       changed.email !== undefined &&
       changed.email &&
       !EMAIL_RE.test(String(changed.email))
     )
-      errs.email = "Enter a valid email address";
+      errs.email = t(
+        "Enter a valid email address",
+        "အီးမေးလ်လိပ်စာ မှန်ကန်စွာ ထည့်ပါ",
+      );
     if (draft.businessTypeId === OTHER && !draft.customBusinessType.trim())
-      errs.businessType = "Please specify your business type";
+      errs.businessType = t(
+        "Please specify your business type",
+        "လုပ်ငန်းအမျိုးအစား သတ်မှတ်ပါ",
+      );
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
@@ -211,25 +223,48 @@ export function ProfileForm({
         }
         const msg = (data.error || "").toLowerCase();
         if (res.status === 409 && msg.includes("username")) {
-          setErrors({ username: "That username is already taken" });
+          setErrors({
+            username: t(
+              "That username is already taken",
+              "ဤအကောင့်နာမည်ကို အခြားသူ အသုံးပြုထားပြီး ဖြစ်ပါသည်",
+            ),
+          });
         } else if (res.status === 409 && msg.includes("email")) {
-          setErrors({ email: "That email is already taken" });
+          setErrors({
+            email: t(
+              "That email is already taken",
+              "ဤအီးမေးလ်ကို အခြားသူ အသုံးပြုထားပြီး ဖြစ်ပါသည်",
+            ),
+          });
         } else if (res.status === 400 && msg.includes("email")) {
-          setErrors({ email: "Enter a valid email address" });
+          setErrors({
+            email: t(
+              "Enter a valid email address",
+              "အီးမေးလ်လိပ်စာ မှန်ကန်စွာ ထည့်ပါ",
+            ),
+          });
         } else if (res.status === 400 && msg.includes("township")) {
-          setErrors({ township: "Please choose a valid township" });
+          setErrors({
+            township: t(
+              "Please choose a valid township",
+              "မြို့နယ် မှန်ကန်စွာ ရွေးပါ",
+            ),
+          });
         } else {
-          toast.error(data.error || "Could not save your changes");
+          toast.error(
+            data.error ||
+              t("Could not save your changes", "အချက်အလက်များ မသိမ်းဆည်းနိုင်ပါ"),
+          );
         }
         return;
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);
-      toast.success("Profile updated");
+      toast.success(t("Profile updated", "အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ"));
       router.refresh();
       window.dispatchEvent(new Event("auth-changed"));
     } catch {
-      toast.error("Could not reach the server");
+      toast.error(t("Could not reach the server", "ဆာဗာသို့ မချိတ်ဆက်နိုင်ပါ"));
     } finally {
       setSaving(false);
     }
@@ -246,22 +281,22 @@ export function ProfileForm({
         void save();
       }}
     >
-      <GroupLabel>Account</GroupLabel>
+      <GroupLabel>{t("Account", "အကောင့်")}</GroupLabel>
       <div className="pf-fields">
         <Field
-          label="Full name"
+          label={t("Full name", "အမည်အပြည့်အစုံ")}
           value={draft.fullName}
           onChange={(v) => set("fullName", v)}
           error={errors.fullName}
         />
         <Field
-          label="Username"
+          label={t("Username", "အကောင့်နာမည်")}
           value={draft.username}
           onChange={(v) => set("username", v)}
           error={errors.username}
         />
         <Field
-          label="Email"
+          label={t("Email", "အီးမေးလ်")}
           type="email"
           inputMode="email"
           value={draft.email}
@@ -273,7 +308,7 @@ export function ProfileForm({
       {/* Phone is OTP-gated — its own verify flow, not part of the save. */}
       <PhoneChange phone={phone} />
 
-      <GroupLabel>Business</GroupLabel>
+      <GroupLabel>{t("Business", "လုပ်ငန်း")}</GroupLabel>
       <div className="pf-fields">
         <label
           className={
@@ -291,16 +326,18 @@ export function ProfileForm({
               setErrors((er) => ({ ...er, businessType: "" }));
             }}
           >
-            <option value="">Select a type</option>
+            <option value="">{t("Select a type", "အမျိုးအစား ရွေးပါ")}</option>
             {businessTypes.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
               </option>
             ))}
-            <option value={OTHER}>Other</option>
+            <option value={OTHER}>{t("Other", "အခြား")}</option>
           </select>
           <ChevronDown className="pf-select-chev" strokeWidth={1.75} />
-          <span className="auth-label">Business type</span>
+          <span className="auth-label">
+            {t("Business type", "လုပ်ငန်းအမျိုးအစား")}
+          </span>
           {errors.businessType && (
             <span className="pf-field-error">{errors.businessType}</span>
           )}
@@ -308,26 +345,26 @@ export function ProfileForm({
 
         {draft.businessTypeId === OTHER && (
           <Field
-            label="Specify your business type"
+            label={t("Specify business type", "လုပ်ငန်းအမျိုးအစား သတ်မှတ်ပါ")}
             value={draft.customBusinessType}
             onChange={(v) => set("customBusinessType", v)}
           />
         )}
 
         <Field
-          label="Company name"
+          label={t("Company name", "ကုမ္ပဏီအမည်")}
           value={draft.company}
           onChange={(v) => set("company", v)}
         />
         <Field
-          label="Office building / street"
+          label={t("Office building / street", "ရုံး အဆောက်အအုံ / လမ်း")}
           full
           value={draft.street}
           onChange={(v) => set("street", v)}
         />
 
         <TownshipCombobox
-          label="Office township"
+          label={t("Office township", "ရုံး မြို့နယ်")}
           locations={locations}
           value={draft.townshipId}
           seedLabel={townshipSeedLabel}
@@ -345,11 +382,14 @@ export function ProfileForm({
 
       <div className="pf-actions">
         <button type="submit" className="pf-save" disabled={!dirty || saving}>
-          {saving ? "Saving…" : "Save changes"}
+          {saving
+            ? t("Saving…", "သိမ်းဆည်းနေသည်…")
+            : t("Save changes", "သိမ်းဆည်းမည်")}
           <Check className="icon-sm" strokeWidth={1.75} />
         </button>
         <span className={"pf-saved-note" + (saved ? " show" : "")}>
-          <Check className="icon-sm" strokeWidth={1.75} /> Saved
+          <Check className="icon-sm" strokeWidth={1.75} />{" "}
+          {t("Saved", "သိမ်းဆည်းပြီးပါပြီ")}
         </span>
       </div>
     </form>

@@ -1,7 +1,10 @@
+"use client";
+
 import { Briefcase, ChevronRight, MapPin, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/shared/user-menu";
 import { ProfileForm } from "@/components/account/profile-form";
+import { useI18n } from "@/components/providers/language-provider";
 import type { BusinessType, Profile, StateRegion } from "@/lib/api/types";
 
 function pick(...vals: (string | null | undefined)[]): string {
@@ -20,9 +23,9 @@ function initials(name: string): string {
 }
 
 /**
- * Profile page body. Server Component — renders the identity header from a
- * (possibly null) `/me` payload, then mounts the interactive edit form seeded
- * with the worker's numeric ids and the business-type / location catalogs.
+ * Profile page body. Client Component (for the locale) — renders the identity
+ * header from a (possibly null) `/me` payload, then mounts the interactive
+ * edit form seeded with the worker's numeric ids and the catalogs.
  */
 export function ProfileView({
   profile,
@@ -34,9 +37,11 @@ export function ProfileView({
   locations: StateRegion[];
 }) {
   const p = profile;
+  const { locale } = useI18n();
+  const t = (en: string, my: string) => (locale === "my" ? my : en);
 
   const fullName = pick(p?.full_name);
-  const displayName = fullName || "Your account";
+  const displayName = fullName || t("Your account", "သင့်အကောင့်");
   const businessType = pick(p?.business_type);
   const company = pick(p?.company_name);
   const partnerStatus = pick(p?.partner_status);
@@ -47,16 +52,16 @@ export function ProfileView({
     .filter((s): s is string => !!s && s.trim().length > 0)
     .join(", ");
 
-  const bizLabel = businessType || "Member";
+  const bizLabel = businessType || t("Member", "အဖွဲ့ဝင်");
   const inits = initials(fullName);
 
   return (
     <main className="pf-page">
       <div className="pf-wrap pf-wrap--narrow">
         <div className="pf-breadcrumb">
-          <Link href="/">Home</Link>
+          <Link href="/">{t("Home", "ပင်မ")}</Link>
           <ChevronRight className="icon-sm" strokeWidth={1.75} />
-          <span className="cur">Account</span>
+          <span className="cur">{t("Account", "အကောင့်")}</span>
         </div>
 
         {/* Identity header */}
@@ -77,14 +82,14 @@ export function ProfileView({
               {displayName}
               {isPartner && (
                 <span className="pf-id-badge">
-                  <ShieldCheck className="icon-sm" strokeWidth={1.75} /> Verified
-                  Partner
+                  <ShieldCheck className="icon-sm" strokeWidth={1.75} />{" "}
+                  {t("Verified Partner", "အတည်ပြုပြီး မိတ်ဖက်")}
                 </span>
               )}
               {isPending && (
                 <span className="pf-id-badge pf-id-badge--muted">
-                  <ShieldCheck className="icon-sm" strokeWidth={1.75} /> Partner
-                  pending
+                  <ShieldCheck className="icon-sm" strokeWidth={1.75} />{" "}
+                  {t("Partner pending", "မိတ်ဖက် စိစစ်ဆဲ")}
                 </span>
               )}
             </div>

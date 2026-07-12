@@ -365,7 +365,7 @@ function SignInForm({
           res.status === 401
             ? t(
                 "Invalid phone/username or password",
-                "ဖုန်းနံပါတ်/အသုံးပြုသူအမည် သို့မဟုတ် စကားဝှက် မှားယွင်းနေပါသည်",
+                "ဖုန်းနံပါတ်/အကောင့်နာမည် သို့မဟုတ် စကားဝှက် မှားယွင်းနေပါသည်",
               )
             : await readError(
                 res,
@@ -401,7 +401,7 @@ function SignInForm({
   return (
     <form className="auth-form" onSubmit={submit}>
       <FloatingField
-        label={t("Phone or username", "ဖုန်းနံပါတ် သို့မဟုတ် အသုံးပြုသူအမည်")}
+        label={t("Phone or username", "ဖုန်းနံပါတ် သို့မဟုတ် အကောင့်နာမည်")}
         autoFocus
         autoComplete="username"
         value={identifier}
