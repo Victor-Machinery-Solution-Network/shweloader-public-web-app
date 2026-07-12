@@ -9,6 +9,10 @@ export const DEFAULT_TITLE =
   "ShweLoader — Myanmar's Heavy Equipment Marketplace";
 export const DEFAULT_DESCRIPTION =
   "Buy, sell, and rent excavators, wheel loaders, cranes, and bulldozers across Myanmar. MMK and USD pricing, on-site viewings, trusted dealers.";
+/** iOS app (App Store Connect Apple ID) — drives the Safari Smart App Banner. */
+export const APPLE_APP_ID = "6760832842";
+export const APP_STORE_URL =
+  "https://apps.apple.com/us/app/shwe-loader/id6760832842";
 
 export const baseMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -51,6 +55,8 @@ export const baseMetadata: Metadata = {
     },
   },
   formatDetection: { telephone: false },
+  // Safari-only (iOS) Smart App Banner: "GET"/"OPEN" bar linking to the app.
+  itunes: { appId: APPLE_APP_ID },
 };
 
 export interface PageMetaInput {
@@ -91,7 +97,16 @@ export function buildMetadata(input: PageMetaInput = {}): Metadata {
           },
         ];
 
+  // On routes the app deep-links (universal-link paths in the AASA file), pass
+  // the page URL as the banner's app-argument so "OPEN" lands on the same
+  // product/article in the app. Other pages inherit the root's plain banner.
+  const appLinked =
+    canonical && /^\/(product|blogs)\//.test(canonical)
+      ? { itunes: { appId: APPLE_APP_ID, appArgument: absoluteUrl(canonical) } }
+      : {};
+
   return {
+    ...appLinked,
     // Pages with a title get the "%s · ShweLoader" template; pages without one
     // (the homepage) get the full default title verbatim — never an empty <title>.
     title: title ?? { absolute: DEFAULT_TITLE },

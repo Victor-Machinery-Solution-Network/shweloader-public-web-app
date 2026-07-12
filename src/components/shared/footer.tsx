@@ -4,6 +4,7 @@ import { Phone, Mail } from "lucide-react";
 
 import { T } from "@/components/t";
 import { getContactEmails, getSiteSettings } from "@/lib/api/settings";
+import { APP_STORE_URL } from "@/lib/seo/metadata";
 
 /**
  * Site footer — dark warm-charcoal in both themes (the design CSS keeps the
@@ -107,6 +108,20 @@ export async function Footer() {
               </a>
             </li>
           </ul>
+          {/* Apple's official badge artwork (required by their guidelines). */}
+          <a
+            href={APP_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sl-footer-appstore"
+          >
+            <Image
+              src="/brand/app-store-badge.svg"
+              alt="Download on the App Store"
+              width={120}
+              height={40}
+            />
+          </a>
         </div>
 
         <div className="sl-footer-col">

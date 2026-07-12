@@ -3936,6 +3936,15 @@ html, body {
   transition: opacity .18s;
 }
 .sl-footer-contact a:hover svg { opacity: 1; }
+/* App Store badge — Apple's black badge already carries its own border/label */
+.sl-footer-appstore {
+  display: inline-block;
+  margin-top: 20px;
+  line-height: 0;
+  opacity: 0.92;
+  transition: opacity .18s;
+}
+.sl-footer-appstore:hover { opacity: 1; }
 .sl-footer-social {
   display: flex; gap: 10px;
   margin-top: 20px;
