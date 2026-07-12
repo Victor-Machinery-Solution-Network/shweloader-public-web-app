@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { toast } from "sonner";
 import { ArrowRight, Heart } from "lucide-react";
 import { useI18n } from "@/components/providers/language-provider";
 import { useAuth } from "@/lib/auth/use-auth";
@@ -11,6 +10,11 @@ import { AuthButtons } from "@/components/shared/auth-buttons";
 import { LangSwitch } from "@/components/shared/lang-switch";
 import { ThemeSwitch, ThemeToggle } from "@/components/shared/theme-toggle";
 import { UserMenu } from "@/components/shared/user-menu";
+import {
+  ANDROID_PACKAGE,
+  APP_STORE_URL,
+  PLAY_STORE_URL,
+} from "@/lib/seo/metadata";
 
 interface NavLink {
   id: string;
@@ -26,16 +30,14 @@ const LINKS: NavLink[] = [
 ];
 
 // "Get App" deep-link targets. On Android, intent:// opens the installed app,
-// else falls back to Play Store natively (no setTimeout race). iOS App Store
-// isn't live yet, so iOS taps just show a "coming soon" toast — swap in the
-// App Store URL here when it ships.
+// else falls back to Play Store natively (no setTimeout race). On iOS, Safari's
+// Smart App Banner covers the open-if-installed case, so the button goes
+// straight to the App Store listing.
 // ponytail: intent:// covers Chrome/Samsung Internet (the Android majority);
 // rarer Android browsers that ignore it simply won't deep-link.
-const ANDROID_PACKAGE = "com.shweloaderbyvmsn.app";
-const PLAY_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 const ANDROID_INTENT =
   `intent://#Intent;scheme=shweloader;package=${ANDROID_PACKAGE};` +
-  `S.browser_fallback_url=${encodeURIComponent(PLAY_URL)};end`;
+  `S.browser_fallback_url=${encodeURIComponent(PLAY_STORE_URL)};end`;
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -60,12 +62,13 @@ export function Header({ showBlogs = true }: { showBlogs?: boolean }) {
   // Open the app if installed, else the store (mobile-only "Get App" CTA).
   const openApp = () => {
     const ua = navigator.userAgent || "";
-    if (/iphone|ipad|ipod/i.test(ua)) {
-      toast(t("actions.getAppSoon")); // iOS App Store listing not live yet
+    if (/iphone|ipod|ipad|macintosh/i.test(ua)) {
+      // iPadOS Safari masquerades as "Macintosh", so Apple UAs group together.
+      window.open(APP_STORE_URL, "_blank", "noopener");
     } else if (/android/i.test(ua)) {
       window.location.href = ANDROID_INTENT;
     } else {
-      window.open(PLAY_URL, "_blank", "noopener");
+      window.open(PLAY_STORE_URL, "_blank", "noopener");
     }
   };
 

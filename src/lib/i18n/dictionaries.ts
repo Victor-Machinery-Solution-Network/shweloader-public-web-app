@@ -43,7 +43,6 @@ export const en = {
     preview: "Preview",
     close: "Close",
     getApp: "Get App",
-    getAppSoon: "iOS app coming soon",
   },
   a11y: {
     breadcrumb: "Breadcrumb",
@@ -269,7 +268,6 @@ export const my: Dictionary = {
     preview: "အစမ်းကြည့်ရန်",
     close: "ပိတ်ရန်",
     getApp: "အက်ပ်ရယူရန်",
-    getAppSoon: "iOS အက်ပ် မကြာမီလာမည်",
   },
   a11y: {
     breadcrumb: "လမ်းညွှန်",
