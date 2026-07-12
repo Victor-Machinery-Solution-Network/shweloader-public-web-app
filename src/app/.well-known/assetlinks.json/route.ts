@@ -21,7 +21,10 @@ export function GET() {
         namespace: "android_app",
         package_name: "com.shweloaderbyvmsn.app",
         sha256_cert_fingerprints: [
+          // EAS upload/signing key (local + sideloaded builds)
           "E3:30:BC:7E:2E:D0:93:E5:A0:7B:26:AF:0F:84:C2:8B:D1:96:49:2C:EC:79:30:0E:28:26:88:54:E9:24:53:EA",
+          // Play App Signing key (what Play-installed APKs are signed with)
+          "9F:8F:49:5F:97:84:B6:96:6A:BB:E5:EB:CE:8E:3D:E7:F2:9A:DD:E7:6F:5B:68:97:D7:73:17:6C:54:63:E5:06",
         ],
       },
     },
