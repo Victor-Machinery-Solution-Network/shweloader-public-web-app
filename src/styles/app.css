@@ -3568,7 +3568,9 @@ html, body {
 .sl-footer-grid {
   padding: 40px 24px 32px;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 0.9fr;
+  /* Middle link columns trimmed so Stay Connected fits both store badges
+     side by side (needs ~264px). */
+  grid-template-columns: 1.9fr 0.75fr 0.75fr 1.5fr;
   gap: 48px;
 }
 .sl-footer-brand { min-width: 0; }
@@ -3937,11 +3939,10 @@ html, body {
 }
 .sl-footer-contact a:hover svg { opacity: 1; }
 /* Store badges — official Apple/Google artwork carries its own border/label */
-/* Stacked: lives in the narrow Stay Connected column, under its own heading */
 .sl-footer-badges {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-wrap: wrap; /* side by side; wraps only when the column can't fit both */
+  align-items: center;
   gap: 10px;
 }
 .sl-footer-badges a {
