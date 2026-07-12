@@ -4,7 +4,7 @@ import { Phone, Mail } from "lucide-react";
 
 import { T } from "@/components/t";
 import { getContactEmails, getSiteSettings } from "@/lib/api/settings";
-import { APP_STORE_URL } from "@/lib/seo/metadata";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/seo/metadata";
 
 /**
  * Site footer — dark warm-charcoal in both themes (the design CSS keeps the
@@ -108,20 +108,27 @@ export async function Footer() {
               </a>
             </li>
           </ul>
-          {/* Apple's official badge artwork (required by their guidelines). */}
-          <a
-            href={APP_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sl-footer-appstore"
-          >
-            <Image
-              src="/brand/app-store-badge.svg"
-              alt="Download on the App Store"
-              width={120}
-              height={40}
-            />
-          </a>
+          {/* Official store badge artwork (required by Apple/Google guidelines).
+              The Play badge PNG carries ~8% built-in padding, so it renders
+              slightly taller to visually match the Apple badge's 40px. */}
+          <div className="sl-footer-badges">
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <Image
+                src="/brand/app-store-badge.svg"
+                alt="Download on the App Store"
+                width={120}
+                height={40}
+              />
+            </a>
+            <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <Image
+                src="/brand/google-play-badge.png"
+                alt="Get it on Google Play"
+                width={124}
+                height={48}
+              />
+            </a>
+          </div>
         </div>
 
         <div className="sl-footer-col">

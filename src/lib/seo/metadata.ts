@@ -13,6 +13,8 @@ export const DEFAULT_DESCRIPTION =
 export const APPLE_APP_ID = "6760832842";
 export const APP_STORE_URL =
   "https://apps.apple.com/us/app/shwe-loader/id6760832842";
+export const ANDROID_PACKAGE = "com.shweloaderbyvmsn.app";
+export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 
 export const baseMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
