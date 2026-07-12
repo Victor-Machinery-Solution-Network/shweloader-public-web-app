@@ -601,7 +601,7 @@ function SignUpStep1({
 
       <div className="auth-row-2">
         <FloatingField
-          label={t("Username", "အသုံးပြုသူအမည်")}
+          label={t("Username", "အကောင့်နာမည်")}
           name="username"
           autoComplete="username"
           required
