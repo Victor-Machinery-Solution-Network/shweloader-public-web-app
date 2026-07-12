@@ -38,6 +38,7 @@ function Field({
   label,
   value,
   onChange,
+  onBlur,
   type = "text",
   full,
   inputMode,
@@ -46,6 +47,7 @@ function Field({
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: (v: string) => void;
   type?: string;
   full?: boolean;
   inputMode?: "numeric" | "text" | "email" | "tel";
@@ -66,6 +68,7 @@ function Field({
         inputMode={inputMode}
         aria-invalid={!!error}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur ? (e) => onBlur(e.target.value) : undefined}
       />
       <span className="auth-label">{label}</span>
       {error && <span className="pf-field-error">{error}</span>}
@@ -293,6 +296,7 @@ export function ProfileForm({
           label={t("Username", "အကောင့်နာမည်")}
           value={draft.username}
           onChange={(v) => set("username", v)}
+          onBlur={(v) => set("username", v.toLowerCase().replace(/[\s-]+/g, ""))}
           error={errors.username}
         />
         <Field

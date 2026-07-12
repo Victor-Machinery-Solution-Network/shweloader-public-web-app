@@ -134,6 +134,7 @@ function FloatingField({
   type = "text",
   value,
   onChange,
+  onBlur,
   autoFocus,
   autoComplete,
   inputMode,
@@ -148,6 +149,7 @@ function FloatingField({
   type?: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   autoFocus?: boolean;
   autoComplete?: string;
   inputMode?: "numeric" | "text" | "tel" | "email";
@@ -172,6 +174,7 @@ function FloatingField({
         placeholder=" "
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         autoFocus={autoFocus}
         autoComplete={autoComplete}
         inputMode={inputMode}
@@ -609,6 +612,11 @@ function SignUpStep1({
           onChange={(e) => {
             update("username", e.target.value);
             clearErr("username");
+          }}
+          onBlur={(e) => {
+            // Auto-fix the common mistakes instead of erroring on them
+            const fixed = e.target.value.toLowerCase().replace(/[\s-]+/g, "");
+            if (fixed !== e.target.value) update("username", fixed);
           }}
           error={errors.username}
         />
