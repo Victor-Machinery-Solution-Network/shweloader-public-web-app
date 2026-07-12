@@ -3937,11 +3937,12 @@ html, body {
 }
 .sl-footer-contact a:hover svg { opacity: 1; }
 /* Store badges — official Apple/Google artwork carries its own border/label */
+/* Stacked: lives in the narrow Stay Connected column, under its own heading */
 .sl-footer-badges {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
-  margin-top: 20px;
 }
 .sl-footer-badges a {
   line-height: 0;

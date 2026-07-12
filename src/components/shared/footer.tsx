@@ -108,27 +108,6 @@ export async function Footer() {
               </a>
             </li>
           </ul>
-          {/* Official store badge artwork (required by Apple/Google guidelines).
-              The Play PNG is pre-trimmed (sharp .trim()) — Google ships it with
-              heavy transparent padding that made it render visibly smaller. */}
-          <div className="sl-footer-badges">
-            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
-              <Image
-                src="/brand/app-store-badge.svg"
-                alt="Download on the App Store"
-                width={120}
-                height={40}
-              />
-            </a>
-            <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer">
-              <Image
-                src="/brand/google-play-badge.png"
-                alt="Get it on Google Play"
-                width={134}
-                height={40}
-              />
-            </a>
-          </div>
         </div>
 
         <div className="sl-footer-col">
@@ -214,6 +193,30 @@ export async function Footer() {
               aria-label="TikTok"
             >
               <TikTokIcon />
+            </a>
+          </div>
+          <div className="sl-footer-col-h" style={{ marginTop: 20 }}>
+            <T path="footer.getApp" />
+          </div>
+          {/* Official store badge artwork (required by Apple/Google guidelines).
+              The Play PNG is pre-trimmed (sharp .trim()) — Google ships it with
+              heavy transparent padding that made it render visibly smaller. */}
+          <div className="sl-footer-badges">
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <Image
+                src="/brand/app-store-badge.svg"
+                alt="Download on the App Store"
+                width={120}
+                height={40}
+              />
+            </a>
+            <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <Image
+                src="/brand/google-play-badge.png"
+                alt="Get it on Google Play"
+                width={134}
+                height={40}
+              />
             </a>
           </div>
         </div>
