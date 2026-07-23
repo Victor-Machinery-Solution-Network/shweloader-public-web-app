@@ -247,7 +247,7 @@ export const my: Dictionary = {
     signUp: "အကောင့်ဖွင့်ရန်",
     signOut: "ထွက်ရန်",
     search: "ရှာဖွေရန်",
-    enquire: "စုံစမ်းရန်",
+    enquire: "စာပေးပို့မည်",
     callDealer: "ဖုန်းခေါ်ရန်",
     viewAll: "အားလုံးကြည့်ရန်",
     viewDetails: "အသေးစိတ်ကြည့်ရန်",
