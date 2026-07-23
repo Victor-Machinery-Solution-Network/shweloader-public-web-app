@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useI18n } from "@/components/providers/language-provider";
 import type { ChatMessage } from "./types";
 import { MessageBubble } from "./MessageBubble";
 import { TypingDots } from "./TypingDots";
@@ -21,6 +22,7 @@ export function Thread({
   adminReadAt: string | null;
   adminTyping: boolean;
 }) {
+  const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement>(null);
   // Tracked via ref (not state) so the new-message effect reads it without
   // re-subscribing — avoids yanking a user who has scrolled up to read history.
@@ -114,6 +116,11 @@ export function Thread({
         {/* Persistent polite live region so AT reliably announces typing. */}
         <div aria-live="polite" className="sr-only">
           {adminTyping ? "Support is typing" : ""}
+        </div>
+        {/* Static greeting bubble at the top of every thread (mobile-app
+            parity) — presentational only, never persisted as a message. */}
+        <div className="chat-msg is-agent">
+          <div className="chat-bubble">{t("chat.greeting")}</div>
         </div>
         {messages.map((m, i) => (
           <div key={m.id}>
