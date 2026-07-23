@@ -54,9 +54,10 @@ export function EnquiryForm({ phone, listing }: EnquiryFormProps) {
   // null = untouched, so the pre-fill follows the live language + side; once the
   // user edits, their text wins. Deriving (not seeding state) keeps it locale-reactive.
   const [custom, setCustom] = useState<string | null>(null);
-  // One stakeholder-authored default for every mode (sale and rent alike); the
-  // admin still sees which listing it's about via the attached product card.
-  const message = custom ?? t("product.enquiryMsg");
+  // Stakeholder-authored defaults, split only by price word (sale vs rental);
+  // the admin sees which listing it's about via the attached product card.
+  const message =
+    custom ?? t(type === "rent" ? "product.enquiryMsgRent" : "product.enquiryMsgSale");
 
   function selectType(next: "sale" | "rent") {
     if (next === type) return;
