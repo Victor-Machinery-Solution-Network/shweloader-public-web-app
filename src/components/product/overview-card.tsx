@@ -299,7 +299,6 @@ export function ContactCard({ listing }: { listing: Listing }) {
 
       <div className="ov-cta" id="enquiry">
         <EnquiryForm
-          title={listing.title}
           phone={seller?.phone ?? null}
           listing={listing}
         />

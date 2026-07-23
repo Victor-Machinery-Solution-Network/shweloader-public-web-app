@@ -10,8 +10,6 @@ import { productRefFromListing } from "@/components/product/overview-card";
 import type { Listing } from "@/lib/api/types";
 
 export interface EnquiryFormProps {
-  /** Listing title — seeds the default message. */
-  title: string;
   /** Dealer phone, already display-formatted; null when masked/absent. */
   phone: string | null;
   /** The normalized listing — the sale/rent listing ids it carries identify the
@@ -42,7 +40,7 @@ function telHref(phone: string): string {
  * a plain `tel:` link shown only when the seller phone is visible (masking
  * honoured by the caller).
  */
-export function EnquiryForm({ title, phone, listing }: EnquiryFormProps) {
+export function EnquiryForm({ phone, listing }: EnquiryFormProps) {
   const { t } = useI18n();
   const { signedIn } = useAuth();
   const { open } = useAuthUI();
@@ -56,7 +54,9 @@ export function EnquiryForm({ title, phone, listing }: EnquiryFormProps) {
   // null = untouched, so the pre-fill follows the live language + side; once the
   // user edits, their text wins. Deriving (not seeding state) keeps it locale-reactive.
   const [custom, setCustom] = useState<string | null>(null);
-  const message = custom ?? messageForType(t, type, title);
+  // One stakeholder-authored default for every mode (sale and rent alike); the
+  // admin still sees which listing it's about via the attached product card.
+  const message = custom ?? t("product.enquiryMsg");
 
   function selectType(next: "sale" | "rent") {
     if (next === type) return;
@@ -139,15 +139,4 @@ export function EnquiryForm({ title, phone, listing }: EnquiryFormProps) {
       )}
     </>
   );
-}
-
-/** Pre-fill the message for the chosen side (sale → "buying", rent → "renting"). */
-function messageForType(
-  t: (path: string) => string,
-  type: "sale" | "rent",
-  title: string,
-): string {
-  return type === "rent"
-    ? `${t("product.enquiryMsgPreRent")}${title}${t("product.enquiryMsgPostRent")}`
-    : `${t("product.enquiryMsgPre")}${title}${t("product.enquiryMsgPost")}`;
 }

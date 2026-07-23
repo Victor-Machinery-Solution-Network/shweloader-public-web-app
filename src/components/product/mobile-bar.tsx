@@ -133,7 +133,6 @@ export function MobileBar({
           </div>
           <div className="pdp-sheet-body">
             <EnquiryForm
-              title={title}
               phone={phone}
               listing={listing}
             />
