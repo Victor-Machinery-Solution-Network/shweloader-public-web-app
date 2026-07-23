@@ -386,7 +386,7 @@ export const my: Dictionary = {
     enquiryMsgPreRent: "မင်္ဂလာပါ၊ ",
     enquiryMsgPostRent: " ကိုငှားရမ်းလိုပါသည်။ ရနိုင်ပါသေးလား?",
     contactSeller: "ရောင်းသူကိုဆက်သွယ်ရန်",
-    enquiryNow: "ယခုစုံစမ်းရန်",
+    enquiryNow: "ဆက်သွယ်စုံစမ်းရန်",
   },
   status: {
     new: "အသစ်",
