@@ -110,13 +110,6 @@ const LEGAL: Record<Locale, Record<DocKey, LegalDoc>> = {
             "We may update these terms from time to time as the platform evolves. Material changes will be communicated in-app or by email where appropriate. Your continued use of ShweLoader after changes take effect means you accept the updated terms.",
           ],
         },
-        {
-          id: "governing-law",
-          h: "Governing Law",
-          body: [
-            "These terms are governed by the laws of Myanmar. Any disputes shall be resolved in the courts of Yangon.",
-          ],
-        },
       ],
     },
     privacy: {
@@ -241,13 +234,6 @@ const LEGAL: Record<Locale, Record<DocKey, LegalDoc>> = {
           h: "ဤစည်းကမ်းချက်များအား ပြင်ဆင်ပြောင်းလဲခြင်း",
           body: [
             "ပလက်ဖောင်း တိုးတက်ပြောင်းလဲလာသည်နှင့်အမျှ ဤစည်းကမ်းချက်များကို ကျွန်ုပ်တို့က အခါအားလျော်စွာ အဆင့်မြှင့်တင်မှုများ ပြုလုပ်နိုင်ပါသည်။ အဓိကကျသော အပြောင်းအလဲများကို အက်ပ်အတွင်းမှတစ်ဆင့် သို့မဟုတ် သင့်လျော်သလို အီးမေးလ်မှတစ်ဆင့် အသိပေးသွားမည်ဖြစ်ပါသည်။ ပြောင်းလဲမှုများ အသက်ဝင်ပြီးနောက်ပိုင်း ShweLoader ကို သင် ဆက်လက်အသုံးပြုခြင်းသည် အဆိုပါ အဆင့်မြှင့်တင်ထားသော စည်းကမ်းချက်များကို သဘောတူလက်ခံသည်ဟု မှတ်ယူမည်ဖြစ်ပါသည်။",
-          ],
-        },
-        {
-          id: "governing-law",
-          h: "အုပ်ချုပ်မှုဥပဒေ",
-          body: [
-            "ဤစည်းကမ်းချက်များသည် မြန်မာနိုင်ငံ ဥပဒေနှင့်အညီ အကျုံးဝင်ပါသည်။ အငြင်းပွားမှုများကို ရန်ကုန်တရားရုံးတွင် ဖြေရှင်းမည်ဖြစ်ပါသည်။",
           ],
         },
       ],
