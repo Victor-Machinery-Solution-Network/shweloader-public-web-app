@@ -350,9 +350,8 @@ export function LiveChat() {
                   offline message when presence is on and the admin is away.
                   Presence off (no Firebase config) keeps the static online look. */}
               {PRESENCE_ENABLED && !supportOnline ? (
-                <>
-                  <span className="lc-dot lc-dot--away" /> {t("chat.offline")}
-                </>
+                // No status dot when away — the message alone reads cleaner.
+                t("chat.offline")
               ) : (
                 <>
                   <span className="lc-dot" /> {t("chat.online")}
