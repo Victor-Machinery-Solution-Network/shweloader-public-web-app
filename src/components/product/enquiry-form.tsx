@@ -119,7 +119,7 @@ export function EnquiryForm({ phone, listing }: EnquiryFormProps) {
       <label className="cc-field ov-msg-field">
         <span>{t("product.messageLabel")}</span>
         <textarea
-          rows={3}
+          rows={5}
           value={message}
           onChange={(e) => setCustom(e.target.value)}
         />
