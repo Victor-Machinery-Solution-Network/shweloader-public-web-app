@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { fontVariables } from "./fonts";
 import { Providers } from "@/components/providers";
 import { getContactEmails } from "@/lib/api/settings";
@@ -33,6 +34,9 @@ export default async function RootLayout({
         <Providers supportEmail={supportEmail}>{children}</Providers>
         <Analytics />
         <SpeedInsights />
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        )}
       </body>
     </html>
   );
