@@ -633,7 +633,7 @@ function SignUpStep1({
           }}
           error={errors.email}
           optional
-          optionalLabel={t("Optional", "ရွေးနိုင်")}
+          optionalLabel={t("Optional", "ရှိပါက")}
         />
       </div>
 
@@ -1138,7 +1138,7 @@ export function SignUpStep3({
         onChange={(e) => update("companyName", e.target.value)}
         autoComplete="organization"
         optional
-        optionalLabel={t("Optional", "ရွေးနိုင်")}
+        optionalLabel={t("Optional", "ရှိပါက")}
       />
 
       <FloatingField
@@ -1146,7 +1146,7 @@ export function SignUpStep3({
         value={data.address}
         onChange={(e) => update("address", e.target.value)}
         optional
-        optionalLabel={t("Optional", "ရွေးနိုင်")}
+        optionalLabel={t("Optional", "ရှိပါက")}
       />
       </div>
 
