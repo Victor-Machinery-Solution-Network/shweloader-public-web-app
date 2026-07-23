@@ -10,10 +10,12 @@ import type { Listing } from "@/lib/api/types";
 export interface SimilarProps {
   listings: Listing[];
   mode?: "sale" | "rent";
+  /** Listing kind of the page — picks the "equipment" vs "attachments" heading. */
+  kind?: "equipment" | "attachment";
 }
 
-/** "You may also like" carousel of related listings with prev/next controls. */
-export function Similar({ listings, mode = "sale" }: SimilarProps) {
+/** "Other equipment/attachments you may like" carousel with prev/next controls. */
+export function Similar({ listings, mode = "sale", kind = "equipment" }: SimilarProps) {
   const { t } = useI18n();
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +37,7 @@ export function Similar({ listings, mode = "sale" }: SimilarProps) {
         <div className="pdp-similar-head">
           <div>
             <h2 className="pdp-h2" style={{ marginBottom: 0 }}>
-              {t("product.similar")}
+              {t(kind === "attachment" ? "product.similarAttachment" : "product.similarEquipment")}
             </h2>
           </div>
           {listings.length > 4 && (

@@ -234,7 +234,7 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
       </div>
 
-      <Similar listings={related} mode={mode === "rent" ? "rent" : "sale"} />
+      <Similar listings={related} mode={mode === "rent" ? "rent" : "sale"} kind={listing.type} />
 
       <MobileBar
         title={listing.title}
