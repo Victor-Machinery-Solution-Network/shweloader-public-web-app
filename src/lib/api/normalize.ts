@@ -181,11 +181,13 @@ export function normalizeCategory(r: ApiCategory): Category {
   return {
     id: r.id,
     name: r.name,
+    nameMy: r.name_my ?? null,
     image: assetUrl(r.image_url),
     subCategories: (r.sub_categories ?? []).map((s) => ({
       id: s.id,
       parentId: s.parent_id,
       name: s.name,
+      nameMy: s.name_my ?? null,
       image: assetUrl(s.image_url),
       displayOrder: s.display_order ?? null,
     })),

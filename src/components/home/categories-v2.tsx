@@ -16,9 +16,17 @@ type TabId = "equipment" | "attachments";
 interface CatGroup {
   id: string;
   name: string;
+  /** Burmese group heading — null when unavailable (see toGroups() below). */
+  nameMy?: string | null;
   /** When set, the group heading is a link (attachment tab → /browse?attsub=). */
   headingHref?: string;
-  items: { id: string; name: string; image: string | null; href: string }[];
+  items: {
+    id: string;
+    name: string;
+    nameMy?: string | null;
+    image: string | null;
+    href: string;
+  }[];
 }
 
 /**
@@ -39,11 +47,13 @@ function toGroups(categories: Category[]): CatGroup[] {
   return categories.map((c) => ({
     id: `c-${c.id}`,
     name: c.name,
+    nameMy: c.nameMy,
     items:
       c.subCategories.length > 0
         ? c.subCategories.map((s) => ({
             id: `s-${s.id}`,
             name: s.name,
+            nameMy: s.nameMy,
             image: s.image,
             href: `/browse?category=${encodeURIComponent(
               c.name,
@@ -53,6 +63,7 @@ function toGroups(categories: Category[]): CatGroup[] {
             {
               id: `c-${c.id}-self`,
               name: c.name,
+              nameMy: c.nameMy,
               image: c.image,
               href: `/browse?category=${encodeURIComponent(c.name)}`,
             },
@@ -75,7 +86,8 @@ export function CategoriesV2({
   equipmentCategories: Category[];
   attachmentCategories: Category[];
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const my = locale === "my";
   const [tab, setTab] = useState<TabId>("equipment");
 
   const equipmentGroups = useMemo(
@@ -90,10 +102,13 @@ export function CategoriesV2({
       groupAttachmentsBySubcategory(attachmentCategories).map((g) => ({
         id: `sub-${g.sub.id}`,
         name: g.sub.name,
+        // g.sub only carries {id, name} (groupAttachmentsBySubcategory doesn't
+        // thread nameMy through) — this heading stays English-only for now.
         headingHref: `/browse?type=attachment&attsub=${encodeURIComponent(g.sub.name)}`,
         items: g.attachments.map((a) => ({
           id: `a-${a.id}`,
           name: a.name,
+          nameMy: a.nameMy,
           image: a.image,
           href: `/browse?type=attachment&category=${encodeURIComponent(a.name)}`,
         })),
@@ -160,8 +175,10 @@ export function CategoriesV2({
                       href={group.headingHref}
                       style={{ color: "inherit", textDecoration: "none" }}
                     >
-                      {group.name}
+                      {my ? (group.nameMy ?? group.name) : group.name}
                     </Link>
+                  ) : my ? (
+                    (group.nameMy ?? group.name)
                   ) : (
                     group.name
                   )}
@@ -195,7 +212,9 @@ export function CategoriesV2({
                           </div>
                         )}
                       </div>
-                      <div className="cat-v2-name">{item.name}</div>
+                      <div className="cat-v2-name">
+                        {my ? (item.nameMy ?? item.name) : item.name}
+                      </div>
                     </Link>
                   );
                 })}

@@ -126,7 +126,8 @@ function CategoryGroup({
   filters: BrowseFilters;
   apply: (patch: Partial<BrowseFilters>) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const my = locale === "my";
   const [open, setOpen] = useState<Set<number>>(() => new Set());
   const [openAtt, setOpenAtt] = useState<Set<number>>(() => new Set());
   const toggleOpen = (id: number) =>
@@ -213,7 +214,7 @@ function CategoryGroup({
             return (
               <Fragment key={c.id}>
                 <TreeRow
-                  label={c.name}
+                  label={my ? (c.nameMy ?? c.name) : c.name}
                   on={parentSel}
                   indeterminate={!parentSel && someChildSel}
                   depth={0}
@@ -231,7 +232,7 @@ function CategoryGroup({
                     {c.subCategories.map((s) => (
                       <TreeRow
                         key={s.id}
-                        label={s.name}
+                        label={my ? (s.nameMy ?? s.name) : s.name}
                         on={filters.sub === s.name}
                         depth={1}
                         onToggle={() => pickSub(s.name, c.name)}
@@ -259,6 +260,8 @@ function CategoryGroup({
               return (
                 <Fragment key={`asub-${g.sub.id}`}>
                   <TreeRow
+                    // g.sub only carries {id, name} (groupAttachmentsBySubcategory
+                    // doesn't thread nameMy through) — this label stays English-only.
                     label={g.sub.name}
                     on={subSel}
                     indeterminate={!subSel && someChildSel}
@@ -277,7 +280,7 @@ function CategoryGroup({
                       {g.attachments.map((a) => (
                         <TreeRow
                           key={a.id}
-                          label={a.name}
+                          label={my ? (a.nameMy ?? a.name) : a.name}
                           on={
                             filters.type === "attachment" &&
                             filters.category === a.name &&

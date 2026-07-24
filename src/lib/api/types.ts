@@ -104,6 +104,7 @@ export interface ApiSubCategory {
   id: number;
   parent_id: number;
   name: string;
+  name_my?: string | null;
   image_url?: string | null;
   display_order?: string | null;
 }
@@ -111,6 +112,7 @@ export interface ApiSubCategory {
 export interface ApiCategory {
   id: number;
   name: string;
+  name_my?: string | null;
   image_url?: string | null;
   display_order?: string | null;
   sub_categories?: ApiSubCategory[];
@@ -251,11 +253,13 @@ export interface BlogPost {
 export interface Category {
   id: number;
   name: string;
+  nameMy: string | null;
   image: string | null;
   subCategories: {
     id: number;
     parentId: number;
     name: string;
+    nameMy: string | null;
     image: string | null;
     /** TEXT display order ("0","1",…). Present for attachment tag groups. */
     displayOrder?: string | null;
@@ -321,6 +325,7 @@ export interface BusinessType {
 export interface PartnerType {
   id: number;
   name: string;
+  name_my?: string | null;
 }
 
 /**

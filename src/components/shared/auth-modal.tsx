@@ -1231,7 +1231,7 @@ export function SignUpStep3({
             </option>
             {partnerTypes.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.name}
+                {t(p.name, p.name_my ?? p.name)}
               </option>
             ))}
           </select>
