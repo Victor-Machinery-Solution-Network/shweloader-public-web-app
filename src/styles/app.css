@@ -4200,8 +4200,4 @@ html, body {
   transition: background .15s, border-color .15s;
 }
 .sshare-link:hover { background: var(--m-bg-2); border-color: var(--m-line-2); }
-/* In the product side column: stretch into a full-width row of equal pills so
-   it reads as a second action row under Save/Share, not floating icons. */
-.pdp-side .sshare { display: flex; width: 100%; }
-.pdp-side .sshare-link { flex: 1; width: auto; height: 38px; }
 .bp-share-row { display: inline-flex; align-items: center; gap: 12px; }
