@@ -61,7 +61,14 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["sharp"],
 
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      // RFC 8288 agent-discovery: llms.txt is the machine-readable site guide.
+      {
+        source: "/",
+        headers: [{ key: "Link", value: '</llms.txt>; rel="describedby"' }],
+      },
+    ];
   },
 };
 
