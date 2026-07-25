@@ -4189,3 +4189,15 @@ html, body {
   opacity: 0.6;
   filter: saturate(0.7);
 }
+
+/* Social share links (SocialShare) — pill icons matching .pdp-btn chrome. */
+.sshare { display: inline-flex; align-items: center; gap: 8px; }
+.sshare-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 9999px;
+  background: var(--m-bg); border: 1px solid var(--m-line);
+  color: var(--m-ink);
+  transition: background .15s, border-color .15s;
+}
+.sshare-link:hover { background: var(--m-bg-2); border-color: var(--m-line-2); }
+.bp-share-row { display: inline-flex; align-items: center; gap: 12px; }

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ProductActions } from "@/components/product/product-actions";
+import { SocialShare } from "@/components/shared/social-share";
 import { StatusPill } from "@/components/shared/status-pill";
 import { T } from "@/components/t";
 
@@ -229,6 +230,7 @@ export default async function ProductPage({ params }: PageProps) {
               title={listing.title}
               shareUrl={shareUrl}
             />
+            <SocialShare url={shareUrl} title={listing.title} />
             <ContactCard listing={listing} />
           </aside>
         </div>

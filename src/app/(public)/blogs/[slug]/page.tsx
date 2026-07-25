@@ -23,6 +23,7 @@ import type { BlogPost } from "@/lib/api/types";
 
 import { renderMarkdown } from "@/lib/markdown";
 import { BlogShare } from "@/components/blog/blog-share";
+import { SocialShare } from "@/components/shared/social-share";
 import { T } from "@/components/t";
 
 type Params = Promise<{ slug: string }>;
@@ -129,10 +130,16 @@ export default async function BlogPostPage({ params }: { params: Params }) {
               <T path="actions.backToBlog" />
             </span>
           </Link>
-          <BlogShare
-            title={post.title}
-            url={absoluteUrl(`/blogs/${canonical}`)}
-          />
+          <div className="bp-share-row">
+            <SocialShare
+              url={absoluteUrl(`/blogs/${canonical}`)}
+              title={post.title}
+            />
+            <BlogShare
+              title={post.title}
+              url={absoluteUrl(`/blogs/${canonical}`)}
+            />
+          </div>
         </div>
       </section>
 
