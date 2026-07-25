@@ -4,7 +4,8 @@ import { decodeJwtExp } from "@/lib/auth/jwt-exp";
 import { API_BASE_URL } from "@/lib/env";
 
 /**
- * Server-side gate + silent-refresh for the private app area.
+ * (a) Markdown content negotiation for agents on public pages, and
+ * (b) server-side gate + silent-refresh for the private app area:
  *
  * 1. No `sl_token` → bounce to the sign-in modal (remembering the destination).
  * 2. On a real navigation whose access token is within 60s of expiry (or
@@ -18,6 +19,8 @@ import { API_BASE_URL } from "@/lib/env";
  * refresh round-trip; the worker still verifies the signature. `/saved` is not
  * gated (localStorage-only).
  */
+const PRIVATE_PATH = /^\/(account|chat|notifications)(\/|$)/;
+
 const TOKEN_COOKIE = "sl_token";
 const REFRESH_COOKIE = "sl_refresh";
 const REMEMBER_COOKIE = "sl_remember";
@@ -36,6 +39,21 @@ function signInRedirect(req: NextRequest) {
 }
 
 export async function middleware(req: NextRequest) {
+  // Markdown for Agents: agents asking for text/markdown get the page converted
+  // by /api/markdown (which re-fetches the HTML with Accept: text/html — no
+  // rewrite loop). Browsers never send this Accept value. Public pages only.
+  if (
+    req.method === "GET" &&
+    (req.headers.get("accept") ?? "").includes("text/markdown") &&
+    !PRIVATE_PATH.test(req.nextUrl.pathname)
+  ) {
+    const url = req.nextUrl.clone();
+    url.searchParams.set("path", req.nextUrl.pathname + req.nextUrl.search);
+    url.pathname = "/api/markdown";
+    return NextResponse.rewrite(url);
+  }
+  if (!PRIVATE_PATH.test(req.nextUrl.pathname)) return NextResponse.next();
+
   const token = req.cookies.get(TOKEN_COOKIE)?.value;
   if (!token) return signInRedirect(req);
 
@@ -110,6 +128,10 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Private routes only. Subpaths included for future nested pages.
-  matcher: ["/account/:path*", "/chat/:path*", "/notifications/:path*"],
+  // All page routes: markdown negotiation needs public pages too; the auth
+  // gate above still only fires for PRIVATE_PATH. Excludes API/static/metadata
+  // routes (dots allowed in slugs, so no blanket `.*\..*` exclusion).
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|llms.txt|manifest.webmanifest|icon.png|apple-icon.png|brand/|\\.well-known/).*)",
+  ],
 };
