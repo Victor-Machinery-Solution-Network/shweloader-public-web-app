@@ -130,7 +130,7 @@ export function Composer({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={pendingProduct.productThumbnail}
-              alt=""
+              alt={pendingProduct.productName ?? "Product"}
               className="chat-composer-product-thumb"
             />
           ) : (

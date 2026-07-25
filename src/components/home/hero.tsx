@@ -124,7 +124,7 @@ export function Hero({ slides }: { slides: Slide[] }) {
                     on the parent .hero-slide (see app.css). */}
                 <img
                   src={src}
-                  alt=""
+                  alt={`ShweLoader promotion ${i + 1}`}
                   loading="eager"
                   fetchPriority={i === 0 ? "high" : "low"}
                   decoding="async"

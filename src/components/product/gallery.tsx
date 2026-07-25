@@ -125,7 +125,7 @@ export function Gallery({
       <div key={i} className="g-hero-img" aria-hidden={i !== idx}>
         <Image
           src={p.hero}
-          alt={i === idx ? `${title} — ${t("product.photo")} ${idx + 1}` : ""}
+          alt={`${title} — ${t("product.photo")} ${i + 1}`}
           fill
           // First photo = priority (LCP); the rest load eagerly so the slide
           // shows already-decoded images (lazy ones janked the transition).
@@ -316,7 +316,7 @@ export function Gallery({
                   {p.thumb && (
                     <Image
                       src={p.thumb}
-                      alt=""
+                      alt={`${title} — ${t("product.photo")} ${photoIndex + 1}`}
                       fill
                       sizes="(min-width: 769px) 300px, 1px"
                       style={{
@@ -333,7 +333,7 @@ export function Gallery({
                     <Image
                       className="feat-stamp-sold"
                       src="/brand/sold-out-stamp.png"
-                      alt=""
+                      alt={isRented ? t("product.rented") : t("product.soldOut")}
                       width={240}
                       height={240}
                     />
@@ -376,7 +376,7 @@ export function Gallery({
                 {p.thumb && (
                   <Image
                     src={p.thumb}
-                    alt=""
+                    alt={`${title} — ${t("product.photo")} ${i + 1}`}
                     fill
                     sizes="80px"
                     style={{
@@ -483,7 +483,7 @@ export function Gallery({
                 {p.thumb && (
                   <Image
                     src={p.thumb}
-                    alt=""
+                    alt={`${title} — ${t("product.photo")} ${i + 1}`}
                     fill
                     sizes="72px"
                     style={{

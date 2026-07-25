@@ -48,7 +48,7 @@ export function BlogCard({ post }: { post: BlogPost }) {
         {!failed && cover && (
           <Image
             src={cover}
-            alt=""
+            alt={post.title}
             fill
             sizes="(max-width: 640px) 100vw, 300px"
             style={{
