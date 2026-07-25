@@ -28,6 +28,9 @@ export interface WebUser {
   /** Numeric IDs (null when unset) — drive the CompleteProfileGate. */
   businessTypeId?: number | null;
   townshipId?: number | null;
+  /** False = partner question never answered (gate re-prompts). Stale cookies
+   *  omit the field (undefined) and must NOT prompt. */
+  partnerPrompted?: boolean;
   memberSince?: string;
 }
 

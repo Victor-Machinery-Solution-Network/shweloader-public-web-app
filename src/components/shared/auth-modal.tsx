@@ -638,7 +638,7 @@ function SignUpStep1({
 
       <div className="auth-row-2">
         <FloatingField
-          label={t("Company name", "ကုမ္ပဏီအမည်")}
+          label={t("Business or company name", "လုပ်ငန်း (သို့) ကုမ္ပဏီအမည်")}
           name="organization"
           autoComplete="organization"
           value={data.companyName}
@@ -1146,14 +1146,10 @@ export function SignUpStep3({
             township_id: data.townshipId ?? null,
           }
         : {}),
+      // Records the answer server-side (even "No") so no client re-prompts
+      // this account; also guarantees the PUT is never empty.
+      partner_prompted: true,
     };
-    // Nothing to persist (partner "No" on the partner-only step) — the account
-    // is already complete, so just advance without an empty PUT (which the
-    // proxy rejects with 400 "No changes to save").
-    if (Object.values(payload).every((v) => v === undefined)) {
-      onSubmit();
-      return;
-    }
     setBusy(true);
     try {
       const res = await fetch("/api/account", {

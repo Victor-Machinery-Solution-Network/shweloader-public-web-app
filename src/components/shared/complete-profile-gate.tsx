@@ -53,7 +53,13 @@ export function CompleteProfileGate() {
   const missingBusiness =
     !!user && (user.businessTypeId === null || user.townshipId === null);
 
-  const incomplete = signedIn && !!user && !completed && missingBusiness;
+  // Interrupted signups (left after OTP, any device): the server marks the
+  // partner question unanswered. Strictly `=== false` — a stale cookie without
+  // the field must not prompt.
+  const missedPartnerQuestion = !!user && user.partnerPrompted === false;
+
+  const incomplete =
+    signedIn && !!user && !completed && (missingBusiness || missedPartnerQuestion);
 
   // Re-prompt on navigation: clearing `dismissed` whenever the path changes means
   // a user who closed the gate sees it again on the next page (mobile parity).

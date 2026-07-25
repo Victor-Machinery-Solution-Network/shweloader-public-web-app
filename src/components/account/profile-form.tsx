@@ -331,7 +331,7 @@ export function ProfileForm({
         )}
 
         <Field
-          label={t("Company name", "ကုမ္ပဏီအမည်")}
+          label={t("Business or company name", "လုပ်ငန်း (သို့) ကုမ္ပဏီအမည်")}
           value={draft.company}
           onChange={(v) => set("company", v)}
         />

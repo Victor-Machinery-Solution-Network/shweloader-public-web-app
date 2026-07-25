@@ -75,6 +75,9 @@ export async function refreshUserCookie(accessToken: string): Promise<void> {
       // either is force-prompted to finish their business details (mobile parity).
       businessTypeId: u.business_type_id ?? null,
       townshipId: u.township_id ?? null,
+      // False only for accounts that never answered the partner question
+      // (partner_prompted_at NULL); the gate re-prompts those.
+      partnerPrompted: u.partner_prompted_at != null,
     };
     // Lifetime tracks the session: persistent (7d) when "Remember me" is on,
     // otherwise a session cookie. Either way it never outlives the sl_token gate.
