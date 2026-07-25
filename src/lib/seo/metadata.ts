@@ -6,7 +6,7 @@ export const SITE_NAME = "ShweLoader";
  *  because per-segment metadata replaces (doesn't deep-merge) the root's. */
 export const TWITTER_HANDLE = "@shweloader";
 export const DEFAULT_TITLE =
-  "ShweLoader — Myanmar's Heavy Equipment Marketplace";
+  "ShweLoader Myanmar | Heavy Equipment for Sale & Rent";
 export const DEFAULT_DESCRIPTION =
   "Buy, sell, and rent excavators, wheel loaders, cranes, and bulldozers across Myanmar. MMK and USD pricing, on-site viewings, trusted dealers.";
 /** iOS app (App Store Connect Apple ID) — drives the Safari Smart App Banner. */
