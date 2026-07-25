@@ -1,5 +1,5 @@
 import { SITE_URL, absoluteUrl } from "@/lib/env";
-import { SITE_NAME } from "./metadata";
+import { SITE_NAME, APP_STORE_URL, PLAY_STORE_URL } from "./metadata";
 import { listingSlug, blogSlug } from "@/lib/slug";
 import { toIsoDate } from "@/lib/format";
 import { toPlainText, truncate } from "@/lib/utils";
@@ -24,7 +24,7 @@ function organizationRef(): Json {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: absoluteUrl("/brand/logo_dark.svg"),
+    logo: absoluteUrl("/brand/logo_full.png"),
   };
 }
 
@@ -33,11 +33,25 @@ export function organizationSchema(): Json {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE_NAME,
+    alternateName: "Shwe Loader",
     url: SITE_URL,
-    logo: absoluteUrl("/brand/logo_dark.svg"),
+    // PNG, not SVG — Google's logo parsing is raster-safe only.
+    logo: absoluteUrl("/brand/logo_full.png"),
     description:
       "Myanmar's marketplace for heavy equipment and machinery — buy, rent, or sell construction equipment, excavators, loaders, cranes, and attachments.",
-    sameAs: ["https://www.facebook.com/profile.php?id=61559388680768"],
+    foundingDate: "2018",
+    founder: {
+      "@type": "Organization",
+      name: "Victor Machinery Solution Network Co., Ltd",
+    },
+    // Entity disambiguation vs the unaffiliated shweloader.com: every real
+    // profile we control, so search engines bind the brand to .com.mm.
+    sameAs: [
+      "https://www.facebook.com/profile.php?id=61559388680768",
+      "https://facebook.com/shweloader",
+      APP_STORE_URL,
+      PLAY_STORE_URL,
+    ],
     // Online-only business: declare the service country, NOT a street/region.
     // A fabricated locality (e.g. a Yangon address) is a false local signal that
     // would conflict with having no physical presence / Google Business Profile.
@@ -63,8 +77,10 @@ export function websiteSchema(): Json {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
+    alternateName: "Shwe Loader",
     url: SITE_URL,
     inLanguage: ["en", "my"],
+    publisher: organizationRef(),
     potentialAction: {
       "@type": "SearchAction",
       target: {
