@@ -11,6 +11,20 @@ import { NodeHtmlMarkdown } from "node-html-markdown";
 // ponytail: ~4 chars/token heuristic, matches how Cloudflare's header is used
 const estimateTokens = (s: string) => Math.ceil(s.length / 4);
 
+const decodeEntities = (s: string) =>
+  s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)));
+
+const first = (html: string, re: RegExp) => {
+  const m = html.match(re);
+  return m ? decodeEntities(m[1].trim()) : null;
+};
+
 export async function GET(req: NextRequest): Promise<Response> {
   const path = req.nextUrl.searchParams.get("path") ?? "/";
   if (!path.startsWith("/") || path.startsWith("//")) {
@@ -26,7 +40,24 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   const html = await upstream.text();
-  const markdown = NodeHtmlMarkdown.translate(html);
+
+  // Signal over chrome: convert only <main> (nav/footer/toggles are noise that
+  // burns agent context), and lead with the page's own metadata so an agent
+  // knows what it is reading without guessing.
+  const title = first(html, /<title[^>]*>([^<]*)<\/title>/i);
+  const description = first(html, /<meta\s+name="description"\s+content="([^"]*)"/i);
+  const canonical = first(html, /<link\s+rel="canonical"\s+href="([^"]*)"/i);
+  const main = first(html, /<main[\s\S]*?>([\s\S]*)<\/main>/i);
+
+  const header = [
+    title && `# ${title}`,
+    description && `> ${description}`,
+    canonical && `Canonical URL: ${canonical}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  const body = NodeHtmlMarkdown.translate(main ?? html);
+  const markdown = header ? `${header}\n\n---\n\n${body}` : body;
 
   return new Response(markdown + "\n", {
     headers: {
