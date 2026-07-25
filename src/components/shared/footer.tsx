@@ -169,8 +169,11 @@ export async function Footer() {
             >
               <FacebookIcon />
             </a>
+            {/* contact?number= (with encoded +) is the scheme confirmed working
+                on device — chat?number= shows Viber's "requested page not
+                available" (same finding as the mobile app's About screen). */}
             <a
-              href={`viber://chat?number=%2B${HOTLINE_TEL.replace(/^\+/, "")}`}
+              href={`viber://contact?number=%2B${HOTLINE_TEL.replace(/^\+/, "")}`}
               className="sl-footer-social-btn"
               aria-label="Viber"
             >
