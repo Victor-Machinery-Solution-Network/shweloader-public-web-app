@@ -48,9 +48,13 @@ export async function middleware(req: NextRequest) {
     !PRIVATE_PATH.test(req.nextUrl.pathname)
   ) {
     const url = req.nextUrl.clone();
-    url.searchParams.set("path", req.nextUrl.pathname + req.nextUrl.search);
     url.pathname = "/api/markdown";
-    return NextResponse.rewrite(url);
+    url.search = "";
+    // Path travels via header — rewrite query params don't reliably reach the
+    // route handler.
+    const headers = new Headers(req.headers);
+    headers.set("x-md-path", req.nextUrl.pathname + req.nextUrl.search);
+    return NextResponse.rewrite(url, { request: { headers } });
   }
   if (!PRIVATE_PATH.test(req.nextUrl.pathname)) return NextResponse.next();
 

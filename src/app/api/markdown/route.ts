@@ -25,8 +25,34 @@ const first = (html: string, re: RegExp) => {
   return m ? decodeEntities(m[1].trim()) : null;
 };
 
+// Fact-dense JSON-LD types only; nav-ish schemas (BreadcrumbList, WebSite,
+// ItemList…) duplicate links already present in the converted content.
+const FACT_TYPES = new Set(["Product", "BlogPosting", "Organization", "AboutPage"]);
+const BULKY_KEYS = new Set(["@context", "image", "logo"]);
+
+function structuredFacts(html: string): string | null {
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  const facts: unknown[] = [];
+  for (const [, json] of blocks) {
+    try {
+      const data = JSON.parse(json) as Record<string, unknown> | Record<string, unknown>[];
+      for (const item of Array.isArray(data) ? data : [data]) {
+        if (!FACT_TYPES.has(String(item["@type"]))) continue;
+        facts.push(
+          JSON.parse(JSON.stringify(item, (k, v) => (BULKY_KEYS.has(k) ? undefined : v))),
+        );
+      }
+    } catch {
+      // malformed block — skip
+    }
+  }
+  if (!facts.length) return null;
+  return `## Structured data (schema.org)\n\n\`\`\`json\n${JSON.stringify(facts.length === 1 ? facts[0] : facts, null, 1)}\n\`\`\``;
+}
+
 export async function GET(req: NextRequest): Promise<Response> {
-  const path = req.nextUrl.searchParams.get("path") ?? "/";
+  const path =
+    req.headers.get("x-md-path") ?? new URL(req.url).searchParams.get("path") ?? "/";
   if (!path.startsWith("/") || path.startsWith("//")) {
     return new Response("Bad path", { status: 400 });
   }
@@ -56,8 +82,13 @@ export async function GET(req: NextRequest): Promise<Response> {
   ]
     .filter(Boolean)
     .join("\n\n");
-  const body = NodeHtmlMarkdown.translate(main ?? html);
-  const markdown = header ? `${header}\n\n---\n\n${body}` : body;
+  // Alt-less images (gallery thumbs, carousel dupes) carry zero signal for an
+  // LLM — strip them; labeled images keep their alt text as context.
+  const body = NodeHtmlMarkdown.translate(main ?? html)
+    .replace(/!\[\]\([^)]*\)/g, "")
+    .replace(/\n{3,}/g, "\n\n");
+  const facts = structuredFacts(html);
+  const markdown = [header, body, facts].filter(Boolean).join("\n\n---\n\n");
 
   return new Response(markdown + "\n", {
     headers: {
