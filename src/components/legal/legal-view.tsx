@@ -162,7 +162,7 @@ const LEGAL: Record<Locale, Record<DocKey, LegalDoc>> = {
           id: "contact",
           h: "Contact Us",
           body: [
-            "For privacy-related questions, contact us at privacy@shweloader.com.",
+            "For privacy-related questions, contact us at privacy@shweloader.com.mm.",
           ],
         },
       ],
@@ -288,7 +288,7 @@ const LEGAL: Record<Locale, Record<DocKey, LegalDoc>> = {
           id: "contact",
           h: "ဆက်သွယ်ရန်",
           body: [
-            "ကိုယ်ရေးအချက်အလက်ဆိုင်ရာ မေးခွန်းများရှိပါက privacy@shweloader.com သို့ ဆက်သွယ်နိုင်ပါသည်။",
+            "ကိုယ်ရေးအချက်အလက်ဆိုင်ရာ မေးခွန်းများရှိပါက privacy@shweloader.com.mm သို့ ဆက်သွယ်နိုင်ပါသည်။",
           ],
         },
       ],
@@ -311,7 +311,7 @@ function LegalSection({ s, privacyEmail }: { s: LegalSectionData; privacyEmail: 
       {s.body.map((p, i) => (
         // The privacy address is admin-editable; the copy ships the default
         // literal, so this is a no-op unless admin set a different value.
-        <p key={i}>{p.replace("privacy@shweloader.com", privacyEmail)}</p>
+        <p key={i}>{p.replace("privacy@shweloader.com.mm", privacyEmail)}</p>
       ))}
       {s.bullets ? (
         <ul>

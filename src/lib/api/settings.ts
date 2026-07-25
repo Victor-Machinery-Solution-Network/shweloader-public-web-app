@@ -18,10 +18,10 @@ export interface ContactEmails {
 // Fallbacks = the historical static addresses. Used when a key is unset in D1
 // (or the API is unreachable) so nothing ever renders blank.
 const FALLBACK: ContactEmails = {
-  info: "info@shweloader.com",
+  info: "inquiry@shweloader.com.mm",
   support: "support@shweloader.com.mm",
-  sales: "sales@shweloader.com",
-  privacy: "privacy@shweloader.com",
+  sales: "inquiry@shweloader.com.mm",
+  privacy: "privacy@shweloader.com.mm",
 };
 
 export async function getContactEmails(): Promise<ContactEmails> {
