@@ -8,7 +8,7 @@ export const TWITTER_HANDLE = "@shweloader";
 export const DEFAULT_TITLE =
   "ShweLoader Myanmar | Heavy Equipment for Sale & Rent";
 export const DEFAULT_DESCRIPTION =
-  "Buy, sell and rent excavators, bulldozers, wheel loaders, cranes, trucks and construction machinery across Myanmar on ShweLoader. MMK and USD pricing, on-site viewings, trusted dealers.";
+  "Buy, sell and rent excavators, bulldozers, wheel loaders, cranes, trucks and construction machinery across Myanmar. MMK and USD pricing, trusted dealers.";
 /** iOS app (App Store Connect Apple ID) — drives the Safari Smart App Banner. */
 export const APPLE_APP_ID = "6760832842";
 export const APP_STORE_URL =
