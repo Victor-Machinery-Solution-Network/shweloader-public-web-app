@@ -48,11 +48,12 @@ export function CompleteProfileGate() {
   // Throwaway form state — SignUpStep3 only reads/writes the business fields.
   const [data, setData] = useState<SignUpData>(EMPTY_SIGNUP);
 
-  const incomplete =
-    signedIn &&
-    !!user &&
-    !completed &&
-    (user.businessTypeId === null || user.townshipId === null);
+  // Backfill mode for the reused SignUpStep3: legacy accounts missing business
+  // type/township get those fields rendered (new signups collect them in step 1).
+  const missingBusiness =
+    !!user && (user.businessTypeId === null || user.townshipId === null);
+
+  const incomplete = signedIn && !!user && !completed && missingBusiness;
 
   // Re-prompt on navigation: clearing `dismissed` whenever the path changes means
   // a user who closed the gate sees it again on the next page (mobile parity).
@@ -133,6 +134,7 @@ export function CompleteProfileGate() {
           t={t}
           data={data}
           setData={setData}
+          missingBusiness={missingBusiness}
           onSubmit={() => {
             // Mark complete optimistically (covers replica lag), and re-read the
             // refreshed sl_user cookie so the user object also reflects the IDs.

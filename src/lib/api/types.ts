@@ -340,7 +340,6 @@ export interface Profile {
   email: string | null;
   phone: string;
   company_name: string | null;
-  address: string | null;
   is_verified: number;
   business_type_id: number | null;
   business_type: string | null;

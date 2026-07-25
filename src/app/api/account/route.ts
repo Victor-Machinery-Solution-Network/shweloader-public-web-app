@@ -10,8 +10,8 @@ import { enforceOrigin, enforceJsonContent } from "@/lib/auth/csrf";
  *
  * PUT /api/account → PUT {API}/me via authedFetch (silent 401→refresh→retry;
  * 403 ACCOUNT_BLACKLISTED → 403 for the suspension overlay). The worker accepts
- * the snake_case fields full_name, email, company_name, address,
- * business_type_id | custom_business_type, township_id, username.
+ * the snake_case fields full_name, email, company_name,
+ * business_type_id | custom_business_type, township_id, partner_type_id.
  */
 export async function PUT(req: Request) {
   const csrf = enforceOrigin(req) ?? enforceJsonContent(req);

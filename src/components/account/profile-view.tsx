@@ -121,10 +121,8 @@ export function ProfileView({
           <ProfileForm
             initial={{
               fullName,
-              username: pick(p?.username),
               email: pick(p?.email),
               company,
-              street: pick(p?.address),
               businessTypeId: p?.business_type_id ?? null,
               customBusinessType: "",
               townshipId: p?.township_id ?? null,

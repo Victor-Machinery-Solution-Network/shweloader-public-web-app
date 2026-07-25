@@ -21,10 +21,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 export interface ProfileDraft {
   fullName: string;
-  username: string;
   email: string;
   company: string;
-  street: string;
   businessTypeId: number | null;
   customBusinessType: string;
   townshipId: number | null;
@@ -38,7 +36,6 @@ function Field({
   label,
   value,
   onChange,
-  onBlur,
   type = "text",
   full,
   inputMode,
@@ -47,7 +44,6 @@ function Field({
   label: string;
   value: string;
   onChange: (v: string) => void;
-  onBlur?: (v: string) => void;
   type?: string;
   full?: boolean;
   inputMode?: "numeric" | "text" | "email" | "tel";
@@ -68,7 +64,6 @@ function Field({
         inputMode={inputMode}
         aria-invalid={!!error}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur ? (e) => onBlur(e.target.value) : undefined}
       />
       <span className="auth-label">{label}</span>
       {error && <span className="pf-field-error">{error}</span>}
@@ -149,13 +144,9 @@ export function ProfileForm({
     const tr = (v: string) => v.trim();
     if (tr(draft.fullName) !== tr(base.fullName))
       p.full_name = tr(draft.fullName);
-    if (tr(draft.username) !== tr(base.username))
-      p.username = tr(draft.username);
     if (tr(draft.email) !== tr(base.email)) p.email = tr(draft.email) || null;
     if (tr(draft.company) !== tr(base.company))
       p.company_name = tr(draft.company) || null;
-    if (tr(draft.street) !== tr(base.street))
-      p.address = tr(draft.street) || null;
     if (draft.townshipId !== base.townshipId)
       p.township_id = draft.townshipId;
 
@@ -182,8 +173,6 @@ export function ProfileForm({
     const errs: Record<string, string> = {};
     if (changed.full_name !== undefined && !String(changed.full_name).trim())
       errs.fullName = t("Full name is required", "အမည်အပြည့်အစုံ ထည့်ပါ");
-    if (changed.username !== undefined && !String(changed.username).trim())
-      errs.username = t("Username is required", "အကောင့်နာမည် ထည့်ပါ");
     if (
       changed.email !== undefined &&
       changed.email &&
@@ -225,14 +214,7 @@ export function ProfileForm({
           return;
         }
         const msg = (data.error || "").toLowerCase();
-        if (res.status === 409 && msg.includes("username")) {
-          setErrors({
-            username: t(
-              "That username is already taken",
-              "ဤအကောင့်နာမည်ကို အခြားသူ အသုံးပြုထားပြီး ဖြစ်ပါသည်",
-            ),
-          });
-        } else if (res.status === 409 && msg.includes("email")) {
+        if (res.status === 409 && msg.includes("email")) {
           setErrors({
             email: t(
               "That email is already taken",
@@ -291,13 +273,6 @@ export function ProfileForm({
           value={draft.fullName}
           onChange={(v) => set("fullName", v)}
           error={errors.fullName}
-        />
-        <Field
-          label={t("Username", "အကောင့်နာမည်")}
-          value={draft.username}
-          onChange={(v) => set("username", v)}
-          onBlur={(v) => set("username", v.toLowerCase().replace(/[\s-]+/g, ""))}
-          error={errors.username}
         />
         <Field
           label={t("Email", "အီးမေးလ်")}
@@ -359,12 +334,6 @@ export function ProfileForm({
           label={t("Company name", "ကုမ္ပဏီအမည်")}
           value={draft.company}
           onChange={(v) => set("company", v)}
-        />
-        <Field
-          label={t("Office building / street", "ရုံး အဆောက်အအုံ / လမ်း")}
-          full
-          value={draft.street}
-          onChange={(v) => set("street", v)}
         />
 
         <TownshipCombobox

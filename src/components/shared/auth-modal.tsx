@@ -49,17 +49,16 @@ const OTP_RESEND_SECONDS = 90;
 
 export interface SignUpData {
   name: string;
-  username: string;
   email: string;
   phone: string;
   password: string;
   confirmPassword: string;
   agree: boolean;
-  // Business details (step 3 — mirrors the mobile onboarding screen).
+  // Business details (step 1 — username is now server-generated, so step 1
+  // collects the business basics instead; step 3 is partner-only).
   businessTypeId: number | null; // OTHER_BUSINESS (-1) → use customBusinessType
   customBusinessType: string;
   companyName: string;
-  address: string; // office building / street (optional)
   townshipId: number | null; // office township (required)
   partner: string; // "yes" | "no"
   partnerType: number | null; // required when partner === "yes"
@@ -67,7 +66,6 @@ export interface SignUpData {
 
 export const EMPTY_SIGNUP: SignUpData = {
   name: "",
-  username: "",
   email: "",
   phone: "",
   password: "",
@@ -76,7 +74,6 @@ export const EMPTY_SIGNUP: SignUpData = {
   businessTypeId: null,
   customBusinessType: "",
   companyName: "",
-  address: "",
   townshipId: null,
   partner: "",
   partnerType: null,
@@ -114,8 +111,6 @@ const displayPhone = (raw: string): string => {
 /** A login identifier that's only phone characters — clean it like a phone so a
  *  number typed with spaces still matches the stored (cleaned) value. */
 const PHONE_LIKE_RE = /^[\d\s+()-]+$/;
-/** Username handle: 3–20 of lowercase letters, digits, dot, underscore. */
-const USERNAME_RE = /^[a-z0-9._]{3,20}$/;
 /** Pragmatic email shape (one @, a dot in the domain) — the worker is the gate. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_MIN = 2;
@@ -466,6 +461,29 @@ function SignUpStep1({
   const clearErr = (k: string) =>
     setErrors((er) => (er[k] ? { ...er, [k]: "" } : er));
 
+  // Reference data for the business-type + township pickers — step 1 now
+  // collects the business basics (username is server-generated), so the lookups
+  // load here, pre-auth (the /api/lookups proxy is public).
+  const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
+  const [locations, setLocations] = useState<StateRegion[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/lookups", { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: unknown) => {
+        if (!d || typeof d !== "object") return;
+        const o = d as Record<string, unknown>;
+        if (Array.isArray(o.businessTypes))
+          setBusinessTypes(o.businessTypes as BusinessType[]);
+        if (Array.isArray(o.locations))
+          setLocations(o.locations as StateRegion[]);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  const isOther = data.businessTypeId === OTHER_BUSINESS;
+
   // Client-side validation, mirroring the mobile signup: required fields, a 6+
   // char password with a letter and a number, and a matching confirmation. We
   // render these inline (auth-error) instead of the browser's default bubbles.
@@ -488,13 +506,20 @@ function SignUpStep1({
     else if (!/\p{L}/u.test(name))
       e.name = t("Please enter a valid name", "မှန်ကန်သော အမည် ထည့်ပါ");
 
-    // Username — predictable, URL-safe handle.
-    const username = data.username.trim();
-    if (!username) e.username = required;
-    else if (!USERNAME_RE.test(username))
-      e.username = t(
-        "3–20 chars: lowercase letters, numbers, . or _",
-        "စာလုံး ၃–၂၀: စာလုံးအသေး၊ ဂဏန်း၊ . သို့မဟုတ် _ သာ",
+    // Business type — required; "Other" needs the free-text value.
+    if (data.businessTypeId === null)
+      e.businessType = t("Select a business type", "လုပ်ငန်းအမျိုးအစား ရွေးပါ");
+    else if (isOther && !data.customBusinessType.trim())
+      e.customBusinessType = t(
+        "Please specify your business type",
+        "လုပ်ငန်းအမျိုးအစား ဖော်ပြပါ",
+      );
+
+    // Township — required.
+    if (data.townshipId === null)
+      e.township = t(
+        "Select your office township",
+        "ရုံးတည်ရှိရာ မြို့နယ် ရွေးပါ",
       );
 
     // Email — optional, but if present it must look like an email.
@@ -561,10 +586,19 @@ function SignUpStep1({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           full_name: data.name.trim(),
-          username: data.username.trim(),
           email: data.email.trim() || undefined,
           phone: cleanPhone(data.phone),
           password: data.password,
+          // Business basics moved up from the old step 3; the worker generates
+          // the username server-side now.
+          company_name: data.companyName.trim() || null,
+          business_type_id: isOther
+            ? undefined
+            : (data.businessTypeId ?? undefined),
+          custom_business_type: isOther
+            ? data.customBusinessType.trim()
+            : undefined,
+          township_id: data.townshipId,
         }),
       });
       if (!res.ok) {
@@ -604,21 +638,13 @@ function SignUpStep1({
 
       <div className="auth-row-2">
         <FloatingField
-          label={t("Username", "အကောင့်နာမည်")}
-          name="username"
-          autoComplete="username"
-          required
-          value={data.username}
-          onChange={(e) => {
-            update("username", e.target.value);
-            clearErr("username");
-          }}
-          onBlur={(e) => {
-            // Auto-fix the common mistakes instead of erroring on them
-            const fixed = e.target.value.toLowerCase().replace(/[\s-]+/g, "");
-            if (fixed !== e.target.value) update("username", fixed);
-          }}
-          error={errors.username}
+          label={t("Company name", "ကုမ္ပဏီအမည်")}
+          name="organization"
+          autoComplete="organization"
+          value={data.companyName}
+          onChange={(e) => update("companyName", e.target.value)}
+          optional
+          optionalLabel={t("Optional", "ရှိပါက")}
         />
         <FloatingField
           label={t("Email", "အီးမေးလ်")}
@@ -635,6 +661,73 @@ function SignUpStep1({
           optional
           optionalLabel={t("Optional", "ရှိပါက")}
         />
+      </div>
+
+      {/* Business type */}
+      <label
+        className={
+          "auth-field auth-float auth-float--select" +
+          (errors.businessType ? " has-error" : "")
+        }
+      >
+        <select
+          className="pf-select"
+          value={data.businessTypeId === null ? "" : String(data.businessTypeId)}
+          aria-invalid={!!errors.businessType}
+          onChange={(e) => {
+            update(
+              "businessTypeId",
+              e.target.value === "" ? null : Number(e.target.value),
+            );
+            clearErr("businessType");
+          }}
+        >
+          <option value="">{t("Select a type", "အမျိုးအစား ရွေးပါ")}</option>
+          {businessTypes.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+          <option value={OTHER_BUSINESS}>{t("Other", "အခြား")}</option>
+        </select>
+        <ChevronDown className="pf-select-chev" strokeWidth={1.75} />
+        <span className="auth-label">
+          {t("Business type", "လုပ်ငန်းအမျိုးအစား")}
+        </span>
+        {errors.businessType && (
+          <span className="auth-error" role="alert">
+            {errors.businessType}
+          </span>
+        )}
+      </label>
+
+      {isOther && (
+        <FloatingField
+          label={t("Specify business type", "လုပ်ငန်းအမျိုးအစား သတ်မှတ်ပါ")}
+          value={data.customBusinessType}
+          onChange={(e) => {
+            update("customBusinessType", e.target.value);
+            clearErr("customBusinessType");
+          }}
+          error={errors.customBusinessType}
+        />
+      )}
+
+      <div className={"auth-field" + (errors.township ? " has-error" : "")}>
+        <TownshipCombobox
+          label={t("Office township", "ရုံး မြို့နယ်")}
+          locations={locations}
+          value={data.townshipId}
+          onChange={(id) => {
+            update("townshipId", id);
+            clearErr("township");
+          }}
+        />
+        {errors.township && (
+          <span className="auth-error" role="alert">
+            {errors.township}
+          </span>
+        )}
       </div>
 
       <div className="auth-field">
@@ -945,26 +1038,31 @@ function OtpStep({
 // ---------------------------------------------------------------------------
 
 /**
- * Step 3 — business details. Mirrors the mobile onboarding screen: business type
- * (+ "Other" → custom), company name, office street + township, and a partner
- * question (+ partner type when "Yes"). Runs AFTER OTP, so the session cookie is
- * set — it submits via the authenticated `PUT /api/account` (→ worker PUT /me),
- * the same payload the mobile app sends.
+ * Step 3 — partner question (+ partner type when "Yes"). Business type/township
+ * moved to step 1 for new signups, so this step is partner-only by default.
+ * Legacy accounts missing those fields still backfill here: when
+ * `missingBusiness` is set (by the CompleteProfileGate), the business-type +
+ * township fields render and are required. Runs AFTER OTP, so the session
+ * cookie is set — it submits via the authenticated `PUT /api/account`
+ * (→ worker PUT /me), the same payload the mobile app sends.
  */
-// Exported so the CompleteProfileGate can reuse the exact same business-details
-// form (DRY). The gate passes a throwaway SignUpData (only the business fields are
-// read here) and an onSubmit that closes the gate + refreshes auth.
+// Exported so the CompleteProfileGate can reuse the exact same form (DRY). The
+// gate passes a throwaway SignUpData (only the business/partner fields are read
+// here) and an onSubmit that closes the gate + refreshes auth.
 export function SignUpStep3({
   t,
   data,
   setData,
   onSubmit,
+  missingBusiness = false,
 }: {
   t: Tr;
   data: SignUpData;
   setData: React.Dispatch<React.SetStateAction<SignUpData>>;
   /** Called after the profile is saved successfully (parent shows the success step). */
   onSubmit: () => void;
+  /** Legacy-backfill mode: also collect business type + township (gate only). */
+  missingBusiness?: boolean;
 }) {
   const update = <K extends keyof SignUpData>(k: K, v: SignUpData[K]) =>
     setData((d) => ({ ...d, [k]: v }));
@@ -1002,18 +1100,23 @@ export function SignUpStep3({
   // disabling the button — clearer, and keyboard/screen-reader friendly.
   const validate = (): boolean => {
     const e: Record<string, string> = {};
-    if (data.businessTypeId === null)
-      e.businessType = t("Select a business type", "လုပ်ငန်းအမျိုးအစား ရွေးပါ");
-    else if (isOther && !data.customBusinessType.trim())
-      e.customBusinessType = t(
-        "Please specify your business type",
-        "လုပ်ငန်းအမျိုးအစား ဖော်ပြပါ",
-      );
-    if (data.townshipId === null)
-      e.township = t(
-        "Select your office township",
-        "ရုံးတည်ရှိရာ မြို့နယ် ရွေးပါ",
-      );
+    if (missingBusiness) {
+      if (data.businessTypeId === null)
+        e.businessType = t(
+          "Select a business type",
+          "လုပ်ငန်းအမျိုးအစား ရွေးပါ",
+        );
+      else if (isOther && !data.customBusinessType.trim())
+        e.customBusinessType = t(
+          "Please specify your business type",
+          "လုပ်ငန်းအမျိုးအစား ဖော်ပြပါ",
+        );
+      if (data.townshipId === null)
+        e.township = t(
+          "Select your office township",
+          "ရုံးတည်ရှိရာ မြို့နယ် ရွေးပါ",
+        );
+    }
     if (data.partner !== "yes" && data.partner !== "no")
       e.partner = t("Please choose an option", "ရွေးချယ်မှုတစ်ခု ပြုလုပ်ပါ");
     else if (data.partner === "yes" && data.partnerType === null)
@@ -1026,26 +1129,37 @@ export function SignUpStep3({
     e.preventDefault();
     if (busy) return;
     if (!validate()) return;
+    // partner_type_id as today; the business/township fields ship only in the
+    // legacy-backfill mode — new signups already sent them with /auth/register.
+    const payload: Record<string, unknown> = {
+      ...(data.partner === "yes" && data.partnerType
+        ? { partner_type_id: data.partnerType }
+        : {}),
+      ...(missingBusiness
+        ? {
+            business_type_id: isOther
+              ? undefined
+              : (data.businessTypeId ?? undefined),
+            custom_business_type: isOther
+              ? data.customBusinessType.trim()
+              : undefined,
+            township_id: data.townshipId ?? null,
+          }
+        : {}),
+    };
+    // Nothing to persist (partner "No" on the partner-only step) — the account
+    // is already complete, so just advance without an empty PUT (which the
+    // proxy rejects with 400 "No changes to save").
+    if (Object.values(payload).every((v) => v === undefined)) {
+      onSubmit();
+      return;
+    }
     setBusy(true);
     try {
       const res = await fetch("/api/account", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          company_name: data.companyName.trim() || undefined,
-          address: data.address.trim() || null,
-          business_type_id: isOther
-            ? undefined
-            : (data.businessTypeId ?? undefined),
-          custom_business_type: isOther
-            ? data.customBusinessType.trim()
-            : undefined,
-          partner_type_id:
-            data.partner === "yes" && data.partnerType
-              ? data.partnerType
-              : undefined,
-          township_id: data.townshipId ?? null,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         toast.error(
@@ -1068,104 +1182,104 @@ export function SignUpStep3({
 
   return (
     <form className="auth-form" onSubmit={submit}>
-      <div className="auth-step-head">
-        <h3 className="auth-step-h">
-          {t("Tell us about your business", "သင့်လုပ်ငန်းအကြောင်း ပြောပြပါ")}
-        </h3>
-        <p className="auth-step-sub">
-          {t(
-            "We use this to recommend the right listings and pricing.",
-            "သင်နှင့်ကိုက်ညီသော အကြောင်းအရာများကို ပြသရန် အသုံးပြုပါမည်။",
-          )}
-        </p>
-      </div>
-
-      {/* Business type */}
-      <label
-        className={
-          "auth-field auth-float auth-float--select" +
-          (errors.businessType ? " has-error" : "")
-        }
-      >
-        <select
-          className="pf-select"
-          value={data.businessTypeId === null ? "" : String(data.businessTypeId)}
-          aria-invalid={!!errors.businessType}
-          onChange={(e) => {
-            update(
-              "businessTypeId",
-              e.target.value === "" ? null : Number(e.target.value),
-            );
-            clearErr("businessType");
-          }}
-        >
-          <option value="">{t("Select a type", "အမျိုးအစား ရွေးပါ")}</option>
-          {businessTypes.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-          <option value={OTHER_BUSINESS}>{t("Other", "အခြား")}</option>
-        </select>
-        <ChevronDown className="pf-select-chev" strokeWidth={1.75} />
-        <span className="auth-label">
-          {t("Business type", "လုပ်ငန်းအမျိုးအစား")}
-        </span>
-        {errors.businessType && (
-          <span className="auth-error" role="alert">
-            {errors.businessType}
-          </span>
-        )}
-      </label>
-
-      {isOther && (
-        <FloatingField
-          label={t("Specify business type", "လုပ်ငန်းအမျိုးအစား သတ်မှတ်ပါ")}
-          value={data.customBusinessType}
-          onChange={(e) => {
-            update("customBusinessType", e.target.value);
-            clearErr("customBusinessType");
-          }}
-          error={errors.customBusinessType}
-        />
+      {missingBusiness ? (
+        <div className="auth-step-head">
+          <h3 className="auth-step-h">
+            {t("Tell us about your business", "သင့်လုပ်ငန်းအကြောင်း ပြောပြပါ")}
+          </h3>
+          <p className="auth-step-sub">
+            {t(
+              "We use this to recommend the right listings and pricing.",
+              "သင်နှင့်ကိုက်ညီသော အကြောင်းအရာများကို ပြသရန် အသုံးပြုပါမည်။",
+            )}
+          </p>
+        </div>
+      ) : (
+        <div className="auth-step-head">
+          <h3 className="auth-step-h">
+            {t("One last question", "နောက်ဆုံး မေးခွန်းတစ်ခု")}
+          </h3>
+          <p className="auth-step-sub">
+            {t(
+              "Partners get extra visibility — you can also do this later.",
+              "မိတ်ဖက်များ ပိုမိုမြင်သာမှု ရရှိသည် — နောက်မှလည်း ပြုလုပ်နိုင်ပါသည်။",
+            )}
+          </p>
+        </div>
       )}
 
-      {/* Paired side-by-side on desktop to save space; both optional. */}
-      <div className="auth-row-2">
-      <FloatingField
-        label={t("Company name", "ကုမ္ပဏီအမည်")}
-        value={data.companyName}
-        onChange={(e) => update("companyName", e.target.value)}
-        autoComplete="organization"
-        optional
-        optionalLabel={t("Optional", "ရှိပါက")}
-      />
+      {missingBusiness && (
+        <>
+          {/* Business type (legacy backfill only — new signups set it in step 1) */}
+          <label
+            className={
+              "auth-field auth-float auth-float--select" +
+              (errors.businessType ? " has-error" : "")
+            }
+          >
+            <select
+              className="pf-select"
+              value={
+                data.businessTypeId === null ? "" : String(data.businessTypeId)
+              }
+              aria-invalid={!!errors.businessType}
+              onChange={(e) => {
+                update(
+                  "businessTypeId",
+                  e.target.value === "" ? null : Number(e.target.value),
+                );
+                clearErr("businessType");
+              }}
+            >
+              <option value="">{t("Select a type", "အမျိုးအစား ရွေးပါ")}</option>
+              {businessTypes.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+              <option value={OTHER_BUSINESS}>{t("Other", "အခြား")}</option>
+            </select>
+            <ChevronDown className="pf-select-chev" strokeWidth={1.75} />
+            <span className="auth-label">
+              {t("Business type", "လုပ်ငန်းအမျိုးအစား")}
+            </span>
+            {errors.businessType && (
+              <span className="auth-error" role="alert">
+                {errors.businessType}
+              </span>
+            )}
+          </label>
 
-      <FloatingField
-        label={t("Office building / street", "ရုံး အဆောက်အအုံ / လမ်း")}
-        value={data.address}
-        onChange={(e) => update("address", e.target.value)}
-        optional
-        optionalLabel={t("Optional", "ရှိပါက")}
-      />
-      </div>
+          {isOther && (
+            <FloatingField
+              label={t("Specify business type", "လုပ်ငန်းအမျိုးအစား သတ်မှတ်ပါ")}
+              value={data.customBusinessType}
+              onChange={(e) => {
+                update("customBusinessType", e.target.value);
+                clearErr("customBusinessType");
+              }}
+              error={errors.customBusinessType}
+            />
+          )}
 
-      <div className={"auth-field" + (errors.township ? " has-error" : "")}>
-        <TownshipCombobox
-          label={t("Office township", "ရုံး မြို့နယ်")}
-          locations={locations}
-          value={data.townshipId}
-          onChange={(id) => {
-            update("townshipId", id);
-            clearErr("township");
-          }}
-        />
-        {errors.township && (
-          <span className="auth-error" role="alert">
-            {errors.township}
-          </span>
-        )}
-      </div>
+          <div className={"auth-field" + (errors.township ? " has-error" : "")}>
+            <TownshipCombobox
+              label={t("Office township", "ရုံး မြို့နယ်")}
+              locations={locations}
+              value={data.townshipId}
+              onChange={(id) => {
+                update("townshipId", id);
+                clearErr("township");
+              }}
+            />
+            {errors.township && (
+              <span className="auth-error" role="alert">
+                {errors.township}
+              </span>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Partner */}
       <div className="auth-partner">
