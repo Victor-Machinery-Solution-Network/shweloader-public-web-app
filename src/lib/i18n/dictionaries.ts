@@ -98,12 +98,12 @@ export const en = {
     results: "Results",
     resultsLabel: "results",
     activeFilters: "active",
-    noResults: "No matching listings",
-    noResultsHint: "Try removing a filter or widening your search.",
+    noResults: "Nothing here yet",
+    noResultsHint: "New listings are added regularly — check back soon",
     noMatches: "No matches",
-    emptyTitle: "No listings match your filters",
+    emptyTitle: "Nothing here yet",
     emptyHint:
-      "Try widening the price range, removing a region, or clearing some filters.",
+      "New listings are added regularly — check back soon",
     loadError:
       "Couldn't load listings. Please check your connection and try again.",
     searchBrand: "Search brand…",
@@ -323,12 +323,12 @@ export const my: Dictionary = {
     results: "ရလဒ်များ",
     resultsLabel: "ရလဒ်",
     activeFilters: "ဖွင့်ထား",
-    noResults: "ကိုက်ညီသောစာရင်းမရှိပါ",
-    noResultsHint: "စစ်ထုတ်မှုတစ်ခုဖယ်ကြည့်ပါ သို့မဟုတ် ပိုကျယ်စွာရှာပါ။",
+    noResults: "လက်ရှိ Stock မရနိုင်သေးပါ။",
+    noResultsHint: "ယာဥ်ယန္တရားကြေညာအသစ်များကို ပုံမှန်ထည့်သွင်းပေးနေပါသည် - ကျေးဇူးပြု၍ အရောင်းကိုယ်စားလှယ်များသို့ စာပို့ဆက်သွယ်ပေးပါ။",
     noMatches: "ကိုက်ညီမှုမရှိပါ",
-    emptyTitle: "သင့်စစ်ထုတ်မှုနှင့်ကိုက်ညီသောစာရင်းမရှိပါ",
+    emptyTitle: "လက်ရှိ Stock မရနိုင်သေးပါ။",
     emptyHint:
-      "ဈေးနှုန်းအပိုင်းအခြားကိုကျယ်အောင်ပြင်ပါ၊ ဒေသတစ်ခုဖယ်ပါ သို့မဟုတ် စစ်ထုတ်မှုအချို့ရှင်းပါ။",
+      "ယာဥ်ယန္တရားကြေညာအသစ်များကို ပုံမှန်ထည့်သွင်းပေးနေပါသည် - ကျေးဇူးပြု၍ အရောင်းကိုယ်စားလှယ်များသို့ စာပို့ဆက်သွယ်ပေးပါ။",
     loadError:
       "စာရင်းများကိုမဖွင့်နိုင်ပါ။ အင်တာနက်ချိတ်ဆက်မှုကိုစစ်ပြီးထပ်ကြိုးစားပါ။",
     searchBrand: "ကုမ္ပဏီရှာရန်…",
