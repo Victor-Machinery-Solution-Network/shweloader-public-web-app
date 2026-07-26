@@ -7,15 +7,24 @@ import type { BlogPost, Listing } from "@/lib/api/types";
 
 type Json = Record<string, unknown>;
 
-/** Render JSON-LD safely (escape `<` to avoid breaking out of the script). */
+/** Render JSON-LD safely (escape `<` to avoid breaking out of the script).
+ *  One <script> per schema object — a top-level array in a single tag is valid
+ *  JSON-LD, but naive extractors expecting `{"@context"…` miss it. */
 export function JsonLd({ data }: { data: Json | Json[] }) {
-  const json = JSON.stringify(data).replace(/</g, "\\u003c");
+  const items = Array.isArray(data) ? data : [data];
   return (
-    <script
-      type="application/ld+json"
-      // data is server-built from trusted shapes; `<` is escaped above.
-      dangerouslySetInnerHTML={{ __html: json }}
-    />
+    <>
+      {items.map((item, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          // data is server-built from trusted shapes; `<` is escaped below.
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(item).replace(/</g, "\\u003c"),
+          }}
+        />
+      ))}
+    </>
   );
 }
 
