@@ -77,8 +77,7 @@ export async function generateMetadata({
     const node =
       findLandingNode(categorySlug(filters.sub || filters.category), cats, attach);
     if (node) {
-      canonicalPath =
-        filters.mode === "rent" ? `/${node.slug}/for-rent` : `/${node.slug}`;
+      canonicalPath = `/${node.slug}/for-${filters.mode === "rent" ? "rent" : "sale"}`;
     }
   }
 

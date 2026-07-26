@@ -1,20 +1,10 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-
-import "@/styles/pages/browse.css";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import {
   getAttachmentCategories,
   getEquipmentCategories,
 } from "@/lib/api/taxonomy";
 import { buildLandingNodes } from "@/lib/category-landing";
-import {
-  CategoryLanding,
-  landingDescription,
-  landingTitle,
-  loadLanding,
-} from "@/components/browse/category-landing";
-import { buildMetadata } from "@/lib/seo/metadata";
 
 interface PageProps {
   params: Promise<{ categorySlug: string }>;
@@ -37,22 +27,16 @@ export async function generateStaticParams() {
   }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+/** A category has no mode-less view — /bulldozers 308s to /bulldozers/for-sale. */
+export default async function CategoryIndexPage({ params }: PageProps) {
   const { categorySlug } = await params;
-  const data = await loadLanding(categorySlug, "sale");
-  if (!data) return {};
-  return buildMetadata({
-    title: landingTitle(data.node, "sale"),
-    description: landingDescription(data.node, "sale"),
-    path: `/${data.node.slug}`,
-    // Empty category = thin page; keep it out of the index until it has stock.
-    noindex: data.total === 0,
-  });
-}
-
-export default async function CategoryLandingPage({ params }: PageProps) {
-  const { categorySlug } = await params;
-  const data = await loadLanding(categorySlug, "sale");
-  if (!data) notFound();
-  return <CategoryLanding data={data} mode="sale" />;
+  const [cats, attach] = await Promise.all([
+    getEquipmentCategories(),
+    getAttachmentCategories(),
+  ]);
+  const node = buildLandingNodes(cats, attach).find(
+    (n) => n.slug === categorySlug,
+  );
+  if (!node) notFound();
+  permanentRedirect(`/${node.slug}/for-sale`);
 }

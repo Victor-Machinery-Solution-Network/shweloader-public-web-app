@@ -66,9 +66,9 @@ function toGroups(categories: Category[]): CatGroup[] {
             name: s.name,
             nameMy: s.nameMy,
             image: s.image,
-            // Clean SEO landing page (/bulldozers) — server-rendered with the
-            // correctly filtered listings; from there "Refine in Browse".
-            href: `/${categorySlug(s.name)}`,
+            // Clean SEO landing page (/bulldozers/for-sale) — the browse
+            // experience pre-filtered, with correctly filtered SSR listings.
+            href: `/${categorySlug(s.name)}/for-sale`,
           }))
         : [
             {
@@ -76,7 +76,7 @@ function toGroups(categories: Category[]): CatGroup[] {
               name: c.name,
               nameMy: c.nameMy,
               image: c.image,
-              href: `/${categorySlug(c.name)}`,
+              href: `/${categorySlug(c.name)}/for-sale`,
             },
           ],
   }));

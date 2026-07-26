@@ -60,7 +60,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           const data = await loadLanding(n.slug, mode).catch(() => null);
           if (!data || data.total === 0) return null;
           return {
-            url: absoluteUrl(mode === "rent" ? `/${n.slug}/for-rent` : `/${n.slug}`),
+            url: absoluteUrl(`/${n.slug}/for-${mode}`),
             changeFrequency: "daily",
             priority: mode === "rent" ? 0.65 : 0.75,
           } as const;
