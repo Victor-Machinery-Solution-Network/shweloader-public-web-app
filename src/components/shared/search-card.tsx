@@ -32,29 +32,33 @@ const ALL_MYANMAR = "All Myanmar";
  * are appended as additional top-level groups so the buyer can pick an
  * attachment type the same way.
  * ------------------------------------------------------------------ */
+interface CatSub {
+  /** English name — the identity threaded into /browse (never translated). */
+  name: string;
+  nameMy: string | null;
+}
 interface CatNode {
   id: string;
+  /** English name — used as the value/identity everywhere; display is `labelMy`. */
   label: string;
-  subs: string[];
+  labelMy: string | null;
+  subs: CatSub[];
 }
 
 function buildCategoryTree(
   categories: Category[],
   attachmentCategories: Category[],
 ): CatNode[] {
-  const fromCategory = (c: Category): CatNode => ({
-    id: `c-${c.id}`,
+  const fromCategory = (prefix: string) => (c: Category): CatNode => ({
+    id: `${prefix}-${c.id}`,
     label: c.name,
-    subs: c.subCategories.map((s) => s.name),
+    labelMy: c.nameMy,
+    subs: c.subCategories.map((s) => ({ name: s.name, nameMy: s.nameMy })),
   });
   return [
-    { id: "all", label: ALL_CATEGORIES, subs: [] },
-    ...categories.map(fromCategory),
-    ...attachmentCategories.map((c) => ({
-      id: `a-${c.id}`,
-      label: c.name,
-      subs: c.subCategories.map((s) => s.name),
-    })),
+    { id: "all", label: ALL_CATEGORIES, labelMy: null, subs: [] },
+    ...categories.map(fromCategory("c")),
+    ...attachmentCategories.map(fromCategory("a")),
   ];
 }
 
@@ -173,7 +177,11 @@ function CategoryPicker({
   onChange: (v: string, parent?: string) => void;
   label: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const my = locale === "my";
+  // English name stays the value/identity; Burmese is display-only.
+  const disp = (name: string, nameMy?: string | null) =>
+    my && nameMy ? nameMy : name;
   const [open, setOpen] = useState(false);
   const [hoverId, setHoverId] = useState(tree[0]?.id ?? "all");
   const [isModal, setIsModal] = useState(false);
@@ -259,9 +267,23 @@ function CategoryPicker({
       setHoverId("all");
       return;
     }
-    const owner = tree.find((c) => c.label === value || c.subs.includes(value));
+    const owner = tree.find(
+      (c) => c.label === value || c.subs.some((s) => s.name === value),
+    );
     if (owner) setHoverId(owner.id);
   }, [open, value, tree]);
+
+  // Resolve the current (English) value to its display label for the trigger.
+  const valueDisplay = useMemo(() => {
+    if (value === ALL_CATEGORIES) return t("search.allCategories");
+    for (const c of tree) {
+      if (c.label === value) return disp(c.label, c.labelMy);
+      const sub = c.subs.find((s) => s.name === value);
+      if (sub) return disp(sub.name, sub.nameMy);
+    }
+    return value;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, tree, my, t]);
 
   const pick = useCallback(
     (label: string, parent?: string) => {
@@ -278,18 +300,27 @@ function CategoryPicker({
     const needle = q.trim().toLowerCase();
     if (!needle) return null;
     const out: CatSearchResult[] = [];
+    const hit = (name: string, nameMy?: string | null) =>
+      name.toLowerCase().includes(needle) ||
+      (nameMy ? nameMy.toLowerCase().includes(needle) : false);
     for (const c of tree) {
-      if (c.label.toLowerCase().includes(needle)) {
-        out.push({ label: c.label, hint: "Category", commit: c.label });
+      if (hit(c.label, c.labelMy)) {
+        out.push({ label: disp(c.label, c.labelMy), hint: t("search.category"), commit: c.label });
       }
       for (const s of c.subs) {
-        if (s.toLowerCase().includes(needle)) {
-          out.push({ label: s, hint: c.label, commit: s, parent: c.label });
+        if (hit(s.name, s.nameMy)) {
+          out.push({
+            label: disp(s.name, s.nameMy),
+            hint: disp(c.label, c.labelMy),
+            commit: s.name,
+            parent: c.label,
+          });
         }
       }
     }
     return out;
-  }, [q, tree]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, tree, my, t]);
 
   const menu = (
     <div
@@ -329,7 +360,7 @@ function CategoryPicker({
                 }
               }}
             >
-              <span>{c.label}</span>
+              <span>{c.id === "all" ? t("search.allCategories") : disp(c.label, c.labelMy)}</span>
               {c.subs.length > 0 && (
                 <ChevronRight className="icon-sm cat-opt-chev" aria-hidden="true" />
               )}
@@ -348,21 +379,25 @@ function CategoryPicker({
               className={cn("cat-opt", hovered.label === value && "is-active")}
               onClick={() => pick(hovered.label)}
             >
-              <span>All {hovered.label.toLowerCase()}</span>
+              <span>
+                {my
+                  ? `${disp(hovered.label, hovered.labelMy)} အားလုံး`
+                  : `All ${hovered.label.toLowerCase()}`}
+              </span>
               {hovered.label === value && (
                 <Check className="icon-sm cat-opt-check" aria-hidden="true" />
               )}
             </button>
           </li>
           {hovered.subs.map((s) => (
-            <li key={s}>
+            <li key={s.name}>
               <button
                 type="button"
-                className={cn("cat-opt", s === value && "is-active")}
-                onClick={() => pick(s, hovered.label)}
+                className={cn("cat-opt", s.name === value && "is-active")}
+                onClick={() => pick(s.name, hovered.label)}
               >
-                <span>{s}</span>
-                {s === value && (
+                <span>{disp(s.name, s.nameMy)}</span>
+                {s.name === value && (
                   <Check className="icon-sm cat-opt-check" aria-hidden="true" />
                 )}
               </button>
@@ -383,7 +418,7 @@ function CategoryPicker({
         aria-haspopup={isModal ? "dialog" : "true"}
         aria-expanded={open}
       >
-        <span className="cat-trigger-val">{value}</span>
+        <span className="cat-trigger-val">{valueDisplay}</span>
         <ChevronDown className="icon-sm cat-trigger-chev" aria-hidden="true" />
       </button>
 
