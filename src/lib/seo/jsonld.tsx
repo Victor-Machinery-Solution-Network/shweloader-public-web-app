@@ -28,9 +28,14 @@ export function JsonLd({ data }: { data: Json | Json[] }) {
   );
 }
 
-// Business hotline (also the Viber number). Keep in sync with footer.tsx
-// HOTLINE_TEL and the contactPoint below.
-const HOTLINE_TEL = "+959940475000";
+// FALLBACK hotline only — the live value is admin-editable (Settings →
+// contact_phone, read via getSiteSettings().contactPhone) and passed in by
+// pages; this static is used when no phone is provided.
+const HOTLINE_FALLBACK = "+959940475000";
+
+/** Schema-clean telephone: admin-stored display format → digits+plus. */
+const schemaTel = (phone?: string) =>
+  (phone ?? HOTLINE_FALLBACK).replace(/\s+/g, "");
 
 function organizationRef(): Json {
   return {
@@ -44,7 +49,7 @@ function organizationRef(): Json {
 /** Seller for an Offer: the visible partner (with phone when present), else the
  *  marketplace itself with the hotline — every listing gets a reachable
  *  contact in structured data, not just the homepage. */
-function offerSeller(listing: Listing): Json {
+function offerSeller(listing: Listing, phone?: string): Json {
   if (listing.seller?.company && !listing.seller.hidden) {
     return {
       "@type": "Organization",
@@ -52,13 +57,13 @@ function offerSeller(listing: Listing): Json {
       ...(listing.seller.phone ? { telephone: listing.seller.phone } : {}),
     };
   }
-  return { "@type": "Organization", name: SITE_NAME, url: SITE_URL, telephone: HOTLINE_TEL };
+  return { "@type": "Organization", name: SITE_NAME, url: SITE_URL, telephone: schemaTel(phone) };
 }
 
 /** Offer for a listing, or undefined when the price is hidden/absent — the
  *  hide_price guard lives HERE so every schema (product page, category
  *  ItemList) shares it and can't leak an admin-hidden price. */
-function listingOffer(listing: Listing): Json | undefined {
+function listingOffer(listing: Listing, phone?: string): Json | undefined {
   const url = absoluteUrl(`/product/${listingSlug(listing)}`);
   // Derive price + currency together so they can never disagree, mirroring
   // formatMoney() exactly (USD only when display-currency is USD AND a usd
@@ -91,11 +96,11 @@ function listingOffer(listing: Listing): Json | undefined {
         ? "https://schema.org/NewCondition"
         : "https://schema.org/UsedCondition",
     url,
-    seller: offerSeller(listing),
+    seller: offerSeller(listing, phone),
   };
 }
 
-export function organizationSchema(): Json {
+export function organizationSchema(phone?: string): Json {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -128,7 +133,7 @@ export function organizationSchema(): Json {
       contactType: "customer service",
       // Business hotline (also the Viber number). Keep in sync with
       // footer.tsx HOTLINE_TEL.
-      telephone: HOTLINE_TEL,
+      telephone: schemaTel(phone),
       areaServed: "MM",
       availableLanguage: ["English", "Burmese"],
     },
@@ -174,13 +179,13 @@ export function breadcrumbSchema(
   };
 }
 
-export function productSchema(listing: Listing): Json {
+export function productSchema(listing: Listing, phone?: string): Json {
   const url = absoluteUrl(`/product/${listingSlug(listing)}`);
   const images = [listing.thumbnail, ...listing.images]
     .map((i) => i.url)
     .filter((u): u is string => !!u);
 
-  const offers = listingOffer(listing);
+  const offers = listingOffer(listing, phone);
 
   return {
     "@context": "https://schema.org",
@@ -251,6 +256,8 @@ export function collectionPageSchema(opts: {
   path: string;
   listings: Listing[];
   description?: string;
+  /** Admin-editable hotline for the marketplace-seller fallback. */
+  phone?: string;
 }): Json {
   return {
     "@context": "https://schema.org",
@@ -265,7 +272,7 @@ export function collectionPageSchema(opts: {
       // Full Product + Offer per item (price/seller/contact when visible) so an
       // agent can enumerate the machines from one category-page fetch.
       itemListElement: opts.listings.map((l, i) => {
-        const offers = listingOffer(l);
+        const offers = listingOffer(l, opts.phone);
         return {
           "@type": "ListItem",
           position: i + 1,
@@ -282,12 +289,12 @@ export function collectionPageSchema(opts: {
   };
 }
 
-export function aboutPageSchema(): Json {
+export function aboutPageSchema(phone?: string): Json {
   return {
     "@context": "https://schema.org",
     "@type": "AboutPage",
     name: "About ShweLoader",
     url: absoluteUrl("/about"),
-    mainEntity: organizationSchema(),
+    mainEntity: organizationSchema(phone),
   };
 }

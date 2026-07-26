@@ -123,7 +123,7 @@ export default async function AboutPage() {
   const PHONE_TEL = contactPhone.replace(/\s+/g, "");
   return (
     <div className="ax-page">
-      <JsonLd data={aboutPageSchema()} />
+      <JsonLd data={aboutPageSchema(contactPhone)} />
 
       {/* HERO */}
       <section className="ax-hero">

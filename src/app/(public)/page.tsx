@@ -56,7 +56,7 @@ export default async function HomePage() {
         ShweLoader — Myanmar&apos;s heavy equipment marketplace: buy, sell, and
         rent excavators, wheel loaders, cranes, and bulldozers
       </h1>
-      <JsonLd data={[organizationSchema(), websiteSchema()]} />
+      <JsonLd data={[organizationSchema(settings.contactPhone), websiteSchema()]} />
 
       {/* Admin kill-switches (Admin → Settings) — same behavior as mobile. */}
       {settings.announcementBarEnabled && (

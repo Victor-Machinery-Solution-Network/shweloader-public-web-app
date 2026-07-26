@@ -8,6 +8,7 @@ import {
   getEquipmentCategories,
 } from "@/lib/api/taxonomy";
 import { getLocations } from "@/lib/api/locations";
+import { getSiteSettings } from "@/lib/api/settings";
 import {
   JsonLd,
   breadcrumbSchema,
@@ -53,6 +54,8 @@ export interface LandingData {
   raw: Record<string, string>;
   filters: BrowseFilters;
   catalogs: ListingsViewCatalogs;
+  /** Admin-editable hotline (Settings → contact_phone) for schema sellers. */
+  contactPhone: string;
 }
 
 /** Resolve a landing slug and fetch its correctly filtered listings (SSR). */
@@ -68,10 +71,11 @@ export async function loadLanding(
   const node = nodes.find((n) => n.slug === slug);
   if (!node) return null;
 
-  const [brands, conditionTypes, locations] = await Promise.all([
+  const [brands, conditionTypes, locations, { contactPhone }] = await Promise.all([
     getBrands(),
     getConditionTypes(),
     getLocations(),
+    getSiteSettings(),
   ]);
   const catalogs: ListingsViewCatalogs = {
     categories,
@@ -94,7 +98,7 @@ export async function loadLanding(
     query: toListingQuery(filters, catalogs),
   });
 
-  return { node, nodes, listings, total, raw, filters, catalogs };
+  return { node, nodes, listings, total, raw, filters, catalogs, contactPhone };
 }
 
 /**
@@ -112,7 +116,7 @@ export function CategoryLanding({
   data: LandingData;
   mode: LandingMode;
 }) {
-  const { node, nodes, listings, total, raw, filters, catalogs } = data;
+  const { node, nodes, listings, total, raw, filters, catalogs, contactPhone } = data;
   const title = landingTitle(node, mode);
   const path = landingPath(node, mode);
   const otherMode: LandingMode = mode === "rent" ? "sale" : "rent";
@@ -142,6 +146,7 @@ export function CategoryLanding({
             path,
             listings,
             description: landingDescription(node, mode),
+            phone: contactPhone,
           }),
         ]}
       />

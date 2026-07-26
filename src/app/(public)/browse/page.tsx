@@ -10,6 +10,7 @@ import {
   getEquipmentCategories,
 } from "@/lib/api/taxonomy";
 import { getLocations } from "@/lib/api/locations";
+import { getSiteSettings } from "@/lib/api/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
   JsonLd,
@@ -114,13 +115,14 @@ export default async function BrowsePage() {
   // both fetched at build/revalidate (no searchParams). `browseListings` →
   // `getSaleListings` is `"use cache"` (cacheTag: listings), so this bakes into
   // the prerender and refreshes via the /api/revalidate webhook on catalog edits.
-  const [categories, attachmentCategories, brands, locations, conditionTypes] =
+  const [categories, attachmentCategories, brands, locations, conditionTypes, { contactPhone }] =
     await Promise.all([
       getEquipmentCategories(),
       getAttachmentCategories(),
       getBrands(),
       getLocations(),
       getConditionTypes(),
+      getSiteSettings(),
     ]);
   const catalogs = {
     categories,
@@ -150,6 +152,7 @@ export default async function BrowsePage() {
             listings: initialListings,
             description:
               "Browse excavators, wheel loaders, cranes, bulldozers, and attachments for sale and rent across Myanmar on ShweLoader, with MMK and USD pricing.",
+            phone: contactPhone,
           }),
         ]}
       />

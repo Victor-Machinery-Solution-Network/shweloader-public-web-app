@@ -24,6 +24,7 @@ import {
 } from "@/lib/api/listings";
 import { assetUrl } from "@/lib/assets";
 import { absoluteUrl } from "@/lib/env";
+import { getSiteSettings } from "@/lib/api/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
   JsonLd,
@@ -111,7 +112,10 @@ export default async function ProductPage({ params }: PageProps) {
   // query/hash carried over from however the visitor arrived.
   const shareUrl = absoluteUrl(`/product/${canonicalSlug}`);
 
-  const related = await getRelatedListings(listing);
+  const [related, { contactPhone }] = await Promise.all([
+    getRelatedListings(listing),
+    getSiteSettings(),
+  ]);
 
   const mode = listingMode(listing);
   const fields = priceFields(listing);
@@ -148,7 +152,7 @@ export default async function ProductPage({ params }: PageProps) {
   return (
     <div className="pdp-page">
       <JsonLd
-        data={[productSchema(listing), breadcrumbSchema(crumbs)]}
+        data={[productSchema(listing, contactPhone), breadcrumbSchema(crumbs)]}
       />
 
       <div className="container">
