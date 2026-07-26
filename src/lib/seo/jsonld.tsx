@@ -28,12 +28,70 @@ export function JsonLd({ data }: { data: Json | Json[] }) {
   );
 }
 
+// Business hotline (also the Viber number). Keep in sync with footer.tsx
+// HOTLINE_TEL and the contactPoint below.
+const HOTLINE_TEL = "+959940475000";
+
 function organizationRef(): Json {
   return {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
     logo: absoluteUrl("/brand/logo_full.png"),
+  };
+}
+
+/** Seller for an Offer: the visible partner (with phone when present), else the
+ *  marketplace itself with the hotline — every listing gets a reachable
+ *  contact in structured data, not just the homepage. */
+function offerSeller(listing: Listing): Json {
+  if (listing.seller?.company && !listing.seller.hidden) {
+    return {
+      "@type": "Organization",
+      name: listing.seller.company,
+      ...(listing.seller.phone ? { telephone: listing.seller.phone } : {}),
+    };
+  }
+  return { "@type": "Organization", name: SITE_NAME, url: SITE_URL, telephone: HOTLINE_TEL };
+}
+
+/** Offer for a listing, or undefined when the price is hidden/absent — the
+ *  hide_price guard lives HERE so every schema (product page, category
+ *  ItemList) shares it and can't leak an admin-hidden price. */
+function listingOffer(listing: Listing): Json | undefined {
+  const url = absoluteUrl(`/product/${listingSlug(listing)}`);
+  // Derive price + currency together so they can never disagree, mirroring
+  // formatMoney() exactly (USD only when display-currency is USD AND a usd
+  // value exists; else MMK; else USD) — the structured-data price always
+  // matches the price shown on the page.
+  let price: number | null = null;
+  let currency = "USD";
+  if (listing.sale && !listing.sale.hide) {
+    if (listing.sale.currency === "USD" && listing.sale.usd != null) {
+      price = listing.sale.usd;
+      currency = "USD";
+    } else if (listing.sale.mmk != null) {
+      price = listing.sale.mmk;
+      currency = "MMK";
+    } else if (listing.sale.usd != null) {
+      price = listing.sale.usd;
+      currency = "USD";
+    }
+  }
+  if (price == null) return undefined;
+  return {
+    "@type": "Offer",
+    price: String(price),
+    priceCurrency: currency,
+    availability: listing.isSoldOut
+      ? "https://schema.org/SoldOut"
+      : "https://schema.org/InStock",
+    itemCondition:
+      listing.condition?.toLowerCase() === "new"
+        ? "https://schema.org/NewCondition"
+        : "https://schema.org/UsedCondition",
+    url,
+    seller: offerSeller(listing),
   };
 }
 
@@ -70,7 +128,7 @@ export function organizationSchema(): Json {
       contactType: "customer service",
       // Business hotline (also the Viber number). Keep in sync with
       // footer.tsx HOTLINE_TEL.
-      telephone: "+959940475000",
+      telephone: HOTLINE_TEL,
       areaServed: "MM",
       availableLanguage: ["English", "Burmese"],
     },
@@ -122,50 +180,7 @@ export function productSchema(listing: Listing): Json {
     .map((i) => i.url)
     .filter((u): u is string => !!u);
 
-  // Derive price + currency together so they can never disagree, mirroring
-  // formatMoney() exactly (USD only when display-currency is USD AND a usd value
-  // exists; else MMK; else USD) — so the structured-data price matches the price
-  // shown on the page. The old code took `usd ?? mmk` for the value but labelled
-  // the currency independently, so a USD value could ship as `priceCurrency:MMK`.
-  let price: number | null = null;
-  let currency = "USD";
-  if (listing.sale && !listing.sale.hide) {
-    if (listing.sale.currency === "USD" && listing.sale.usd != null) {
-      price = listing.sale.usd;
-      currency = "USD";
-    } else if (listing.sale.mmk != null) {
-      price = listing.sale.mmk;
-      currency = "MMK";
-    } else if (listing.sale.usd != null) {
-      price = listing.sale.usd;
-      currency = "USD";
-    }
-  }
-
-  const offers =
-    price != null
-      ? {
-          "@type": "Offer",
-          price: String(price),
-          priceCurrency: currency,
-          availability: listing.isSoldOut
-            ? "https://schema.org/SoldOut"
-            : "https://schema.org/InStock",
-          itemCondition:
-            listing.condition?.toLowerCase() === "new"
-              ? "https://schema.org/NewCondition"
-              : "https://schema.org/UsedCondition",
-          url,
-          ...(listing.seller?.company && !listing.seller.hidden
-            ? {
-                seller: {
-                  "@type": "Organization",
-                  name: listing.seller.company,
-                },
-              }
-            : {}),
-        }
-      : undefined;
+  const offers = listingOffer(listing);
 
   return {
     "@context": "https://schema.org",
@@ -247,12 +262,22 @@ export function collectionPageSchema(opts: {
     mainEntity: {
       "@type": "ItemList",
       numberOfItems: opts.listings.length,
-      itemListElement: opts.listings.map((l, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        url: absoluteUrl(`/product/${listingSlug(l)}`),
-        name: l.title,
-      })),
+      // Full Product + Offer per item (price/seller/contact when visible) so an
+      // agent can enumerate the machines from one category-page fetch.
+      itemListElement: opts.listings.map((l, i) => {
+        const offers = listingOffer(l);
+        return {
+          "@type": "ListItem",
+          position: i + 1,
+          item: {
+            "@type": "Product",
+            name: l.title,
+            url: absoluteUrl(`/product/${listingSlug(l)}`),
+            ...(l.brand ? { brand: { "@type": "Brand", name: l.brand } } : {}),
+            ...(offers ? { offers } : {}),
+          },
+        };
+      }),
     },
   };
 }

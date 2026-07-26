@@ -56,6 +56,26 @@ export async function generateMetadata({
     filters.location ||
     filters.mode === "rent";
 
+  // Resolve category/sub against the live taxonomy first: it normalizes raw
+  // param values for the title ("lifting-equipment" → "Lifting Equipment") and
+  // drives the canonical below.
+  let node = null;
+  if (filters.sub || filters.category) {
+    const [cats, attach] = await Promise.all([
+      getEquipmentCategories().catch(() => []),
+      getAttachmentCategories().catch(() => []),
+    ]);
+    node = findLandingNode(
+      categorySlug(filters.sub || filters.category),
+      cats,
+      attach,
+    );
+    if (node) {
+      if (filters.sub) filters.sub = node.name;
+      else filters.category = node.name;
+    }
+  }
+
   const title = hasFilters ? titleFromFilters(filters) : "Browse heavy equipment";
   const description = hasFilters
     ? `${title} on ShweLoader — Myanmar's heavy equipment marketplace. Compare listings with MMK and USD pricing.`
@@ -69,16 +89,8 @@ export async function generateMetadata({
   // The canonical consolidates to the matching landing page when the filtered
   // name validates against the live taxonomy (never to a 404), else /browse.
   let canonicalPath = "/browse";
-  if (filters.sub || filters.category) {
-    const [cats, attach] = await Promise.all([
-      getEquipmentCategories().catch(() => []),
-      getAttachmentCategories().catch(() => []),
-    ]);
-    const node =
-      findLandingNode(categorySlug(filters.sub || filters.category), cats, attach);
-    if (node) {
-      canonicalPath = `/${node.slug}/for-${filters.mode === "rent" ? "rent" : "sale"}`;
-    }
+  if (node) {
+    canonicalPath = `/${node.slug}/for-${filters.mode === "rent" ? "rent" : "sale"}`;
   }
 
   return buildMetadata({
