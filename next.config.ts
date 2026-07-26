@@ -74,6 +74,10 @@ const nextConfig: NextConfig = {
             key: "Cache-Control",
             value: "public, max-age=0, must-revalidate, no-transform",
           },
+          // Vercel's edge ignores no-transform; an explicit identity encoding
+          // makes it skip compression entirely (naive AI fetchers advertise
+          // br/gzip they can't decode).
+          { key: "Content-Encoding", value: "identity" },
         ],
       },
       // RFC 8288 agent-discovery: llms.txt is the machine-readable site guide.
