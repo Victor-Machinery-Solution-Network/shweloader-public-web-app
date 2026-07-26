@@ -16,6 +16,7 @@ import {
   breadcrumbSchema,
   collectionPageSchema,
 } from "@/lib/seo/jsonld";
+import { categorySlug, findLandingNode } from "@/lib/category-landing";
 import { BrowseShell } from "@/components/browse/browse-shell";
 import { ListingsView } from "@/components/browse/listings-view";
 import {
@@ -43,7 +44,9 @@ export async function generateMetadata({
 }: {
   searchParams: Promise<RawSearchParams>;
 }): Promise<Metadata> {
-  const filters = parseFilters(await searchParams);
+  const raw = await searchParams;
+  const filters = parseFilters(raw);
+  const hasParams = Object.keys(raw).length > 0;
   const hasFilters =
     filters.q ||
     filters.category ||
@@ -58,30 +61,32 @@ export async function generateMetadata({
     ? `${title} on ShweLoader — Myanmar's heavy equipment marketplace. Compare listings with MMK and USD pricing.`
     : "Browse excavators, wheel loaders, cranes, bulldozers, and attachments for sale and rent across Myanmar on ShweLoader.";
 
-  // A clean single-category view (no other filters, page 1) gets its OWN
-  // canonical so it can rank as a long-tail landing page ("Excavators for sale
-  // in Myanmar"). Noisier combos (sub-category, brand, location, search) keep
-  // consolidating to /browse to avoid thin/duplicate pages.
-  const onlyCategory =
-    !!filters.category &&
-    !filters.sub &&
-    !filters.brands.length &&
-    !filters.models.length &&
-    !filters.location &&
-    !filters.q;
-  const canonicalPath =
-    onlyCategory && filters.page === 1
-      ? `/browse?category=${encodeURIComponent(filters.category)}${
-          filters.mode === "rent" ? "&mode=rent" : ""
-        }`
-      : "/browse";
+  // Deliberate index strategy: SEO lives on the clean landing pages
+  // (/bulldozers, /bulldozers/for-rent). Bare /browse is indexable (its static
+  // content matches its generic title); EVERY parameterized view is noindex —
+  // its SSR HTML is the unfiltered default (the filter applies client-side),
+  // so letting it index would pair a filtered title with unfiltered content.
+  // The canonical consolidates to the matching landing page when the filtered
+  // name validates against the live taxonomy (never to a 404), else /browse.
+  let canonicalPath = "/browse";
+  if (filters.sub || filters.category) {
+    const [cats, attach] = await Promise.all([
+      getEquipmentCategories().catch(() => []),
+      getAttachmentCategories().catch(() => []),
+    ]);
+    const node =
+      findLandingNode(categorySlug(filters.sub || filters.category), cats, attach);
+    if (node) {
+      canonicalPath =
+        filters.mode === "rent" ? `/${node.slug}/for-rent` : `/${node.slug}`;
+    }
+  }
 
   return buildMetadata({
     title,
     description,
     path: canonicalPath,
-    // Paginated permutations shouldn't dilute the canonical index.
-    noindex: filters.page > 1,
+    noindex: hasParams,
   });
 }
 

@@ -4201,3 +4201,18 @@ html, body {
 }
 .sshare-link:hover { background: var(--m-bg-2); border-color: var(--m-line-2); }
 .bp-share-row { display: inline-flex; align-items: center; gap: 12px; }
+
+/* ---------- Category landing pages (/bulldozers, /bulldozers/for-rent) ---------- */
+.cland { padding: 24px 0 48px; }
+.cland-crumbs { font-size: 13px; color: var(--m-ink-2, #777); margin-bottom: 12px; }
+.cland-crumbs a { color: inherit; }
+.cland-intro { margin: 8px 0 16px; color: var(--m-ink-2, #666); max-width: 70ch; }
+.cland-links { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.cland-pill {
+  display: inline-flex; align-items: center;
+  padding: 6px 14px; border-radius: 9999px; font-size: 14px;
+  background: var(--m-bg); border: 1px solid var(--m-line); color: var(--m-ink);
+}
+.cland-pill:hover { background: var(--m-bg-2); border-color: var(--m-line-2); }
+.cland-grid { margin-bottom: 28px; }
+.cland-sub-h { font-size: 16px; font-weight: 600; margin: 0 0 10px; }

@@ -8,6 +8,8 @@ import {
 } from "@/lib/api/taxonomy";
 import { getSiteSettings } from "@/lib/api/settings";
 import { listingSlug, blogSlug } from "@/lib/slug";
+import { buildLandingNodes } from "@/lib/category-landing";
+import { loadLanding } from "@/components/browse/category-landing";
 
 function asDate(value: string | null | undefined): Date | undefined {
   if (!value) return undefined;
@@ -47,17 +49,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getAttachmentCategories().catch(() => []),
   ]);
 
-  // Top-level category landing pages — self-canonical long-tail entry points
-  // ("Excavators for sale in Myanmar"). Generated from the live taxonomy, so
-  // they track whatever categories the admin defines. URL must match the
-  // self-canonical the browse page emits for a clean single-category view.
-  const categoryEntries: MetadataRoute.Sitemap = [...equipCats, ...attachCats].map(
-    (c) => ({
-      url: absoluteUrl(`/browse?category=${encodeURIComponent(c.name)}`),
-      changeFrequency: "daily",
-      priority: 0.75,
-    }),
-  );
+  // Clean category landing pages (/bulldozers, /bulldozers/for-rent) — the
+  // indexable long-tail entry points, generated from the live taxonomy. Only
+  // pages with stock are listed; empty ones are noindex until they fill.
+  const nodes = buildLandingNodes(equipCats, attachCats);
+  const categoryEntries: MetadataRoute.Sitemap = (
+    await Promise.all(
+      nodes.flatMap((n) =>
+        (["sale", "rent"] as const).map(async (mode) => {
+          const data = await loadLanding(n.slug, mode).catch(() => null);
+          if (!data || data.total === 0) return null;
+          return {
+            url: absoluteUrl(mode === "rent" ? `/${n.slug}/for-rent` : `/${n.slug}`),
+            changeFrequency: "daily",
+            priority: mode === "rent" ? 0.65 : 0.75,
+          } as const;
+        }),
+      ),
+    )
+  ).filter((e): e is NonNullable<typeof e> => e !== null);
 
   const listingEntries: MetadataRoute.Sitemap = listings.map((l) => ({
     url: absoluteUrl(`/product/${listingSlug(l)}`),

@@ -16,6 +16,7 @@ function ExcavatorIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 import { assetUrl } from "@/lib/assets";
+import { categorySlug } from "@/lib/category-landing";
 import { useI18n } from "@/components/providers/language-provider";
 import type { Category } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -65,9 +66,9 @@ function toGroups(categories: Category[]): CatGroup[] {
             name: s.name,
             nameMy: s.nameMy,
             image: s.image,
-            href: `/browse?category=${encodeURIComponent(
-              c.name,
-            )}&sub=${encodeURIComponent(s.name)}`,
+            // Clean SEO landing page (/bulldozers) — server-rendered with the
+            // correctly filtered listings; from there "Refine in Browse".
+            href: `/${categorySlug(s.name)}`,
           }))
         : [
             {
@@ -75,7 +76,7 @@ function toGroups(categories: Category[]): CatGroup[] {
               name: c.name,
               nameMy: c.nameMy,
               image: c.image,
-              href: `/browse?category=${encodeURIComponent(c.name)}`,
+              href: `/${categorySlug(c.name)}`,
             },
           ],
   }));
