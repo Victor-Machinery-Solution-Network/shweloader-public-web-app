@@ -63,6 +63,19 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },
+      // Agent-critical plain files: `no-transform` stops edge compression.
+      // Serving is spec-compliant either way, but many naive AI fetchers
+      // advertise `Accept-Encoding: br` without actually decompressing —
+      // they'd see "unreadable binary". These files are tiny; skip encoding.
+      {
+        source: "/(sitemap.xml|robots.txt|llms.txt)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate, no-transform",
+          },
+        ],
+      },
       // RFC 8288 agent-discovery: llms.txt is the machine-readable site guide.
       {
         source: "/",
