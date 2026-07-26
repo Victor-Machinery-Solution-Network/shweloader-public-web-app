@@ -1719,7 +1719,11 @@ export function AuthModal() {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="auth-modal" data-screen-label="Auth modal" ref={dialogRef}>
+      <div
+        className={"auth-modal" + (tab === "signup" ? " auth-modal-wide" : "")}
+        data-screen-label="Auth modal"
+        ref={dialogRef}
+      >
         <button
           type="button"
           className="auth-modal-close"

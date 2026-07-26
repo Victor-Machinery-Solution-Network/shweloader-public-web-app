@@ -32,6 +32,10 @@
   animation: authModalPop .25s cubic-bezier(.2,.7,.2,1);
   display: flex;
 }
+
+/* Signup collects more fields — give the two-pane layout extra room on desktop. */
+.auth-modal.auth-modal-wide { max-width: 1120px; }
+
 @keyframes authModalPop {
   from { opacity: 0; transform: translateY(12px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -109,7 +113,7 @@
 @media (max-width: 768px) {
   .auth-modal .auth-split { grid-template-columns: 1fr; }
   .auth-modal .auth-promo-col { display: none; }
-  .auth-modal { max-width: 480px; }
+  .auth-modal, .auth-modal.auth-modal-wide { max-width: 480px; }
   .auth-modal .auth-form-col { padding: 24px 24px 28px; }
 }
 
