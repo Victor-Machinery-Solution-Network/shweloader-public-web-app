@@ -428,7 +428,7 @@ function CategoryPicker({
           className="cat-modal-overlay"
           role="dialog"
           aria-modal="true"
-          aria-label="Choose category"
+          aria-label={t("search.chooseCategory")}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setOpen(false);
@@ -439,7 +439,7 @@ function CategoryPicker({
           <div className="cat-modal">
             <header className="cat-modal-head">
               <div>
-                <div className="cat-modal-eyebrow">Choose category</div>
+                <div className="cat-modal-eyebrow">{t("search.chooseCategory")}</div>
                 <h3 className="cat-modal-title">{t("search.lookingFor")}</h3>
               </div>
               <button
@@ -458,10 +458,10 @@ function CategoryPicker({
               <Search className="cat-modal-search-icon" aria-hidden="true" />
               <input
                 type="text"
-                placeholder="Search categories and subcategories"
+                placeholder={t("search.searchCategories")}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                aria-label="Search categories and subcategories"
+                aria-label={t("search.searchCategories")}
               />
               {q && (
                 <button
@@ -477,7 +477,7 @@ function CategoryPicker({
             {searchResults ? (
               <div className="cat-modal-results">
                 {searchResults.length === 0 ? (
-                  <div className="cat-modal-empty">No categories match &ldquo;{q}&rdquo;</div>
+                  <div className="cat-modal-empty">{t("search.noCategoryMatch")} &ldquo;{q}&rdquo;</div>
                 ) : (
                   searchResults.map((r, i) => (
                     <button
@@ -532,6 +532,20 @@ function LocationPicker({
   const my = locale === "my";
   const locName = (n: { name: string; nameMy: string | null }) =>
     my ? (n.nameMy ?? n.name) : n.name;
+  // Value/commit is the English name; resolve it to a display label for the
+  // collapsed trigger (same pattern as the category picker).
+  const valueDisplay = useMemo(() => {
+    if (value === ALL_MYANMAR) return t("search.allMyanmar");
+    for (const s of locations) {
+      if (s.name === value) return locName(s);
+      for (const d of s.districts) {
+        if (d.name === value) return locName(d);
+        for (const tw of d.townships) if (tw.name === value) return locName(tw);
+      }
+    }
+    return value;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, locations, my, t]);
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [hoverStateId, setHoverStateId] = useState<number | null>(
@@ -639,7 +653,7 @@ function LocationPicker({
           aria-haspopup="dialog"
           aria-expanded={open}
         >
-          <span className="cat-trigger-val">{value}</span>
+          <span className="cat-trigger-val">{valueDisplay}</span>
           <ChevronDown className="icon-sm cat-trigger-chev" aria-hidden="true" />
         </button>
       </div>
@@ -726,7 +740,7 @@ function LocationPicker({
                       )}
                       onClick={() => pick(ALL_MYANMAR)}
                     >
-                      {ALL_MYANMAR}
+                      {t("search.allMyanmar")}
                     </button>
                     {locations.slice(0, 4).map((s) => (
                       <button
@@ -788,7 +802,11 @@ function LocationPicker({
                             )}
                             onClick={() => pick(stateObj.name)}
                           >
-                            <span>All {stateObj.name.toLowerCase()}</span>
+                            <span>
+                              {my
+                                ? `${locName(stateObj)} တစ်ခုလုံး`
+                                : `All ${stateObj.name.toLowerCase()}`}
+                            </span>
                           </button>
                         </li>
                       )}
