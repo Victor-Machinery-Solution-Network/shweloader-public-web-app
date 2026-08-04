@@ -60,25 +60,6 @@ const nextConfig: NextConfig = {
   // (No longer tied to next/image, which is now unoptimized.)
   serverExternalPackages: ["sharp"],
 
-  // Category slugs are derived from the taxonomy name at runtime
-  // (`categorySlug()` in src/lib/category-landing.ts), so fixing a misspelled
-  // category name in D1 silently changes its public URL. These two were live
-  // and indexed under the typo — 301 so existing Google results keep working.
-  async redirects() {
-    return [
-      {
-        source: "/tendem-rollers/:path*",
-        destination: "/tandem-rollers/:path*",
-        permanent: true,
-      },
-      {
-        source: "/rigid-fuel-boxer-trucks/:path*",
-        destination: "/rigid-fuel-bowser-trucks/:path*",
-        permanent: true,
-      },
-    ];
-  },
-
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },
