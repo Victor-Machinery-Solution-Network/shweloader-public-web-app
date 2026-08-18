@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ProductActions } from "@/components/product/product-actions";
 import { StatusPill } from "@/components/shared/status-pill";
-import { T } from "@/components/t";
+import { T, TName } from "@/components/t";
 
 import { Gallery } from "@/components/product/gallery";
 import {
@@ -25,6 +25,7 @@ import {
 import { assetUrl } from "@/lib/assets";
 import { absoluteUrl } from "@/lib/env";
 import { getSiteSettings } from "@/lib/api/settings";
+import { categoryNamesMy } from "@/lib/api/taxonomy";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
   JsonLd,
@@ -134,6 +135,13 @@ export default async function ProductPage({ params }: PageProps) {
     listing.brand ||
     null;
 
+  // Category names are admin-authored, not dictionary keys — pull their Burmese
+  // column so the crumb localizes with the rest of the trail.
+  const { categoryMy, subCategoryMy } = await categoryNamesMy(
+    listing.category,
+    listing.subCategory,
+  );
+
   // "<brand> <model>" — shared with the browse card; used for the H1 + breadcrumb.
   const displayTitle = listingDisplayTitle(listing);
 
@@ -169,7 +177,9 @@ export default async function ProductPage({ params }: PageProps) {
           {listing.category && (
             <>
               <span className="pdp-crumbs-sep" aria-hidden="true">/</span>
-              <Link href="/browse">{listing.category}</Link>
+              <Link href="/browse">
+                <TName name={listing.category} nameMy={categoryMy} />
+              </Link>
             </>
           )}
           <span className="pdp-crumbs-sep" aria-hidden="true">/</span>
@@ -207,7 +217,23 @@ export default async function ProductPage({ params }: PageProps) {
                   </div>
                 )}
                 <h1 className="t-h">{displayTitle}</h1>
-                {eyebrow && <div className="t-eyebrow">{eyebrow}</div>}
+                {eyebrow && (
+                  <div className="t-eyebrow">
+                    {listing.category || listing.subCategory ? (
+                      <>
+                        {listing.category && (
+                          <TName name={listing.category} nameMy={categoryMy} />
+                        )}
+                        {listing.category && listing.subCategory && " · "}
+                        {listing.subCategory && (
+                          <TName name={listing.subCategory} nameMy={subCategoryMy} />
+                        )}
+                      </>
+                    ) : (
+                      eyebrow
+                    )}
+                  </div>
+                )}
               </div>
               {/* Tablet-only Save/Share (desktop uses the side-column row; phones
                   use the floating gallery overlay). */}
