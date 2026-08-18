@@ -1211,8 +1211,9 @@
   /* The labelled actions row is replaced by the floating overlay on phones; the
      enquiry form is replaced by the sticky bottom bar — so the side column only
      carries the seller card on mobile. */
-  /* Divider above the Description so it reads as a separate section. */
-  .pdp-main .pdp-section { border-top: 1px solid var(--m-line); padding-top: 28px; }
+  /* Section rules belong to the block ABOVE the Description (ov-list, or the
+     seller block when there is one). Giving the Description its own border-top
+     as well drew two lines whenever the seller was hidden. */
   .pdp-hero { grid-template-columns: 1fr; gap: 24px; }
   .pdp-body:has(.pdp-body-r) { grid-template-columns: 1fr; }
 
@@ -1317,6 +1318,10 @@
     border: 0; border-radius: 0; background: none;
     padding: 0; box-shadow: none;
   }
+  /* Price and enquiry form are hidden on mobile (sticky bar owns both), so a
+     listing with no visible seller left this as an empty grid item — a dead
+     band between the overview and Description rules. */
+  .pdp-contact:not(:has(.ov-seller)) { display: none; }
   .ov-list {
     border-top: 0; margin-top: 0;
     padding: 4px 0 24px;
@@ -1324,7 +1329,9 @@
   }
   .ov-seller {
     border-top: 0;
-    padding: 0 0 4px;
+    /* closes the seller section, the way .ov-list closes the overview */
+    border-bottom: 1px solid var(--m-line);
+    padding: 0 0 24px;
   }
   .ov-list-eyebrow,
   .ov-seller-eyebrow {
