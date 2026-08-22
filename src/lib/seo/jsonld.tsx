@@ -72,18 +72,20 @@ function listingOffer(listing: Listing, phone?: string): Json | undefined {
   let price: number | null = null;
   let currency = "USD";
   if (listing.sale && !listing.sale.hide) {
-    if (listing.sale.currency === "USD" && listing.sale.usd != null) {
+    // `> 0`, not `!= null`: a zero amount means "ask us" and must never reach
+    // structured data as a $0 Offer.
+    if (listing.sale.currency === "USD" && Number(listing.sale.usd ?? 0) > 0) {
       price = listing.sale.usd;
       currency = "USD";
-    } else if (listing.sale.mmk != null) {
+    } else if (Number(listing.sale.mmk ?? 0) > 0) {
       price = listing.sale.mmk;
       currency = "MMK";
-    } else if (listing.sale.usd != null) {
+    } else if (Number(listing.sale.usd ?? 0) > 0) {
       price = listing.sale.usd;
       currency = "USD";
     }
   }
-  if (price == null) return undefined;
+  if (price == null || price <= 0) return undefined;
   return {
     "@type": "Offer",
     price: String(price),

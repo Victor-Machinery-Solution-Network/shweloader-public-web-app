@@ -59,9 +59,15 @@ export function formatMoney(
   displayCurrency?: DisplayCurrency,
 ): string {
   const preferUsd = displayCurrency === "USD";
-  if (preferUsd && usd != null) return formatUSD(usd);
-  if (mmk != null) return formatMMK(mmk);
-  if (usd != null) return formatUSD(usd);
+  // A zero amount means "ask us", never a real price — same meaning as
+  // hide_price, which is why the admin editor auto-hides a listing priced 0.
+  // app-api already masks these to null; this is the client-side backstop so a
+  // 0 can never render as "MMK 0" on any surface.
+  const hasUsd = Number(usd ?? 0) > 0;
+  const hasMmk = Number(mmk ?? 0) > 0;
+  if (preferUsd && hasUsd) return formatUSD(usd);
+  if (hasMmk) return formatMMK(mmk);
+  if (hasUsd) return formatUSD(usd);
   return "";
 }
 
