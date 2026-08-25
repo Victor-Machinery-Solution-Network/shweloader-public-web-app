@@ -39,6 +39,12 @@ export interface ChatMessage {
   attachments: ChatAttachment[];
   product: ProductRef | null;
   createdAt: string; // ISO
+  /** An admin corrected the text after sending — renders the "Edited" marker. */
+  edited?: boolean;
+  /** An admin deleted the message. The worker has already swapped `text` for
+   *  the tombstone and stripped attachments/product; this flag is what lets a
+   *  client that knows about it draw the styled version instead. */
+  deletedAt?: string | null;
   /** Only set on optimistic outgoing messages. */
   status?: SendStatus;
 }
@@ -61,6 +67,8 @@ export interface ServerMessage {
   created_at: string;
   attachments?: Array<{ file_url: string; file_name: string; file_size: number; file_type: string }>;
   product?: Record<string, unknown> | null;
+  edited?: boolean;
+  deleted_at?: string | null;
 }
 
 /** Worker Pusher `new-message` event on private-chat-{sessionId} */

@@ -218,6 +218,8 @@ export const en = {
     createAccount: "Create a free account",
     closedNote: "This conversation was closed.",
     startNew: "Start new conversation",
+    edited: "Edited",
+    deleted: "This message was deleted",
   },
   notifications: { title: "Notifications", empty: "You're all caught up" },
   common: {
@@ -447,6 +449,8 @@ export const my: Dictionary = {
     createAccount: "အခမဲ့ အကောင့်ဖွင့်ရန်",
     closedNote: "ဤစကားဝိုင်းကို ပိတ်လိုက်ပါပြီ။",
     startNew: "စကားဝိုင်းအသစ် စတင်ရန်",
+    edited: "ပြင်ဆင်ပြီး",
+    deleted: "ဤစာကို ဖျက်လိုက်ပါပြီ။",
   },
   notifications: { title: "အသိပေးချက်များ", empty: "အသစ်မရှိတော့ပါ" },
   common: {

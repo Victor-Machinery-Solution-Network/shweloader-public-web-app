@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/providers/language-provider";
 import { assetUrl } from "@/lib/assets";
 import { formatMoney } from "@/lib/format";
 import { listingSlug } from "@/lib/slug";
@@ -173,6 +174,14 @@ export function MessageBubble({
 }) {
   const mine = message.senderType === "user";
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const { t } = useI18n();
+
+  // Deleted by an admin. The bubble keeps its place in the thread and shows
+  // nothing it used to carry — the worker already stripped the payload, so
+  // this branch is only the styled treatment. A build that predates it falls
+  // back to the worker's plain-text tombstone in the normal bubble, which
+  // reads correctly, just without the icon.
+  const isDeleted = !!message.deletedAt;
 
   const attachments = message.attachments ?? [];
   const imageAtts = attachments.filter((a) => a.fileType.startsWith("image/"));
@@ -192,6 +201,28 @@ export function MessageBubble({
         groupedWithNext && "grp-next",
       )}
     >
+      {isDeleted ? (
+        <div className="chat-bubble is-deleted">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6M14 11v6" />
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+          </svg>
+          <span>{t("chat.deleted")}</span>
+        </div>
+      ) : (
+        <>
       {/* Product reference card — rendered above the text bubble */}
       {message.product && <ProductCard product={message.product} />}
 
@@ -213,11 +244,16 @@ export function MessageBubble({
           ))}
         </div>
       )}
+        </>
+      )}
 
       {/* Show the time/Seen meta only on the last message of a group (or a
           standalone message) — grouped messages share one timestamp below. */}
       {!groupedWithNext && (
         <div className="chat-msg-meta">
+          {message.edited && !isDeleted && (
+            <span className="chat-msg-edited">{t("chat.edited")}</span>
+          )}
           <span className="chat-msg-time">{fmtTime(message.createdAt)}</span>
           {mine && isLastOutgoing && <SeenTick message={message} adminReadAt={adminReadAt} />}
         </div>

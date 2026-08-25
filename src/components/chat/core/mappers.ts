@@ -47,6 +47,8 @@ export function fromServerMessage(m: ServerMessage): ChatMessage {
     attachments: attachmentsFromServer(m.attachments),
     product,
     createdAt: m.created_at,
+    edited: !!m.edited,
+    deletedAt: m.deleted_at ?? null,
   };
 }
 

@@ -16,6 +16,7 @@ export function usePusherChat(sessionId: number | null): { adminTyping: boolean 
   const bumpUnread = useChatStore((s) => s.bumpUnread);
   const setAdminReadAt = useChatStore((s) => s.setAdminReadAt);
   const setSessionStatus = useChatStore((s) => s.setSessionStatus);
+  const updateMessage = useChatStore((s) => s.updateMessage);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -52,6 +53,28 @@ export function usePusherChat(sessionId: number | null): { adminTyping: boolean 
         }
       });
 
+      // An admin edited or deleted a message in this thread. The payload is
+      // deliberately not viewer-specific — every client re-renders from these
+      // fields. Older builds simply don't bind this and pick the change up on
+      // their next fetch.
+      channel.bind(
+        "message-updated",
+        (raw: {
+          messageId: number;
+          message: string | null;
+          editedAt?: string | null;
+          deletedAt?: string | null;
+        }) => {
+          // Spreading `edited: undefined` would clobber a true already in the
+          // store, so only include the key when the event actually sets it.
+          updateMessage(sessionId, raw.messageId, {
+            text: raw.deletedAt ? null : raw.message,
+            deletedAt: raw.deletedAt ?? null,
+            ...(raw.editedAt ? { edited: true } : {}),
+          });
+        },
+      );
+
       channel.bind("messages-read", (raw: { reader_type: string; read_at: string }) => {
         if (raw.reader_type === "admin") setAdminReadAt(sessionId, raw.read_at);
       });
@@ -81,7 +104,7 @@ export function usePusherChat(sessionId: number | null): { adminTyping: boolean 
         pusher.unsubscribe(name);
       });
     };
-  }, [sessionId, addMessage, bumpUnread, setAdminReadAt, setSessionStatus]);
+  }, [sessionId, addMessage, bumpUnread, setAdminReadAt, setSessionStatus, updateMessage]);
 
   return { adminTyping };
 }

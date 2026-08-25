@@ -372,6 +372,23 @@
 }
 .chat-msg.is-agent .chat-msg-meta { flex-direction: row; }
 .chat-msg-time { font-size: 11px; color: var(--m-fg-3); }
+.chat-msg-edited { font-size: 11px; color: var(--m-fg-3); }
+
+/* Admin deleted this message. Keeps the bubble's shape and side so the thread
+   still reads chronologically, but drops the sender fill for a muted outline —
+   it is a placeholder, not something anyone said. */
+.chat-msg .chat-bubble.is-deleted {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent;
+  border: 1px solid var(--m-line);
+  color: var(--m-fg-3);
+  font-style: italic;
+}
+.chat-msg.is-me .chat-bubble.is-deleted,
+.chat-msg.is-agent .chat-bubble.is-deleted {
+  background: transparent; color: var(--m-fg-3);
+}
+.chat-msg .chat-bubble.is-deleted svg { flex: none; }
 
 /* Consecutive same-sender grouping (mobile parity): tighten the gap between
    stacked bubbles and flatten the sender-side corners so they read as one

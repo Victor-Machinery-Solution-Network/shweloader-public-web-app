@@ -31,6 +31,12 @@ interface ChatState {
   bumpUnread: (sessionId: number) => void;
   setAdminReadAt: (sessionId: number, iso: string) => void;
   setSessionStatus: (sessionId: number, status: ChatSession["status"]) => void;
+  /** Apply an admin edit/delete to an already-rendered message. */
+  updateMessage: (
+    sessionId: number,
+    serverId: number,
+    patch: Partial<Pick<ChatMessage, "text" | "edited" | "deletedAt">>,
+  ) => void;
   totalUnread: () => number;
 }
 
@@ -121,6 +127,28 @@ export const useChatStore = create<ChatState>()(
               );
           return { messages: { ...st.messages, [sessionId]: next } };
         }),
+
+      // An admin edited or deleted one of their messages. The worker has
+      // already decided what the customer may see, so this only re-renders —
+      // attachments and the product card are dropped locally too, since a
+      // deleted bubble must not keep showing the image it carried.
+      updateMessage: (sessionId, serverId, patch) =>
+        set((st) => ({
+          messages: {
+            ...st.messages,
+            [sessionId]: (st.messages[sessionId] ?? []).map((x) =>
+              x.serverId === serverId
+                ? {
+                    ...x,
+                    ...patch,
+                    ...(patch.deletedAt
+                      ? { attachments: [], product: null }
+                      : {}),
+                  }
+                : x,
+            ),
+          },
+        })),
 
       setStatus: (sessionId, tempId, status) =>
         set((st) => ({
