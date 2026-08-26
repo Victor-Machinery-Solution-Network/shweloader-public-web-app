@@ -41,7 +41,7 @@ export async function getRentListings(
 export async function browseListings(opts: {
   mode?: "sale" | "rent";
   query?: ListingQuery;
-}): Promise<{ listings: Listing[]; total: number }> {
+}): Promise<{ listings: Listing[]; total: number | null }> {
   "use cache";
   cacheLife("hours");
   cacheTag(CACHE_TAGS.listings);

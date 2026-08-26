@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: landingDescription(data.node, "sale"),
     path: `/${data.node.slug}/for-sale`,
     // Empty category = thin page; keep it out of the index until it has stock.
-    noindex: data.total === 0,
+    noindex: data.listings.length === 0,
   });
 }
 

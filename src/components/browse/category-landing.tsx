@@ -49,7 +49,8 @@ export interface LandingData {
   node: LandingNode;
   nodes: LandingNode[];
   listings: Listing[];
-  total: number;
+  /** Matching count from the API; null when it reported none. */
+  total: number | null;
   /** Raw filter params this page pre-applies (drives the client baseline). */
   raw: Record<string, string>;
   filters: BrowseFilters;
@@ -154,13 +155,17 @@ export function CategoryLanding({
       <div className="cland-head container">
         <h1 className="cland-h1">{title}</h1>
         <p className="cland-intro">
-          {total > 0
-            ? `${total} ${(total === 1 ? node.name : pluralName(node.name)).toLowerCase()} for ${
+          {listings.length === 0
+            ? `No ${pluralName(node.name).toLowerCase()} are listed for ${
                 mode === "rent" ? "rent" : "sale"
-              } across Myanmar — MMK and USD pricing from trusted dealers.`
-            : `No ${pluralName(node.name).toLowerCase()} are listed for ${
-                mode === "rent" ? "rent" : "sale"
-              } right now — check back soon or browse the full catalog.`}
+              } right now — check back soon or browse the full catalog.`
+            : total != null
+              ? `${total} ${(total === 1 ? node.name : pluralName(node.name)).toLowerCase()} for ${
+                  mode === "rent" ? "rent" : "sale"
+                } across Myanmar — MMK and USD pricing from trusted dealers.`
+              : `${pluralName(node.name)} for ${
+                  mode === "rent" ? "rent" : "sale"
+                } across Myanmar — MMK and USD pricing from trusted dealers.`}
         </p>
         <div className="cland-links">
           <Link className="cland-pill" href={landingPath(node, otherMode)}>

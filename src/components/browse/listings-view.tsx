@@ -46,7 +46,7 @@ export function ListingsView({
   catalogs,
 }: {
   initialListings: Listing[];
-  initialTotal: number;
+  initialTotal: number | null;
   initialFilters: BrowseFilters;
   catalogs: ListingsViewCatalogs;
 }) {
@@ -67,7 +67,7 @@ export function ListingsView({
   );
 
   const [listings, setListings] = useState<Listing[]>(initialListings);
-  const [total, setTotal] = useState<number>(initialTotal);
+  const [total, setTotal] = useState<number | null>(initialTotal);
   const [loading, setLoading] = useState(false);
   const [errored, setErrored] = useState(false);
 

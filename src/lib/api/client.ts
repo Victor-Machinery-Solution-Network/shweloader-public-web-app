@@ -139,12 +139,15 @@ export async function apiFetch<T>(
 export async function apiFetchList<T>(
   path: string,
   opts: ApiFetchOptions = {},
-): Promise<{ data: T[]; total: number }> {
+): Promise<{ data: T[]; total: number | null }> {
   let res: Response;
   try {
     res = await fetch(buildUrl(path, opts.query), {
       method: "GET",
-      headers: { Accept: "application/json" },
+      // Same edge-cache bypass as `apiFetch` above — this path was added later
+      // for paginated browse and missed it, leaving it the only server-side
+      // read served from the worker's edge cache.
+      headers: { Accept: "application/json", "X-Edge-Cache-Bypass": "1" },
       signal: opts.signal,
     });
   } catch (err) {
@@ -163,7 +166,11 @@ export async function apiFetchList<T>(
   const data = (await res.json()) as T[];
   const header = res.headers.get("x-total-count");
   const parsed = header != null ? Number(header) : NaN;
-  return { data, total: Number.isFinite(parsed) ? parsed : data.length };
+  // `null`, never `data.length`: a page-sized fallback is indistinguishable from
+  // a genuine single page, so a missing header would silently hide every later
+  // page — and on a cached/prerendered view that wrong number sticks. Callers
+  // must handle "count unknown" explicitly.
+  return { data, total: Number.isFinite(parsed) ? parsed : null };
 }
 
 /** Returns null on 404 instead of throwing — for detail lookups. */

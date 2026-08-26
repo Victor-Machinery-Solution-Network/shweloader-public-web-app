@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: landingTitle(data.node, "rent"),
     description: landingDescription(data.node, "rent"),
     path: `/${data.node.slug}/for-rent`,
-    noindex: data.total === 0,
+    noindex: data.listings.length === 0,
   });
 }
 

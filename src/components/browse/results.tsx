@@ -10,6 +10,7 @@ import { buildBrowseHref, PAGE_SIZE, type BrowseFilters } from "./filters";
  * Results region: grid of `ListingCard`s or list of `ListingRow`s per `view`, an
  * `EmptyState` when nothing matches, and numbered `Pagination` derived from the
  * `total` matching count (the API's X-Total-Count, or matched length on Saved).
+ * `total` is null when the API reported no count — see the derivation below.
  *
  * `onNavigate`, when provided (by the client ListingsView), makes pagination
  * update the URL shallowly + fetch client-side instead of a full navigation.
@@ -22,8 +23,9 @@ export function Results({
   basePath,
 }: {
   listings: Listing[];
-  /** Total matching listings across all pages — drives numbered pagination. */
-  total: number;
+  /** Total matching listings across all pages — drives numbered pagination.
+   *  `null` when the API reported no count (missing X-Total-Count). */
+  total: number | null;
   filters: BrowseFilters;
   onNavigate?: (page: number) => void;
   /** Route the pagination links target — defaults to /browse; Saved passes /saved. */
@@ -40,7 +42,13 @@ export function Results({
     );
   }
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // Unknown count: assume this page is the last unless it came back full, in
+  // which case there's at least one more. Enough to keep later pages reachable
+  // (a client fetch fills in the real count) without inventing a page number.
+  const totalPages =
+    total != null
+      ? Math.max(1, Math.ceil(total / PAGE_SIZE))
+      : filters.page + (listings.length === PAGE_SIZE ? 1 : 0);
 
   return (
     <>
