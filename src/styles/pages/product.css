@@ -270,7 +270,9 @@
   touch-action: pan-y;
 }
 .g-lb-img { position: relative; width: 100%; height: 100%; }
-.g-lb-stage .g-nav { opacity: 1; background: rgba(255, 255, 255, 0.14); }
+/* z-index: the full-size .g-lb-img follows .g-prev in DOM order and, being
+   positioned with 100% width, paints over it — killing the back arrow. */
+.g-lb-stage .g-nav { opacity: 1; z-index: 1; background: rgba(255, 255, 255, 0.14); }
 .g-lb-stage .g-nav:hover { background: rgba(255, 255, 255, 0.26); }
 .g-lb-stage .g-prev { left: 8px; }
 .g-lb-stage .g-next { right: 8px; }
