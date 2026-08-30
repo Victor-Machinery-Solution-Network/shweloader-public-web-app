@@ -115,19 +115,34 @@ export function parseFilters(sp: RawSearchParams): BrowseFilters {
   };
 }
 
+/** Routes whose OWN path the chrome stays on. Everything else (category landing
+ *  pages) shallow-navs to /browse — see `buildBrowseHref`. */
+const CHROME_PATHS = new Set(["/browse", "/saved"]);
+
 /**
  * Serialize a filter state to a `<basePath>?…` query string. `basePath` defaults
- * to the current route on the client (so the same Browse chrome serves both
- * `/browse` and `/saved`), with a `/browse` SSR fallback. Render-time callers
- * (pagination links) pass `basePath` explicitly to stay hydration-safe; click
- * handlers can rely on the inferred current route.
+ * to the current route on the client when that route owns the chrome (`/browse`,
+ * `/saved`), with a `/browse` SSR fallback. Render-time callers (pagination
+ * links) pass `basePath` explicitly to stay hydration-safe; click handlers can
+ * rely on the inferred current route.
+ *
+ * On a category landing page (/bulldozers/for-sale) the default is `/browse`,
+ * NOT the landing path: `useBrowseFilters` merges the landing's pre-applied
+ * baseline OVER the URL while the pathname is still the landing path, and this
+ * function omits empty params — so any filter the user CLEARS there (unticking
+ * the category, picking a different one, Buy↔Rent on a /for-rent page, Clear
+ * all) would be silently restored from the baseline. Chrome hrefs always carry
+ * the complete filter state, so leaving the landing path is what makes them win.
  */
 export function buildBrowseHref(
   f: Partial<BrowseFilters>,
   basePath?: string,
 ): string {
   const base =
-    basePath ?? (typeof window !== "undefined" ? window.location.pathname : "/browse");
+    basePath ??
+    (typeof window !== "undefined" && CHROME_PATHS.has(window.location.pathname)
+      ? window.location.pathname
+      : "/browse");
   const p = new URLSearchParams();
   if (f.q) p.set("q", f.q);
   if (f.type) p.set("type", f.type);
