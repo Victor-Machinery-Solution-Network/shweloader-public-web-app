@@ -87,8 +87,12 @@ export function ChatShell({
 
   // Mobile-only master-detail toggle: "list" shows the session rail,
   // "conv" shows the open conversation. Ignored at desktop widths (>768px),
-  // where both panes are always visible (the back button is hidden).
-  const [mobileView, setMobileView] = useState<"list" | "conv">("list");
+  // where both panes are always visible (the back button is hidden). A user
+  // with no sessions yet starts in "conv" — there's no list to show, and the
+  // composer is where their first message (which creates the session) goes.
+  const [mobileView, setMobileView] = useState<"list" | "conv">(
+    initial.length === 0 ? "conv" : "list",
+  );
 
   // Seed the store with server-rendered sessions on mount / when they change.
   // Only set activeSessionId when none is set yet (preserve user navigation),
@@ -166,13 +170,9 @@ export function ChatShell({
 
   // `active` is null for a user with no sessions yet: the thread is empty and
   // the composer is live — the first send creates the session. Treat that as
-  // an open conversation (it is), and go straight to the conversation pane on
-  // mobile since there's no list to show.
+  // an open conversation (it is).
   return (
-    <div
-      className="chat-shell2"
-      data-mobile-view={sessions.length === 0 ? "conv" : mobileView}
-    >
+    <div className="chat-shell2" data-mobile-view={mobileView}>
       {/* Left: session list */}
       <aside className="chat-list">
         <div className="chat-list-head">
