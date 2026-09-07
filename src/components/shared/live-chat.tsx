@@ -34,10 +34,13 @@ import "@/styles/pages/chat.css";
  *
  * Signed-out: the launcher opens the global auth modal (sign in to chat). If the
  * panel is opened via the global event, it shows the sign-in gate instead.
- * Signed-in: bootstraps the user's primary session via POST /api/chat/sessions
- * (get-or-create, once per component lifecycle), then renders the shared Thread +
- * Composer backed by the realtime core. The launcher button keeps its static
- * always-green dot — purely decorative, no presence call.
+ * Signed-in: renders the shared Thread + Composer backed by the realtime core.
+ * The active session is the user's most recent open one (from GET /api/chat/
+ * sessions); with none, the thread is simply empty and the session is created
+ * on the FIRST SEND (useChatSync.send → startNewSession) — never on open.
+ * That's mobile parity, and it's what keeps the admin app free of blank
+ * conversations. The launcher button keeps its static always-green dot —
+ * purely decorative, no presence call.
  *
  * Motion is handled entirely by the design CSS, which already disables the
  * pulse/shake animations under `prefers-reduced-motion: reduce`.
@@ -56,7 +59,6 @@ export function LiveChat() {
   const onChatPage = pathname?.startsWith("/chat") ?? false;
 
   const [open, setOpen] = useState(false);
-  const [bootstrapping, setBootstrapping] = useState(false);
   // Product reference staged by a product-page enquiry/chat entry point
   // (dispatched via the shwe:open-chat event). Attached to the user's NEXT sent
   // message so the worker enriches it into a product card, then cleared. Survives
@@ -82,8 +84,6 @@ export function LiveChat() {
     prevOpen.current = open;
   }, [open]);
 
-  // Guard: POST /api/chat/sessions only once per component lifecycle.
-  const bootstrappedRef = useRef(false);
   // Guard: GET /api/chat/sessions once per sign-in.
   const sessionSyncedRef = useRef(false);
 
@@ -133,41 +133,16 @@ export function LiveChat() {
   // (NEXT_PUBLIC_VAPID_PUBLIC_KEY not set) or the browser lacks SW/Push support.
   const webPush = useWebPush();
 
-  // Bootstrap the session when the panel is opened while signed in.
-  // Guard ensures only one POST per component lifecycle regardless of
-  // how many times the panel is opened/closed.
+  // Select the most recent open session once sessions are known (the post-
+  // login sync / refresh fill the store in the worker's last_message_at DESC
+  // order). Falls back to the newest closed one so its history + ClosedNotice
+  // show, matching ChatShell. No sessions at all → stays null: empty thread,
+  // and the first send creates one.
   useEffect(() => {
-    if (!open || !signedIn || bootstrappedRef.current) return;
-    bootstrappedRef.current = true;
-    setBootstrapping(true);
-    fetch("/api/chat/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    })
-      .then((r) => (r.ok ? (r.json() as Promise<{ sessionId: number }>) : null))
-      .then((data) => {
-        if (!data) return;
-        const { sessionId } = data;
-        // Only seed if the store doesn't already know this session — never clobber
-        // existing sessions (the /chat page may have populated the full list).
-        const existing = useChatStore.getState().sessions;
-        if (!existing.some((s) => s.id === sessionId)) {
-          const seedSession: ChatSession = {
-            id: sessionId,
-            status: "active",
-            lastMessageAt: null,
-            lastMessagePreview: null,
-            unreadUserCount: 0,
-            adminLastReadAt: null,
-          };
-          setSessions([...existing, seedSession]);
-        }
-        setActive(sessionId);
-      })
-      .catch(() => {})
-      .finally(() => setBootstrapping(false));
-  }, [open, signedIn, setActive, setSessions]);
+    if (activeSessionId != null || sessions.length === 0) return;
+    const pick = sessions.find((s) => s.status !== "resolved") ?? sessions[0];
+    setActive(pick.id);
+  }, [sessions, activeSessionId, setActive]);
 
   // Post-login sync: when the user signs in, load all their sessions from the
   // server and merge into the store. Runs once per sign-in (guard by ref that
@@ -177,10 +152,9 @@ export function LiveChat() {
       // Tear down the Pusher connection on logout so the next user doesn't
       // inherit the previous user's authenticated socket / channel subscriptions.
       resetPusher();
-      // Reset so both the sync AND the session bootstrap fire again on the next
-      // sign-in (e.g. after a token-expiry logout + re-login as another user).
+      // Reset so the sync fires again on the next sign-in (e.g. after a
+      // token-expiry logout + re-login as another user).
       sessionSyncedRef.current = false;
-      bootstrappedRef.current = false;
       return;
     }
     if (sessionSyncedRef.current) return;
@@ -216,7 +190,7 @@ export function LiveChat() {
                 adminLastReadAt: s.adminLastReadAt }
             : s;
         });
-        // Preserve any sessions only known locally (e.g. just bootstrapped).
+        // Preserve any sessions only known locally (e.g. just created by a send).
         const mergedIds = new Set(merged.map((s) => s.id));
         for (const s of existing) {
           if (!mergedIds.has(s.id)) merged.push(s);
@@ -288,14 +262,14 @@ export function LiveChat() {
     return () => window.removeEventListener("shwe:open-chat", onOpenChat);
   }, []);
 
-  // Auto-send the staged enquiry message once the session is ready. Keyed on
-  // `[activeSessionId, signedIn]` so it fires after the bootstrap POST resolves
-  // (which sets activeSessionId) and after a signed-out → signed-in transition.
-  // `autoSentRef` makes it a one-shot: we flip it before calling `send()` and
-  // clear both pending values, so a re-run can't double-fire. If signed out we
-  // do nothing — `pendingMessage`/`pendingProduct` persist for post-login send.
+  // Auto-send the staged enquiry message as soon as the user is signed in —
+  // `send()` creates the session itself when there isn't one, so nothing waits
+  // on a bootstrap. `autoSentRef` makes it a one-shot: we flip it before
+  // calling `send()` and clear both pending values, so a re-run can't
+  // double-fire. If signed out we do nothing — `pendingMessage`/
+  // `pendingProduct` persist for post-login send.
   useEffect(() => {
-    if (!signedIn || activeSessionId == null) return;
+    if (!signedIn) return;
     if (!pendingMessage || !pendingProduct) return;
     if (autoSentRef.current) return;
     autoSentRef.current = true;
@@ -312,7 +286,7 @@ export function LiveChat() {
       },
       product, // optimistic product card
     );
-  }, [activeSessionId, signedIn, pendingMessage, pendingProduct, send]);
+  }, [signedIn, pendingMessage, pendingProduct, send]);
 
   // Don't render the floating launcher on the full chat page (avoids a second
   // chat surface fighting over the shared store). All hooks above still run.
@@ -398,26 +372,18 @@ export function LiveChat() {
 
         {signedIn ? (
           <>
-            {bootstrapping || activeSessionId == null ? (
-              <div className="lc-body lc-body--loading" aria-live="polite">
-                <span className="chat-typing" aria-label="Loading…">
-                  <span /><span /><span />
-                </span>
-              </div>
-            ) : (
-              <Thread
-                messages={sessionMessages}
-                adminReadAt={sessionAdminReadAt}
-                adminTyping={adminTyping}
-              />
-            )}
+            <Thread
+              messages={sessionMessages}
+              adminReadAt={sessionAdminReadAt}
+              adminTyping={adminTyping}
+            />
             {activeSession?.status === "resolved" ? (
               <ClosedNotice note={t("chat.closedNote")} action={t("chat.startNew")} />
             ) : (
               <Composer
                 onSend={handleSend}
                 onTyping={notifyTyping}
-                disabled={bootstrapping || activeSessionId == null}
+                disabled={false}
                 sessionId={activeSessionId ?? null}
                 pendingProduct={pendingProduct}
                 onClearPending={() => setPendingProduct(null)}

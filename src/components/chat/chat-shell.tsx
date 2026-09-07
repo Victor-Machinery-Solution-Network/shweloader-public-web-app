@@ -164,22 +164,15 @@ export function ChatShell({
     );
   }, [sessions, query]);
 
-  if (!active && sessions.length === 0) {
-    return (
-      <div className="chat-shell2" data-mobile-view="conv">
-        <section className="chat-conv" style={{ gridColumn: "1 / -1" }}>
-          <div className="chat-card-body">
-            <div className="chat-day">
-              <span>No conversations yet</span>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
-  }
-
+  // `active` is null for a user with no sessions yet: the thread is empty and
+  // the composer is live — the first send creates the session. Treat that as
+  // an open conversation (it is), and go straight to the conversation pane on
+  // mobile since there's no list to show.
   return (
-    <div className="chat-shell2" data-mobile-view={mobileView}>
+    <div
+      className="chat-shell2"
+      data-mobile-view={sessions.length === 0 ? "conv" : mobileView}
+    >
       {/* Left: session list */}
       <aside className="chat-list">
         <div className="chat-list-head">
@@ -252,13 +245,13 @@ export function ChatShell({
           </button>
           <span className="chat-id-av" aria-hidden="true">
             <HeadsetIcon />
-            {active && active.status !== "resolved" && (
+            {active?.status !== "resolved" && (
               <span className="chat-id-on" />
             )}
           </span>
           <div className="chat-id-meta">
             <div className="chat-id-name">{t("chat.supportName")}</div>
-            {active && active.status !== "resolved" ? (
+            {active?.status !== "resolved" ? (
               <div className="chat-id-status">
                 {/* Mirror the mobile SupportHeader: "Online" / offline message
                     by admin presence; presence off keeps the static online label. */}

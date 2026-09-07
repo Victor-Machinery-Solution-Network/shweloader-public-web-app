@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { ArrowUp, Package, Paperclip, X } from "lucide-react";
+import { startNewSession } from "./refresh-sessions";
 import type { ChatAttachment, ProductRef } from "./types";
 
 interface PendingFile {
@@ -70,7 +71,7 @@ export function Composer({
     });
   };
 
-  const handleFiles = (files: FileList | null) => {
+  const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const newPending: PendingFile[] = Array.from(files).map((file) => {
       const isImage = file.type.startsWith("image/");
@@ -85,11 +86,24 @@ export function Composer({
     });
     setPending((prev) => [...prev, ...newPending]);
 
+    // The worker keys uploads under a session, so attaching is the one pre-send
+    // action that creates it (the message itself does so lazily in
+    // useChatSync.send). If that fails, fail the chips instead of uploading
+    // into nothing.
+    const sid = sessionId ?? (await startNewSession());
+    if (sid == null) {
+      const keys = new Set(newPending.map((p) => p.key));
+      setPending((prev) =>
+        prev.map((p) => (keys.has(p.key) ? { ...p, status: "error" as const } : p)),
+      );
+      return;
+    }
+
     // Upload each file independently.
     newPending.forEach((pf) => {
       const form = new FormData();
       form.append("file", pf.file);
-      if (sessionId != null) form.append("sessionId", String(sessionId));
+      form.append("sessionId", String(sid));
 
       fetch("/api/chat/upload", { method: "POST", body: form })
         .then((r) => (r.ok ? (r.json() as Promise<ChatAttachment>) : Promise.reject(r.status)))
@@ -221,7 +235,7 @@ export function Composer({
           multiple
           style={{ display: "none" }}
           onChange={(e) => {
-            handleFiles(e.target.files);
+            void handleFiles(e.target.files);
             // Reset so the same file can be re-picked after removal.
             e.target.value = "";
           }}

@@ -54,21 +54,23 @@ export function useChatSync(sessionId: number | null) {
       listing?: { saleListingId?: number; rentListingId?: number },
       product?: ProductRef | null,
     ) => {
-      if (!sessionId) return;
       const trimmed = text.trim();
       // Allow sending if there's text, attachments, or a listing reference.
       if (!trimmed && !(attachments?.length) && !listing) return;
 
-      // If the active conversation was closed by an admin, a new message starts
-      // a FRESH session (mobile parity) — we never reopen the resolved one. Spin
-      // up a new session and target it; the closed thread stays as read-only
-      // history. Bail if creating one failed (don't silently reopen the closed
-      // session via the worker's reopen-on-send path).
+      // The session is created HERE, on the first send — never on panel open
+      // (mobile parity: support.tsx ensureBackendSession). Creating it eagerly
+      // left an empty "pending" row for anyone who opened the widget and typed
+      // nothing, which the admin app rendered as a blank conversation. The
+      // same path covers a conversation closed by an admin: a new message
+      // starts a FRESH session — we never reopen the resolved one, it stays as
+      // read-only history. Bail if creating one failed (don't silently reopen
+      // the closed session via the worker's reopen-on-send path).
+      const current = sessionId
+        ? useChatStore.getState().sessions.find((s) => s.id === sessionId)
+        : undefined;
       let targetId = sessionId;
-      const current = useChatStore
-        .getState()
-        .sessions.find((s) => s.id === sessionId);
-      if (current?.status === "resolved") {
+      if (targetId == null || current?.status === "resolved") {
         const fresh = await startNewSession();
         if (fresh == null) return;
         targetId = fresh;

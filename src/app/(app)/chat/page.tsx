@@ -91,40 +91,10 @@ async function Content() {
     getSiteSettings(),
   ]);
 
-  if (sessions.length === 0) {
-    // No existing sessions — get-or-create a REAL session so the user can
-    // actually send. A placeholder id:0 would silently break sending: send(),
-    // markRead() and the Pusher subscription all guard with `if (!sessionId)`,
-    // and `!0` is truthy, so the very first message would be dropped.
-    // Build the seed list inside the try, but construct the JSX *after* it —
-    // react-hooks/error-boundaries forbids returning JSX from within try/catch.
-    let fresh: ChatSession[] = [];
-    try {
-      const created = await apiFetch<{ sessionId: number }>("/chat/sessions", {
-        method: "POST",
-        body: {},
-        token,
-      });
-      if (created?.sessionId) {
-        fresh = [
-          {
-            id: created.sessionId,
-            status: "pending",
-            unreadUserCount: 0,
-            lastMessageAt: null,
-            lastMessagePreview: "Hi! How can we help you find the right machine today?",
-            adminLastReadAt: null,
-          },
-        ];
-      }
-    } catch (e) {
-      redirectIfBlacklisted(e);
-    }
-    // `fresh` carries the created session on success, or stays [] (read-only
-    // empty state) when creation failed.
-    return <ChatShell sessions={fresh} supportPhone={contactPhone} />;
-  }
-
+  // No sessions is a real state, not one to paper over: ChatShell renders an
+  // empty thread + composer and the first send creates the session (see
+  // useChatSync.send). Creating one here left an empty "pending" row for
+  // anyone who merely visited the page.
   return <ChatShell sessions={sessions} supportPhone={contactPhone} />;
 }
 
